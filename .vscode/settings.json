@@ -1,7 +1,46 @@
+// .vscode/settings.json
 {
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ]
+  // ซ่อนของที่ไม่ใช้ใน dev
+  "explorer.excludeGitIgnore": true, // ซ่อนตาม .gitignore อัตโนมัติ (เช่น node_modules, dist)
+  "files.exclude": {
+    "**/.git": true,
+    "**/.turbo": true,
+    "**/.pnpm-store": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/.cache": true,
+    "**/*.map": true,
+    "**/{hosts,remotes}/**/webpack.*.js": true,
+    "**/{hosts,remotes}/**/postcss.config.*": true,
+    "**/{hosts,remotes}/**/tsconfig.json": true,
+    "**/{hosts,remotes}/**/.npmrc": true,
+    "**/{hosts,remotes}/**/pnpm-lock.yaml": true
+  },
+
+  // ให้ Search ไม่วิ่งเข้าโฟลเดอร์ขยะเหล่านี้
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.turbo": true,
+    "**/.pnpm-store": true
+  },
+
+  // ลดภาระ file watcher (ช่วยให้ VS Code ลื่นขึ้น)
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.turbo/**": true,
+    "**/.pnpm-store/**": true
+  },
+
+  // จัดไฟล์เป็นกอง ๆ (File Nesting) ให้ดูสะอาดขึ้น
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "package.json": "pnpm-lock.yaml, package-lock.json, yarn.lock, .npmrc",
+    "tsconfig.json": "tsconfig.*.json, *.d.ts",
+    "webpack.common.js": "webpack.dev.js, webpack.prod.js, webpack.*.js, webpack.config.js",
+    ".env": ".env.*",
+    "index.tsx": "bootstrap.tsx, remote-live-reload.dev.ts, styles.css"
+  }
 }

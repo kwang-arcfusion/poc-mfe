@@ -9,13 +9,6 @@ export default function Header() {
       <div className="mx-auto max-w-5xl p-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Microfrontend Header</h1>
 
-
-
-
-
-
-
-        
         <md-filled-button onClick={() => setCount((c) => c + 1)}>click: {count}</md-filled-button>
       </div>
     </header>
