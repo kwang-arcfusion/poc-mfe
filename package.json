@@ -3,10 +3,13 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
+  },
+  "overrides": {
+    "@babel/preset-typescript": "7.27.1"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
