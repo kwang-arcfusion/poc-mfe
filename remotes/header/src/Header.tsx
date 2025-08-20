@@ -1,15 +1,44 @@
+// remotes/header/src/Header.tsx
 import '@material/web/button/filled-button.js';
-import { useState } from 'react';
+import '@material/web/button/outlined-button.js';
 import './styles.css';
+import { useAuth0 } from '@auth0/auth0-react';
 
 export default function Header() {
-  const [count, setCount] = useState(0);
+  const { isAuthenticated, loginWithRedirect, logout, isLoading, user } = useAuth0();
+
+  const handleLogin = () => {
+    loginWithRedirect({
+      appState: { returnTo: '/services' },
+    });
+  };
+
+  const handleLogout = () => {
+    logout({
+      logoutParams: { returnTo: window.location.origin },
+    });
+  };
+
   return (
     <header className="w-full border-b border-neutral-200 bg-white">
       <div className="mx-auto max-w-5xl p-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Microfrontend Header</h1>
+        <h1 className="text-xl font-semibold">
+          <a href="/" className="hover:underline">
+            Microfrontend App
+          </a>
+        </h1>
 
-        <md-filled-button onClick={() => setCount((c) => c + 1)}>click: {count}</md-filled-button>
+        <div className="flex items-center gap-4">
+          {isAuthenticated && <span className="text-sm">Welcome, {user?.name}</span>}
+
+          {!isLoading && !isAuthenticated && (
+            <md-filled-button onClick={handleLogin}>Log In</md-filled-button>
+          )}
+
+          {isAuthenticated && (
+            <md-outlined-button onClick={handleLogout}>Log Out</md-outlined-button>
+          )}
+        </div>
       </div>
     </header>
   );

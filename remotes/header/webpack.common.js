@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
+const Dotenv = require('dotenv-webpack');
 
 module.exports = (env = {}) => {
   const isProd = env.mode === 'production';
@@ -48,6 +49,7 @@ module.exports = (env = {}) => {
       ],
     },
     plugins: [
+      new Dotenv(),
       // ทำให้ standalone เป็น index.html (เปิดที่รากโดเมนได้เลย)
       new HtmlWebpackPlugin({
         template: 'public/index.html',

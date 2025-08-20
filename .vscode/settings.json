@@ -1,19 +1,19 @@
 {
   "explorer.excludeGitIgnore": true, // ซ่อนตาม .gitignore อัตโนมัติ (เช่น node_modules, dist)
   "files.exclude": {
-    "**/.git": true,
-    "**/.turbo": true,
-    "**/.pnpm-store": true,
-    "**/node_modules": true,
-    "**/dist": true,
-    "**/coverage": true,
-    "**/.cache": true,
-    "**/*.map": true,
-    "**/{hosts,remotes}/**/webpack.*.js": true,
-    "**/{hosts,remotes}/**/postcss.config.*": true,
-    "**/{hosts,remotes}/**/tsconfig.json": true,
-    "**/{hosts,remotes}/**/.npmrc": true,
-    "**/{hosts,remotes}/**/pnpm-lock.yaml": true
+    "**/.git": false,
+    "**/.turbo": false,
+    "**/.pnpm-store": false,
+    "**/node_modules": false,
+    "**/dist": false,
+    "**/coverage": false,
+    "**/.cache": false,
+    "**/*.map": false,
+    "**/{hosts,remotes}/**/webpack.*.js": false,
+    "**/{hosts,remotes}/**/postcss.config.*": false,
+    "**/{hosts,remotes}/**/tsconfig.json": false,
+    "**/{hosts,remotes}/**/.npmrc": false,
+    "**/{hosts,remotes}/**/pnpm-lock.yaml": false
   },
 
   "search.exclude": {
