@@ -37,5 +37,5 @@ yarn-error.log*
 .DS_Store
 *.pem
 
-script-test.js
+script-code.mjs
 all_code_output.txt

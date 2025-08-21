@@ -1,0 +1,9 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/ui" },
+    { "path": "./hosts/host" },
+    { "path": "./remotes/header" },
+    { "path": "./remotes/home" }
+  ]
+}

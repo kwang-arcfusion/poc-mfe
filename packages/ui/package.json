@@ -1,0 +1,39 @@
+{
+  "name": "@arcfusion/ui",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "scripts": {
+    "build": "pnpm build:js && pnpm build:types",
+    "build:js": "tsup",
+    "build:types": "tsc --emitDeclarationOnly --declaration --declarationMap",
+    "dev": "tsup --watch",
+    "lint": "eslint . --ext .ts,.tsx",
+    "check-types": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.12",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "postcss": "^8.5.6",
+    "react": "^19.1.1",
+    "tailwindcss": "^4.1.12",
+    "tsup": "^8.2.3",
+    "typescript": "^5.6.3"
+  }
+}
