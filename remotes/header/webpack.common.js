@@ -80,6 +80,12 @@ module.exports = (env = {}) => {
             strictVersion: false,
             eager: false,
           },
+          '@auth0/auth0-react': {
+            singleton: true,
+            requiredVersion: false,
+            strictVersion: false,
+            eager: false,
+          },
         },
       }),
     ],

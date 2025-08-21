@@ -1,1 +1,32 @@
-{}
+{
+  "explorer.excludeGitIgnore": true, // ซ่อนตาม .gitignore อัตโนมัติ (เช่น node_modules, dist)
+  "files.exclude": {
+    "**/.git": false,
+    "**/.turbo": false,
+    "**/.pnpm-store": false,
+    "**/node_modules": false,
+    "**/dist": false,
+    "**/coverage": false,
+    "**/.cache": false,
+    "**/*.map": false,
+    "**/{hosts,remotes}/**/webpack.*.js": false,
+    "**/{hosts,remotes}/**/postcss.config.*": false,
+    "**/{hosts,remotes}/**/tsconfig.json": false,
+    "**/{hosts,remotes}/**/.npmrc": false,
+    "**/{hosts,remotes}/**/pnpm-lock.yaml": false
+  },
+
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.turbo": true,
+    "**/.pnpm-store": true
+  },
+
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/.turbo/**": true,
+    "**/.pnpm-store/**": true
+  }
+}
