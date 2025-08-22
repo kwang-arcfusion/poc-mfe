@@ -32,7 +32,7 @@ module.exports = (env = {}) => {
             options: {
               presets: [
                 ['@babel/preset-env', { targets: 'defaults' }],
-                ['@babel/preset-react', { runtime: 'automatic' }],
+                ['@babel/preset-react', { runtime: 'classic' }],
                 ['@babel/preset-typescript', { allowDeclareFields: true }],
               ],
             },

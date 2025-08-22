@@ -1,4 +1,5 @@
 // remotes/home/src/Home.tsx (ตัวอย่างถ้าอยากให้ Home รู้จัก User)
+import React from 'react';
 import '@material/web/textfield/filled-text-field.js';
 import './styles.css';
 import { useAuth0 } from '@auth0/auth0-react';

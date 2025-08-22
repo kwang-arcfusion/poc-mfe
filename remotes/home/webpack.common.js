@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
+const Dotenv = require('dotenv-webpack');
 
 module.exports = (env = {}) => {
   const isProd = env.mode === 'production';
@@ -31,7 +32,7 @@ module.exports = (env = {}) => {
             options: {
               presets: [
                 ['@babel/preset-env', { targets: 'defaults' }],
-                ['@babel/preset-react', { runtime: 'automatic' }],
+                ['@babel/preset-react', { runtime: 'classic' }],
                 ['@babel/preset-typescript', { allowDeclareFields: true }],
               ],
             },
@@ -48,6 +49,7 @@ module.exports = (env = {}) => {
       ],
     },
     plugins: [
+      new Dotenv(),
       // ให้โหมด standalone เป็น index.html (เปิดที่รากโดเมนได้ทันที)
       new HtmlWebpackPlugin({
         template: 'public/index.html',
