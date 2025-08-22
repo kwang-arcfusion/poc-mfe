@@ -1,4 +1,4 @@
-// hosts/host/src/env.d.ts
+// hosts/knowesis/src/env.d.ts
 declare const process: {
   env: {
     NODE_ENV: 'development' | 'production' | 'test';

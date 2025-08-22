@@ -15,7 +15,7 @@ module.exports = (env = {}) => {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
       clean: true,
       publicPath: 'auto',
-      uniqueName: 'host',
+      uniqueName: 'knowesis',
     },
     resolve: { extensions: ['.ts', '.tsx', '.js', '.jsx'] },
     module: {
@@ -51,7 +51,7 @@ module.exports = (env = {}) => {
         filename: isProd ? '[name].[contenthash].css' : '[name].css',
       }),
       new ModuleFederationPlugin({
-        name: 'host',
+        name: 'knowesis',
         filename: 'remoteEntry.js',
         remotes: {
           header: 'header@http://localhost:3001/remoteEntry.js',

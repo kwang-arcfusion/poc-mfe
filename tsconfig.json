@@ -2,7 +2,7 @@
   "files": [],
   "references": [
     { "path": "./packages/ui" },
-    { "path": "./hosts/host" },
+    { "path": "./hosts/knowesis" },
     { "path": "./remotes/header" },
     { "path": "./remotes/home" }
   ]
