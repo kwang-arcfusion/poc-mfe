@@ -3,7 +3,7 @@ if (process.env.NODE_ENV !== 'production') {
   type Remote = { name: string; url: string };
 
   const REMOTES: Remote[] = [
-    { name: 'header', url: 'ws://localhost:3001/ws' },
+    { name: 'ask_ai', url: 'ws://localhost:3001/ws' },
     { name: 'home', url: 'ws://localhost:3002/ws' },
   ];
 

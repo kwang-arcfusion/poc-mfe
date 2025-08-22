@@ -19,7 +19,7 @@ module.exports = (env = {}) => {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
       clean: true,
       publicPath: 'auto',
-      uniqueName: 'header',
+      uniqueName: 'ask_ai',
     },
     resolve: { extensions: ['.ts', '.tsx', '.js', '.jsx'] },
     module: {
@@ -66,10 +66,10 @@ module.exports = (env = {}) => {
         filename: isProd ? '[name].[contenthash].css' : '[name].css',
       }),
       new ModuleFederationPlugin({
-        name: 'header',
+        name: 'ask_ai',
         filename: 'remoteEntry.js',
         exposes: {
-          './Header': './src/Header.tsx',
+          './AskAi': './src/AskAi.tsx',
         },
         remotes: {},
         shared: {

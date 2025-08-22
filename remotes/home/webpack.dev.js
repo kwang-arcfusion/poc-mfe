@@ -9,6 +9,6 @@ module.exports = (env = {}) =>
       port: 3002,
       historyApiFallback: true, // SPA → refresh ที่เส้นทางย่อยไม่พัง
       hot: true,
-      open: true, // เปิด http://localhost:3002/ (คือ standalone)
+      open: false,
     },
   });

@@ -1,12 +1,11 @@
-// remotes/header/src/Header.tsx
+// remotes/ask_ai/src/AskAi.tsx
 import React from 'react';
 import '@material/web/button/filled-button.js';
 import '@material/web/button/outlined-button.js';
 import './styles.css';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect } from 'react';
 
-export default function Header() {
+export default function AskAi() {
   // 1. ดึงฟังก์ชัน `logout` และสถานะ `isAuthenticated` มาจาก useAuth0 hook
   const { isAuthenticated, loginWithRedirect, logout, isLoading, user } = useAuth0();
 
@@ -25,10 +24,6 @@ export default function Header() {
       },
     });
   };
-
-  useEffect(() => {
-    console.log('Header.tsx:30 |isAuthenticated| : ', isAuthenticated);
-  }, []);
 
   return (
     <header className="w-full border-b border-neutral-200 bg-white">

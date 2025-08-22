@@ -54,7 +54,7 @@ module.exports = (env = {}) => {
         name: 'knowesis',
         filename: 'remoteEntry.js',
         remotes: {
-          header: 'header@http://localhost:3001/remoteEntry.js',
+          ask_ai: 'ask_ai@http://localhost:3001/remoteEntry.js',
           home: 'home@http://localhost:3002/remoteEntry.js',
         },
         shared: {

@@ -9,6 +9,6 @@ module.exports = (env = {}) =>
       port: 3001,
       historyApiFallback: true, // index.html (standalone) เป็น SPA
       hot: true,
-      open: true,
+      open: false,
     },
   });

@@ -1,4 +1,4 @@
-declare module 'header/Header' {
+declare module 'ask_ai/AskAi' {
   import { ComponentType } from 'react';
   const Cmp: ComponentType<any>;
   export default Cmp;

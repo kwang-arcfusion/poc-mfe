@@ -1,4 +1,4 @@
-// remotes/header/tailwind.config.mjs
+// remotes/ask_ai/tailwind.config.mjs
 import path from 'path';
 
 /** @type {import('tailwindcss').Config} */

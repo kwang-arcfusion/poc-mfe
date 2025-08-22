@@ -9,7 +9,7 @@ import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
 import { ServicesPage } from './pages/ServicesPage';
 
 // Import MFE components
-const Header = React.lazy(() => import('header/Header'));
+const AskAi = React.lazy(() => import('ask_ai/AskAi'));
 const Home = React.lazy(() => import('home/Home'));
 
 // 1. สร้าง Layout หลักของแอปพลิเคชัน
@@ -17,8 +17,8 @@ const Home = React.lazy(() => import('home/Home'));
 const AppLayout = () => {
   return (
     <div className="min-h-dvh bg-neutral-50 text-neutral-900">
-      <Suspense fallback={<div className="p-6">Loading Header...</div>}>
-        <Header />
+      <Suspense fallback={<div className="p-6">Loading ASk ai...</div>}>
+        <AskAi />
       </Suspense>
       <main className="p-6">
         <Suspense fallback={<div className="p-6">Loading Page...</div>}>

@@ -1,4 +1,4 @@
-// remotes/header/src/standalone.tsx
+// remotes/ask_ai/src/standalone.tsx
 import './styles.css';
 
 // ใช้ Immediately Invoked Function Expression (IIFE) แบบ async
@@ -11,10 +11,10 @@ import './styles.css';
   const React = (await import('react')).default;
   const { createRoot } = await import('react-dom/client');
   const { Auth0Provider, withAuthenticationRequired } = await import('@auth0/auth0-react');
-  const Header = (await import('./Header')).default;
+  const AskAi = (await import('./AskAi')).default;
 
   // 3. สร้าง component ที่ถูกป้องกันแล้ว
-  const ProtectedHeader = withAuthenticationRequired(Header, {
+  const ProtectedAskAi = withAuthenticationRequired(AskAi, {
     onRedirecting: () => <div>Redirecting to login...</div>,
   });
 
@@ -35,7 +35,7 @@ import './styles.css';
         redirect_uri: window.location.origin,
       }}
     >
-      <ProtectedHeader />
+      <ProtectedAskAi />
     </Auth0Provider>
   );
 })();

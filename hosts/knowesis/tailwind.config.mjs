@@ -1,4 +1,4 @@
-// ตัวอย่างไฟล์ tailwind.config.mjs ของแต่ละแอป (knowesis, header, home)
+// ตัวอย่างไฟล์ tailwind.config.mjs ของแต่ละแอป (knowesis, ask_ai, home)
 import path from 'path';
 
 /** @type {import('tailwindcss').Config} */

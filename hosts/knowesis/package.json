@@ -14,6 +14,8 @@
     "react-router-dom": "^7.8.1"
   },
   "devDependencies": {
+    "@arcfusion/ask_ai": "workspace:^",
+    "@arcfusion/home": "workspace:^",
     "@babel/core": "^7.28.3",
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.27.1",
