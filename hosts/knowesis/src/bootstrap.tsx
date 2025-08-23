@@ -64,6 +64,7 @@ const ProtectedAppLayout = withAuthenticationRequired(AppLayout, {
         justifyContent: 'center',
         minHeight: '100vh',
       }}
+      className="test"
     >
       Arcfusion Loading...
     </div>
