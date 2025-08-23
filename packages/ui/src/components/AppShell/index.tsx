@@ -1,7 +1,14 @@
 // packages/ui/src/AppShell.tsx
 import React from 'react';
-import { makeStyles, tokens } from '@fluentui/react-components';
+import {
+  makeStyles,
+  tokens,
+  mergeClasses, // <-- 1. Import mergeClasses
+} from '@fluentui/react-components';
 
+// (ส่วนของ Sidebar, Topbar, ThemeToggle ที่ import เข้ามาจะถูกลบออกไป เพราะ AppShell ไม่ควรรู้จักมัน)
+
+// สไตล์ default ของ AppShell
 const useAppShellStyles = makeStyles({
   root: {
     display: 'flex',
@@ -13,33 +20,41 @@ const useAppShellStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     flexGrow: 1,
-    overflow: 'hidden', // ป้องกันการซ้อน scrollbar
+    overflow: 'hidden',
   },
   mainContent: {
     padding: tokens.spacingHorizontalXXL,
-    overflowY: 'auto', // ทำให้ส่วนเนื้อหา scroll ได้
+    overflowY: 'auto',
     flexGrow: 1,
   },
 });
+
+// 2. กำหนด Type สำหรับ classNames prop
+export type AppShellClassNames = {
+  root?: string;
+  contentContainer?: string;
+  mainContent?: string;
+};
 
 export interface AppShellProps {
   sidebar: React.ReactNode;
   topbar: React.ReactNode;
   children: React.ReactNode;
+  classNames?: AppShellClassNames; // <-- เพิ่ม prop ใหม่
 }
 
-export function AppShell({ sidebar, topbar, children }: AppShellProps) {
+export function AppShell({ sidebar, topbar, children, classNames }: AppShellProps) {
   const styles = useAppShellStyles();
 
   return (
-    <div className={styles.root}>
-      {/* ส่วน Sidebar */}
+    // 3. ใช้ mergeClasses เพื่อรวม default class กับ class ที่ส่งเข้ามา
+    <div className={mergeClasses(styles.root, classNames?.root)}>
       {sidebar}
-
-      {/* ส่วน Content หลัก (Topbap + Children) */}
-      <div className={styles.contentContainer}>
+      <div className={mergeClasses(styles.contentContainer, classNames?.contentContainer)}>
         {topbar}
-        <main className={styles.mainContent}>{children}</main>
+        <main className={mergeClasses(styles.mainContent, classNames?.mainContent)}>
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import { makeStyles, tokens } from '@fluentui/react-components';
 const useStyles = makeStyles({
   root: {
     width: '160px',
-    backgroundColor: tokens.colorNeutralBackground2,
+    backgroundColor: tokens.colorNeutralBackground3,
     borderRight: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
     padding: tokens.spacingVerticalL,
     display: 'flex',
