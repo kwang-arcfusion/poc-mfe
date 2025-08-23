@@ -2,11 +2,12 @@
 
 import { createRoot } from 'react-dom/client';
 import React, { Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+// --- Import NavLink เพิ่มเข้ามา ---
+import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
 import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
 
-// Import จาก Fluent UI
-import { FluentProvider } from '@fluentui/react-components';
+// --- Import makeStyles และ tokens เพิ่มเข้ามา ---
+import { FluentProvider, makeStyles, tokens } from '@fluentui/react-components';
 
 // Import ทุกอย่างที่เราต้องการจาก local packages
 import { useThemeStore } from '@arcfusion/store';
@@ -25,19 +26,49 @@ import { ServicesPage } from './pages/ServicesPage';
 const AskAi = React.lazy(() => import('ask_ai/AskAi'));
 const Home = React.lazy(() => import('home/Home'));
 
+// --- สร้างสไตล์สำหรับ NavLink ของเรา ---
+const useNavStyles = makeStyles({
+  link: {
+    color: tokens.colorNeutralForeground1,
+    textDecorationLine: 'none',
+    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
+    borderRadius: tokens.borderRadiusMedium,
+    ':hover': {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+    },
+    display: 'block',
+  },
+  activeLink: {
+    backgroundColor: tokens.colorNeutralBackground1Selected,
+    fontWeight: tokens.fontWeightSemibold,
+  },
+});
+
 // Component Layout หลัก ทำหน้าที่ประกอบร่าง UI
 const AppLayout = () => {
+  const navStyles = useNavStyles();
+
   return (
     <AppShell
       sidebar={
         <Sidebar>
-          <p>Navigation</p>
-          <a href="/" style={{ textDecoration: 'none' }}>
+          {/* --- เปลี่ยนจาก <a> tag มาเป็น <NavLink> --- */}
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              isActive ? `${navStyles.link} ${navStyles.activeLink}` : navStyles.link
+            }
+          >
             Home
-          </a>
-          <a href="/services" style={{ textDecoration: 'none' }}>
+          </NavLink>
+          <NavLink
+            to="/services"
+            className={({ isActive }) =>
+              isActive ? `${navStyles.link} ${navStyles.activeLink}` : navStyles.link
+            }
+          >
             Services
-          </a>
+          </NavLink>
         </Sidebar>
       }
       topbar={
@@ -80,15 +111,11 @@ const ProtectedAppLayout = withAuthenticationRequired(AppLayout, {
 
 // Component ศูนย์กลางควบคุม Theme
 function ThemedApp() {
-  // --- ย้าย useGlobalStyles มาไว้ที่นี่ ---
-  // นี่คือตำแหน่งที่ดีที่สุด เพราะเป็น Component ชั้นนอกสุดที่จัดการเรื่องสไตล์ทั้งหมด
   useGlobalStyles();
 
   const { theme } = useThemeStore();
   const fluentTheme = theme === 'dark' ? arcusionDarkTheme : arcusionLightTheme;
 
-  // useEffect ที่จัดการ dark class ถูกย้ายเข้าไปใน AppShell แล้ว
-  // ทำให้ ThemedApp เหลือหน้าที่แค่ส่ง Theme และเรียก Global Styles
   return (
     <FluentProvider theme={fluentTheme}>
       <ProtectedAppLayout />

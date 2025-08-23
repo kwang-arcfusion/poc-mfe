@@ -4,8 +4,8 @@ import { makeStyles, tokens } from '@fluentui/react-components';
 
 const useStyles = makeStyles({
   root: {
-    width: '160px',
-    backgroundColor: tokens.colorNeutralBackground3,
+    width: '240px',
+    backgroundColor: tokens.colorNeutralBackground2,
     borderRight: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
     padding: tokens.spacingVerticalL,
     display: 'flex',
@@ -20,16 +20,6 @@ export interface SidebarProps {
 
 export function Sidebar({ children }: SidebarProps) {
   const styles = useStyles();
-  return (
-    <nav className={styles.root}>
-      {/* ในอนาคตเราจะใส่ NavLink ต่างๆ ไว้ตรงนี้ */}
-      {children || (
-        <>
-          <div>Sidebar</div>
-          <div>Navigation Item 1</div>
-          <div>Navigation Item 2</div>
-        </>
-      )}
-    </nav>
-  );
+  // ตอนนี้ Sidebar จะ render อะไรก็ได้ที่เราส่งเข้าไป
+  return <nav className={styles.root}>{children}</nav>;
 }
