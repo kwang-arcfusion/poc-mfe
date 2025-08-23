@@ -1,28 +1,34 @@
 // hosts/knowesis/src/bootstrap.tsx
-import { makeStaticStyles } from '@fluentui/react-components';
 
 import { createRoot } from 'react-dom/client';
 import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
-import { FluentProvider, webLightTheme, webDarkTheme } from '@fluentui/react-components';
+
+// Import จาก Fluent UI เหลือแค่ Provider
+import { FluentProvider } from '@fluentui/react-components';
+
+// Import ทุกอย่างที่เราต้องการจาก local packages
 import { useThemeStore } from '@arcfusion/store';
+import {
+  AppShell,
+  Sidebar,
+  Topbar,
+  ThemeToggle,
+  useGlobalStyles,
+  arcusionLightTheme,
+  arcusionDarkTheme,
+} from '@arcfusion/ui';
 
-// Import AppShell และ Layout components ใหม่
-import { AppShell, Sidebar, Topbar, ThemeToggle, useGlobalStyles } from '@arcfusion/ui';
-
-// Import Pages และ MFE Components
 import { ServicesPage } from './pages/ServicesPage';
 const AskAi = React.lazy(() => import('ask_ai/AskAi'));
 const Home = React.lazy(() => import('home/Home'));
 
-// AppLayout ตอนนี้จะทำหน้าที่แค่ "ประกอบร่าง" Layout ทั้งหมด
 const AppLayout = () => {
   return (
     <AppShell
       sidebar={
         <Sidebar>
-          {/* คุณสามารถเพิ่ม NavLink สำหรับ Router ได้ที่นี่ในอนาคต */}
           <p>Navigation</p>
           <a href="/" style={{ textDecoration: 'none' }}>
             Home
@@ -40,7 +46,6 @@ const AppLayout = () => {
         </Topbar>
       }
     >
-      {/* เนื้อหาหลักของหน้าจะถูกส่งเป็น children */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
         <ThemeToggle />
       </div>
@@ -55,7 +60,6 @@ const AppLayout = () => {
   );
 };
 
-// Component "ยาม" เฝ้าแอป
 const ProtectedAppLayout = withAuthenticationRequired(AppLayout, {
   onRedirecting: () => (
     <div
@@ -65,29 +69,19 @@ const ProtectedAppLayout = withAuthenticationRequired(AppLayout, {
         justifyContent: 'center',
         minHeight: '100vh',
       }}
-      className="test"
     >
       Arcfusion Loading...
     </div>
   ),
 });
 
-// Component ศูนย์กลางควบคุม Theme
 function ThemedApp() {
   useGlobalStyles();
-  const { theme } = useThemeStore();
-  const fluentTheme = theme === 'dark' ? webDarkTheme : webLightTheme;
 
-  // useEffect ที่จัดการ dark class ยังคงจำเป็นสำหรับ Tailwind (ถ้ามี)
-  // หรือสไตล์ custom อื่นๆ ที่ไม่ได้มาจาก Fluent
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-  }, [theme]);
+  const { theme } = useThemeStore();
+
+  // ตอนนี้เราแค่เลือกระหว่าง theme ที่ import เข้ามา
+  const fluentTheme = theme === 'dark' ? arcusionDarkTheme : arcusionLightTheme;
 
   return (
     <FluentProvider theme={fluentTheme}>
