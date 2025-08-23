@@ -1,7 +1,7 @@
 // remotes/ask_ai/src/AskAi.tsx
 import React from 'react';
-import '@material/web/button/filled-button.js';
-import '@material/web/button/outlined-button.js';
+// import '@material/web/button/filled-button.js';
+// import '@material/web/button/outlined-button.js';
 import './styles.css';
 import { useAuth0 } from '@auth0/auth0-react';
 
@@ -37,14 +37,10 @@ export default function AskAi() {
         <div className="flex items-center gap-4">
           {isAuthenticated && <span className="text-sm">Welcome, {user?.name}</span>}
 
-          {!isLoading && !isAuthenticated && (
-            <md-filled-button onClick={handleLogin}>Log In</md-filled-button>
-          )}
+          {!isLoading && !isAuthenticated && <input type="login" />}
 
           {/* 3. ปุ่ม "Log Out" จะแสดงผลก็ต่อเมื่อ `isAuthenticated` เป็น true */}
-          {isAuthenticated && (
-            <md-outlined-button onClick={handleLogout}>Log Out</md-outlined-button>
-          )}
+          {isAuthenticated && <button onClick={handleLogout}>Log Out</button>}
         </div>
       </div>
     </header>
