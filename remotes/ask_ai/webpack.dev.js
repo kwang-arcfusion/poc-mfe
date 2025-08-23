@@ -1,3 +1,4 @@
+// remotes/ask_ai/webpack.dev.js
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common');
 
@@ -7,7 +8,7 @@ module.exports = (env = {}) =>
     devtool: 'eval-cheap-module-source-map',
     devServer: {
       port: 3001,
-      historyApiFallback: true, // index.html (standalone) เป็น SPA
+      historyApiFallback: true,
       hot: true,
       open: false,
     },

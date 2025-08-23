@@ -1,19 +1,17 @@
+// remotes/ask_ai/webpack.common.js
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
-const Dotenv = require('dotenv-webpack');
+
+// ไม่ต้องใช้ HtmlWebpackPlugin และ Dotenv อีกต่อไป
 
 module.exports = (env = {}) => {
   const isProd = env.mode === 'production';
 
   return {
-    // remote มี 2 entries: main (federation) + standalone (โหมด dev/preview)
-    entry: {
-      main: './src/index.tsx', // federation entry (ไม่มี render)
-      standalone: './src/standalone.tsx', // standalone entry
-    },
+    // เหลือแค่ entry เดียวสำหรับ Module Federation
+    entry: './src/index.tsx',
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
@@ -21,17 +19,24 @@ module.exports = (env = {}) => {
       publicPath: 'auto',
       uniqueName: 'ask_ai',
     },
-    resolve: { extensions: ['.ts', '.tsx', '.js', '.jsx'] },
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js', '.jsx'],
+      // alias ยังคงมีประโยชน์เพื่อให้ HMR และการ build ทำงานได้เสถียร
+      alias: {
+        '@arcfusion/ui': path.resolve(__dirname, '../../packages/ui/src'),
+        '@arcfusion/store': path.resolve(__dirname, '../../packages/store/src'),
+      },
+    },
     module: {
       rules: [
         {
           test: /\.(ts|tsx|js|jsx)$/,
+          // include ยังจำเป็นเพื่อให้ host สามารถ transpile โค้ดจาก packages ได้
           include: [
             path.resolve(__dirname, 'src'),
             path.resolve(__dirname, '../../packages/ui/src'),
             path.resolve(__dirname, '../../packages/store/src'),
           ],
-          exclude: /node_modules/,
           use: {
             loader: 'babel-loader',
             options: {
@@ -45,24 +50,16 @@ module.exports = (env = {}) => {
         },
         {
           test: /\.css$/i,
+          include: [
+            path.resolve(__dirname, 'src'),
+            path.resolve(__dirname, '../../packages/ui/src'),
+          ],
           use: [isProd ? MiniCssExtractPlugin.loader : 'style-loader', 'css-loader'],
         },
       ],
     },
     plugins: [
-      new Dotenv(),
-      // ทำให้ standalone เป็น index.html (เปิดที่รากโดเมนได้เลย)
-      new HtmlWebpackPlugin({
-        template: 'public/index.html',
-        filename: 'index.html',
-        chunks: ['standalone'],
-      }),
-      // หน้าเสริมให้ main (ดู bundle ได้ถ้าจำเป็น)
-      new HtmlWebpackPlugin({
-        template: 'public/index.html',
-        filename: 'mf.html',
-        chunks: ['main'],
-      }),
+      // เหลือแค่ 2 plugins ที่จำเป็นสำหรับ remote
       new MiniCssExtractPlugin({
         filename: isProd ? '[name].[contenthash].css' : '[name].css',
       }),
@@ -72,21 +69,10 @@ module.exports = (env = {}) => {
         exposes: {
           './AskAi': './src/AskAi.tsx',
         },
-        remotes: {},
         shared: {
-          react: { singleton: true, requiredVersion: false, strictVersion: false, eager: false },
-          'react-dom': {
-            singleton: true,
-            requiredVersion: false,
-            strictVersion: false,
-            eager: false,
-          },
-          '@auth0/auth0-react': {
-            singleton: true,
-            requiredVersion: false,
-            strictVersion: false,
-            eager: false,
-          },
+          react: { singleton: true, requiredVersion: false },
+          'react-dom': { singleton: true, requiredVersion: false },
+          '@auth0/auth0-react': { singleton: true, requiredVersion: false },
           zustand: { singleton: true, requiredVersion: false },
           '@arcfusion/store': { singleton: true, requiredVersion: false },
         },

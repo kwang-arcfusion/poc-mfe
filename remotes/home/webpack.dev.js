@@ -1,3 +1,4 @@
+// remotes/home/webpack.dev.js
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common');
 
@@ -7,7 +8,7 @@ module.exports = (env = {}) =>
     devtool: 'eval-cheap-module-source-map',
     devServer: {
       port: 3002,
-      historyApiFallback: true, // SPA → refresh ที่เส้นทางย่อยไม่พัง
+      historyApiFallback: true,
       hot: true,
       open: false,
     },
