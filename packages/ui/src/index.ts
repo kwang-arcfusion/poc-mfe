@@ -5,3 +5,6 @@ export { Button } from './Button';
 export type { ButtonProps } from './Button'; // Export ตัว Type ของ Props ออกไปด้วย
 
 export * from './ThemeToggle';
+
+export * from './AppShell/AppShell';
+export type { AppShellProps } from './AppShell/AppShell';

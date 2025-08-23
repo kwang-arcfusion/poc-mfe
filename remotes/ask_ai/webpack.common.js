@@ -26,6 +26,11 @@ module.exports = (env = {}) => {
       rules: [
         {
           test: /\.(ts|tsx|js|jsx)$/,
+          include: [
+            path.resolve(__dirname, 'src'),
+            path.resolve(__dirname, '../../packages/ui/src'),
+            path.resolve(__dirname, '../../packages/store/src'),
+          ],
           exclude: /node_modules/,
           use: {
             loader: 'babel-loader',
