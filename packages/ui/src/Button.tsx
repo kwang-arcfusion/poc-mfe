@@ -1,21 +1,17 @@
 // packages/ui/src/Button.tsx
 import React from 'react';
+// Import Button และ Props มาจาก Fluent UI โดยตรง
+import {
+  Button as FluentButton,
+  ButtonProps as FluentButtonProps,
+} from '@fluentui/react-components';
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
+// สร้าง Props ของเราเอง โดยอาจจะเพิ่ม variant เข้าไป
+export type ButtonProps = FluentButtonProps & {
   variant?: 'primary' | 'secondary';
-}
+};
 
-export function Button({ children, variant = 'primary', ...props }: ButtonProps) {
-  const baseStyle = 'px-4 py-2 rounded font-semibold transition-colors';
-  const variantStyle =
-    variant === 'primary'
-      ? 'bg-blue-600 text-white hover:bg-blue-700'
-      : 'bg-gray-200 text-gray-800 hover:bg-gray-300';
-
-  return (
-    <button className={`${baseStyle} ${variantStyle}`} {...props}>
-      {children}
-    </button>
-  );
+export function Button({ variant = 'primary', ...props }: ButtonProps) {
+  // ใช้ props `appearance` ของ FluentButton ในการเปลี่ยนสไตล์
+  return <FluentButton appearance={variant === 'primary' ? 'primary' : 'secondary'} {...props} />;
 }

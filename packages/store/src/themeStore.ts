@@ -11,10 +11,14 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
       theme: 'light', // Default theme
-      toggleTheme: () =>
-        set((state) => ({
-          theme: state.theme === 'light' ? 'dark' : 'light',
-        })),
+      toggleTheme: () => {
+        console.log('ACTION: Toggling theme...'); // <-- Log ที่ 1
+        set((state) => {
+          const newTheme = state.theme === 'light' ? 'dark' : 'light';
+          console.log(`STATE: Theme changed from ${state.theme} to ${newTheme}`); // <-- Log ที่ 2
+          return { theme: newTheme };
+        });
+      },
     }),
     {
       name: 'arcfusion-theme-storage', // local storage key

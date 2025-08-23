@@ -1,47 +1,28 @@
 // remotes/ask_ai/src/AskAi.tsx
 import React from 'react';
-// import '@material/web/button/filled-button.js';
-// import '@material/web/button/outlined-button.js';
 import './styles.css';
 import { useAuth0 } from '@auth0/auth0-react';
-import { ThemeToggle } from '@arcfusion/ui';
+// import { ThemeToggle } from '@arcfusion/ui'; // <-- ลบบรรทัดนี้
 
 export default function AskAi() {
-  // 1. ดึงฟังก์ชัน `logout` และสถานะ `isAuthenticated` มาจาก useAuth0 hook
-  const { isAuthenticated, loginWithRedirect, logout, isLoading, user } = useAuth0();
-
-  const handleLogin = () => {
-    loginWithRedirect({
-      appState: { returnTo: '/services' },
-    });
-  };
-
-  // 2. สร้างฟังก์ชัน handleLogout เพื่อเรียกใช้คำสั่ง logout
+  const { isAuthenticated, logout, user } = useAuth0();
   const handleLogout = () => {
-    logout({
-      logoutParams: {
-        // บอก Auth0 ว่าหลังจาก logout สำเร็จแล้ว ให้กลับมาที่หน้าแรก (http://localhost:3000)
-        returnTo: window.location.origin,
-      },
-    });
+    /*...*/
   };
 
   return (
-    <header className="w-full border-b border-neutral-200 bg-white">
+    <header className="w-full border-b border-neutral-200 bg-white dark:bg-neutral-800 dark:border-neutral-700 transition-colors">
       <div className="mx-auto max-w-5xl p-4 flex items-center justify-between">
         <h1 className="text-xl font-semibold">
           <a href="/" className="hover:underline">
-            Microfrontend App {`${isAuthenticated}`}
+            Microfrontend App
           </a>
         </h1>
 
         <div className="flex items-center gap-4">
+          {/* <ThemeToggle /> <-- ลบ Component นี้ออก */}
           {isAuthenticated && <span className="text-sm">Welcome, {user?.name}</span>}
-
-          {!isLoading && !isAuthenticated && <input type="login" />}
-
-          {/* 3. ปุ่ม "Log Out" จะแสดงผลก็ต่อเมื่อ `isAuthenticated` เป็น true */}
-          {isAuthenticated && <button onClick={handleLogout}>Log Out</button>}
+          {/* ... ปุ่ม Logout ... */}
         </div>
       </div>
     </header>

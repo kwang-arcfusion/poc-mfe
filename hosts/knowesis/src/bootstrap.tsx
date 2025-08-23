@@ -1,34 +1,76 @@
 // hosts/knowesis/src/bootstrap.tsx
-import './styles.css';
+
 import { createRoot } from 'react-dom/client';
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
 
-import { FluentProvider, webLightTheme, webDarkTheme } from '@fluentui/react-components';
+// Import จาก Fluent UI
+import {
+  FluentProvider,
+  webLightTheme,
+  webDarkTheme,
+  Button as FluentButton,
+  makeStyles,
+  tokens, // <-- Import Design Tokens สำหรับการทำสไตล์
+} from '@fluentui/react-components';
+import { WeatherSunny24Regular, WeatherMoon24Regular } from '@fluentui/react-icons';
+
+// Import State Store ของเรา
 import { useThemeStore } from '@arcfusion/store';
 
-// Import pages
+// Import Pages และ MFE Components
 import { ServicesPage } from './pages/ServicesPage';
-
-// Import MFE components
 const AskAi = React.lazy(() => import('ask_ai/AskAi'));
 const Home = React.lazy(() => import('home/Home'));
 
-// 1. สร้าง Layout หลักของแอปพลิเคชัน
-// นี่คือสิ่งที่จะแสดงผล "หลังจาก" ที่ผู้ใช้ล็อกอินสำเร็จแล้ว
+// --- เริ่มส่วนของการตั้งค่า Theme และ Layout ---
+
+// 1. ใช้ makeStyles เพื่อสร้างสไตล์ที่ผูกกับ Theme ของ Fluent UI
+// นี่คือวิธีใหม่ในการทำสไตล์แทนที่ Tailwind class
+const useAppLayoutStyles = makeStyles({
+  root: {
+    minHeight: '100vh',
+    backgroundColor: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    transitionProperty: 'background-color, color',
+    transitionDuration: tokens.durationNormal,
+    transitionTimingFunction: tokens.curveEasyEase,
+  },
+  mainContent: {
+    padding: tokens.spacingHorizontalXXL,
+  },
+  toggleContainer: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginBottom: tokens.spacingVerticalL,
+  },
+});
+
+// 2. Component Layout หลักของแอป
 const AppLayout = () => {
+  const styles = useAppLayoutStyles();
+  const { theme, toggleTheme } = useThemeStore();
+
   return (
-    <div className="min-h-dvh bg-neutral-50 text-neutral-900">
-      <Suspense fallback={<div className="p-6">Loading ASk ai...</div>}>
+    <div className={styles.root}>
+      <Suspense fallback={<div style={{ padding: '24px' }}>Loading AskAi...</div>}>
         <AskAi />
       </Suspense>
-      <main className="p-6">
-        <Suspense fallback={<div className="p-6">Loading Page...</div>}>
+      <main className={styles.mainContent}>
+        <div className={styles.toggleContainer}>
+          <FluentButton
+            appearance="transparent"
+            icon={theme === 'dark' ? <WeatherSunny24Regular /> : <WeatherMoon24Regular />}
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          />
+        </div>
+
+        <Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/services" element={<ServicesPage />} />
-            {/* ถ้าเข้า path ที่ไม่มีอยู่จริง ให้กลับไปหน้าแรก */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Suspense>
@@ -37,15 +79,37 @@ const AppLayout = () => {
   );
 };
 
-// 2. สร้าง "ยาม" โดยใช้ HOC `withAuthenticationRequired` มาครอบ Layout ของเรา
-const ProtectedApp = withAuthenticationRequired(AppLayout, {
-  // ระหว่างที่กำลังจะ redirect ไป Auth0 ให้แสดงข้อความนี้
+// 3. Component "ยาม" เฝ้าแอป (ไม่เปลี่ยนแปลง)
+const ProtectedAppLayout = withAuthenticationRequired(AppLayout, {
   onRedirecting: () => (
-    <div className="flex items-center justify-center min-h-dvh">Arcfusion Loading...</div>
+    // เราสามารถใช้ styling ของ Fluent ที่นี่ได้เช่นกันถ้าต้องการ
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+      }}
+    >
+      Arcfusion Loading...
+    </div>
   ),
 });
 
-// ---- Main Application Setup ----
+// 4. Component ศูนย์กลางควบคุม Theme (เรียบง่ายขึ้นมาก)
+function ThemedApp() {
+  const { theme } = useThemeStore();
+  const fluentTheme = theme === 'dark' ? webDarkTheme : webLightTheme;
+
+  // แค่ส่ง Theme ที่ถูกต้องให้กับ FluentProvider ก็พอ ไม่ต้องมี useEffect
+  return (
+    <FluentProvider theme={fluentTheme}>
+      <ProtectedAppLayout />
+    </FluentProvider>
+  );
+}
+
+// ---- ส่วนการ Render หลักของแอปพลิเคชัน ----
 const domain = process.env.AUTH0_DOMAIN;
 const clientId = process.env.AUTH0_CLIENT_ID;
 
@@ -58,14 +122,11 @@ createRoot(document.getElementById('root')!).render(
     domain={domain}
     clientId={clientId}
     authorizationParams={{
-      // 3. เปลี่ยน redirect_uri เป็นหน้าแรกของแอป
-      // Auth0 SDK จะจำหน้าที่ผู้ใช้พยายามจะเข้าไว้ให้เอง และส่งกลับมาถูกที่หลังล็อกอิน
       redirect_uri: window.location.origin,
     }}
   >
     <BrowserRouter>
-      {/* 4. Render ตัวแอปที่มียามเฝ้าอยู่ */}
-      <ProtectedApp />
+      <ThemedApp />
     </BrowserRouter>
   </Auth0Provider>
 );

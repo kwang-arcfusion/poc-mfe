@@ -86,6 +86,8 @@ module.exports = (env = {}) => {
             strictVersion: false,
             eager: false,
           },
+          zustand: { singleton: true, requiredVersion: false },
+          '@arcfusion/store': { singleton: true, requiredVersion: false },
         },
       }),
     ],
