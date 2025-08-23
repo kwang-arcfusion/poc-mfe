@@ -1,6 +1,5 @@
 // remotes/ask_ai/src/AskAi.tsx
 import React from 'react';
-import './styles.css';
 import { useAuth0 } from '@auth0/auth0-react';
 // import { ThemeToggle } from '@arcfusion/ui'; // <-- ลบบรรทัดนี้
 

@@ -4,7 +4,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
 const Dotenv = require('dotenv-webpack');
-
 module.exports = (env = {}) => {
   const isProd = env.mode === 'production';
 

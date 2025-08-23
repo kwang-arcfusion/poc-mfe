@@ -1,4 +1,5 @@
 // hosts/knowesis/src/bootstrap.tsx
+import { makeStaticStyles } from '@fluentui/react-components';
 
 import { createRoot } from 'react-dom/client';
 import React, { Suspense, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { FluentProvider, webLightTheme, webDarkTheme } from '@fluentui/react-com
 import { useThemeStore } from '@arcfusion/store';
 
 // Import AppShell และ Layout components ใหม่
-import { AppShell, Sidebar, Topbar, ThemeToggle } from '@arcfusion/ui';
+import { AppShell, Sidebar, Topbar, ThemeToggle, useGlobalStyles } from '@arcfusion/ui';
 
 // Import Pages และ MFE Components
 import { ServicesPage } from './pages/ServicesPage';
@@ -73,6 +74,7 @@ const ProtectedAppLayout = withAuthenticationRequired(AppLayout, {
 
 // Component ศูนย์กลางควบคุม Theme
 function ThemedApp() {
+  useGlobalStyles();
   const { theme } = useThemeStore();
   const fluentTheme = theme === 'dark' ? webDarkTheme : webLightTheme;
 

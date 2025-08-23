@@ -1,5 +1,4 @@
 // remotes/ask_ai/src/standalone.tsx
-import './styles.css';
 
 // ใช้ Immediately Invoked Function Expression (IIFE) แบบ async
 (async () => {

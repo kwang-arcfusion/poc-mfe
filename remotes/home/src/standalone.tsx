@@ -1,5 +1,4 @@
 // remotes/home/src/standalone.tsx
-import './styles.css';
 
 (async () => {
   // 1. เริ่มต้น handshake เพื่อเตรียม shared modules
