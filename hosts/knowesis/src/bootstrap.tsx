@@ -5,6 +5,9 @@ import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
 
+import { FluentProvider, webLightTheme, webDarkTheme } from '@fluentui/react-components';
+import { useThemeStore } from '@arcfusion/store';
+
 // Import pages
 import { ServicesPage } from './pages/ServicesPage';
 

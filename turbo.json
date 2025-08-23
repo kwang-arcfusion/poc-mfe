@@ -3,9 +3,13 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^types"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", "build/**"]
+    },
+    "types": {
+      "dependsOn": ["^types"],
+      "outputs": ["dist/**/*.d.ts", "dist/**/*.d.ts.map"]
     },
     "lint": {
       "dependsOn": ["^lint"]

@@ -5,5 +5,5 @@
     "types": ["node"]
   },
   "include": ["src", "webpack.*.js", "postcss.config.mjs"],
-  "references": [{ "path": "../../packages/ui" }]
+  "references": [{ "path": "../../packages/ui" }, { "path": "../../packages/store" }]
 }

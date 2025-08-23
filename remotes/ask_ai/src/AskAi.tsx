@@ -4,6 +4,7 @@ import React from 'react';
 // import '@material/web/button/outlined-button.js';
 import './styles.css';
 import { useAuth0 } from '@auth0/auth0-react';
+import { ThemeToggle } from '@arcfusion/ui';
 
 export default function AskAi() {
   // 1. ดึงฟังก์ชัน `logout` และสถานะ `isAuthenticated` มาจาก useAuth0 hook
