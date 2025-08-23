@@ -1,35 +1,49 @@
 // hosts/knowesis/src/bootstrap.tsx
 
 import { createRoot } from 'react-dom/client';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
 import { FluentProvider, webLightTheme, webDarkTheme } from '@fluentui/react-components';
 import { useThemeStore } from '@arcfusion/store';
 
-// Import AppShell จาก UI Library ของเรา
-import { AppShell } from '@arcfusion/ui';
+// Import AppShell และ Layout components ใหม่
+import { AppShell, Sidebar, Topbar, ThemeToggle } from '@arcfusion/ui';
 
 // Import Pages และ MFE Components
 import { ServicesPage } from './pages/ServicesPage';
 const AskAi = React.lazy(() => import('ask_ai/AskAi'));
 const Home = React.lazy(() => import('home/Home'));
 
-// --- START: ส่วนที่ปรับแก้ ---
-
-// AppLayout ตอนนี้จะทำหน้าที่แค่ "ประกอบร่าง" โดยใช้ AppShell
+// AppLayout ตอนนี้จะทำหน้าที่แค่ "ประกอบร่าง" Layout ทั้งหมด
 const AppLayout = () => {
   return (
     <AppShell
-      // ส่ง AskAi remote เข้าไปเป็น prop `header`
-      header={
-        <Suspense fallback={<div style={{ padding: '24px' }}>Loading AskAi...</div>}>
-          <AskAi />
-        </Suspense>
+      sidebar={
+        <Sidebar>
+          {/* คุณสามารถเพิ่ม NavLink สำหรับ Router ได้ที่นี่ในอนาคต */}
+          <p>Navigation</p>
+          <a href="/" style={{ textDecoration: 'none' }}>
+            Home
+          </a>
+          <a href="/services" style={{ textDecoration: 'none' }}>
+            Services
+          </a>
+        </Sidebar>
+      }
+      topbar={
+        <Topbar>
+          <Suspense fallback={<div>Loading AskAi...</div>}>
+            <AskAi />
+          </Suspense>
+        </Topbar>
       }
     >
-      {/* ส่ง Routes เข้าไปเป็น prop `children` (เนื้อหาหลัก) */}
-      <Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
+      {/* เนื้อหาหลักของหน้าจะถูกส่งเป็น children */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+        <ThemeToggle />
+      </div>
+      <Suspense fallback={<div>Loading Page...</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/services" element={<ServicesPage />} />
@@ -40,7 +54,7 @@ const AppLayout = () => {
   );
 };
 
-// Component "ยาม" เฝ้าแอป (ไม่เปลี่ยนแปลง)
+// Component "ยาม" เฝ้าแอป
 const ProtectedAppLayout = withAuthenticationRequired(AppLayout, {
   onRedirecting: () => (
     <div
@@ -56,13 +70,22 @@ const ProtectedAppLayout = withAuthenticationRequired(AppLayout, {
   ),
 });
 
-// Component ศูนย์กลางควบคุม Theme (ไม่เปลี่ยนแปลง)
+// Component ศูนย์กลางควบคุม Theme
 function ThemedApp() {
   const { theme } = useThemeStore();
   const fluentTheme = theme === 'dark' ? webDarkTheme : webLightTheme;
 
-  // `useEffect` ที่เคยอยู่ที่นี่ถูกย้ายเข้าไปใน AppShell แล้ว
-  // ทำให้ ThemedApp เหลือหน้าที่แค่ส่ง Theme ให้ FluentProvider
+  // useEffect ที่จัดการ dark class ยังคงจำเป็นสำหรับ Tailwind (ถ้ามี)
+  // หรือสไตล์ custom อื่นๆ ที่ไม่ได้มาจาก Fluent
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
+
   return (
     <FluentProvider theme={fluentTheme}>
       <ProtectedAppLayout />
@@ -70,9 +93,7 @@ function ThemedApp() {
   );
 }
 
-// --- END: ส่วนที่ปรับแก้ ---
-
-// ---- ส่วนการ Render หลักของแอปพลิเคชัน ----
+// ---- Main Application Setup ----
 const domain = process.env.AUTH0_DOMAIN;
 const clientId = process.env.AUTH0_CLIENT_ID;
 

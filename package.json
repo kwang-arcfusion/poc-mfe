@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:ui": "pnpm build --filter=@arcfusion/ui",
     "dev:knowesis": "turbo run dev --filter={hosts/knowesis}...",
     "dev:all": "turbo run dev --parallel",
     "lint": "turbo run lint",
