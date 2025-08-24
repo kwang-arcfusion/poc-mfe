@@ -12,12 +12,6 @@ export default function AskAi() {
   return (
     <header className="w-full border-b border-neutral-200 bg-white dark:bg-neutral-800 dark:border-neutral-700 transition-colors">
       <div className="mx-auto max-w-5xl p-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">
-          <a href="/" className="hover:underline">
-            Microfrontend App
-          </a>
-        </h1>
-
         <div className="flex items-center gap-4">
           {/* <ThemeToggle /> <-- ลบ Component นี้ออก */}
           {isAuthenticated && <span className="text-sm">Welcome, {user?.name}</span>}

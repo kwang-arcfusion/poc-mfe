@@ -8,3 +8,6 @@ export type { TopbarProps } from './Topbar';
 
 export * from './AppShell';
 export type { AppShellProps } from './AppShell';
+
+export * from './UserMenu';
+export type { UserMenuProps } from './UserMenu';

@@ -2,6 +2,7 @@
 import React from 'react';
 import { makeStyles, tokens, Avatar, SearchBox } from '@fluentui/react-components';
 import type { AvatarProps } from '@fluentui/react-components';
+import { UserMenu, type UserMenuProps } from '../UserMenu';
 
 const useStyles = makeStyles({
   root: {
@@ -41,40 +42,32 @@ const useStyles = makeStyles({
   },
 });
 
-export interface TopbarProps {
+export interface TopbarProps extends UserMenuProps {
   pageTitle: string;
-  userInitials: string;
-  userName?: string;
   methodsLeft?: React.ReactNode;
   methodsRight?: React.ReactNode;
 }
 
 export function Topbar({
   pageTitle,
-  userInitials,
-  userName,
   methodsLeft,
   methodsRight,
+  user, // <-- รับ user object
+  onLogout, // <-- รับ onLogout function
 }: TopbarProps) {
   const styles = useStyles();
 
   return (
     <header className={styles.root}>
-      {/* ซ้ายสุด: Page Name */}
       <div className={styles.pageTitle}>{pageTitle}</div>
-
-      {/* กลาง: Methods (แบ่งซ้าย/ขวา) */}
       <div className={styles.middleContainer}>
         <div className={styles.methodsLeft}>{methodsLeft}</div>
         <div className={styles.methodsRight}>{methodsRight}</div>
       </div>
-
-      {/* ขวาสุด: Search + Avatar */}
       <div className={styles.rightContainer}>
         <SearchBox placeholder="Search" />
-        <Avatar color="brand" name={userName} badge={{ status: 'available' }}>
-          {userInitials}
-        </Avatar>
+        {/* เรียกใช้ UserMenu และส่ง props ที่จำเป็นลงไป */}
+        <UserMenu user={user} onLogout={onLogout} />
       </div>
     </header>
   );

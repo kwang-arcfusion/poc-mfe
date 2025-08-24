@@ -1,7 +1,7 @@
 // hosts/knowesis/src/bootstrap.tsx
 
 import { createRoot } from 'react-dom/client';
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Auth0Provider, withAuthenticationRequired, useAuth0 } from '@auth0/auth0-react';
 
@@ -17,7 +17,6 @@ import {
 // Import Icons ที่จะใช้ใน Sidebar
 import {
   Home24Regular,
-  DocumentBulletList24Regular,
   Apps24Regular,
   Bot24Regular,
   Book24Regular,
@@ -30,7 +29,6 @@ import {
   AppShell,
   Sidebar,
   Topbar,
-  ThemeToggle,
   useGlobalStyles,
   arcusionLightTheme,
   arcusionDarkTheme,
@@ -52,8 +50,6 @@ const menuGroups: SidebarNavGroup[] = [
       { value: '/', label: 'Home', icon: <Home24Regular /> },
       { value: '/ask_ai', label: 'Ask AI', icon: <Bot24Regular /> },
       { value: '/stories', label: 'Stories', icon: <Book24Regular /> },
-      // เรายังไม่มีหน้า Services ใน Routes ดังนั้นผมจะ comment ไว้ก่อน
-      // { value: '/services', label: 'Services', icon: <DocumentBulletList24Regular /> },
     ],
   },
   {
@@ -67,27 +63,16 @@ const AppIcon = () => <Apps24Regular style={{ color: '#555' }} />;
 
 // Component Layout หลัก ทำหน้าที่ประกอบร่าง UI
 const AppLayout = () => {
-  useGlobalStyles(); // <-- เรียกใช้ Global Styles ที่นี่
+  useGlobalStyles();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth0();
+  const { user, logout } = useAuth0(); // <-- ดึง logout function มาด้วย
 
   // 1. หา Page Title จาก menuGroups
   const currentPage = menuGroups.flatMap((g) => g.items).find((i) => i.value === location.pathname);
   const pageTitle = currentPage ? currentPage.label : 'Page Not Found';
 
-  // 2. หา User Initials
-  const getInitials = (name?: string) => {
-    if (!name) return '??';
-    const parts = name.split(' ');
-    if (parts.length > 1) {
-      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
-  const userInitials = getInitials(user?.name);
-
-  // 3. (ตัวอย่าง) สร้าง Methods ที่จะแสดงในแต่ละหน้า
+  // 2. (ตัวอย่าง) สร้าง Methods ที่จะแสดงในแต่ละหน้า
   let methodsLeft: React.ReactNode = null;
   let methodsRight: React.ReactNode = null;
 
@@ -113,6 +98,10 @@ const AppLayout = () => {
     navigate(value);
   };
 
+  const handleLogout = () => {
+    logout({ logoutParams: { returnTo: window.location.origin } });
+  };
+
   return (
     <AppShell
       sidebar={
@@ -127,27 +116,23 @@ const AppLayout = () => {
       topbar={
         <Topbar
           pageTitle={pageTitle}
-          userInitials={userInitials}
-          userName={user?.name}
+          user={user} // <-- ส่ง user object ทั้งหมด
+          onLogout={handleLogout} // <-- ส่ง logout function
           methodsLeft={methodsLeft}
           methodsRight={methodsRight}
         />
       }
     >
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-        <ThemeToggle />
-      </div>
-      <React.Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
+      {/* ThemeToggle ถูกย้ายเข้าไปอยู่ใน UserMenu ภายใน Topbar แล้ว จึงไม่จำเป็นต้องมีตรงนี้ */}
+      <Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/ask_ai" element={<AskAiPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/overview" element={<OverviewPage />} />
-          {/* ผม comment services route ออกไปก่อนเพราะยังไม่มีในเมนู */}
-          {/* <Route path="/services" element={<ServicesPage />} /> */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </React.Suspense>
+      </Suspense>
     </AppShell>
   );
 };
