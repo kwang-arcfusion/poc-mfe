@@ -5,17 +5,19 @@ import type { TabListProps } from '@fluentui/react-components';
 
 const useStyles = makeStyles({
   root: {
-    width: '160px',
+    minWidth: '160px',
     backgroundColor: tokens.colorNeutralBackground2,
     borderRight: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
     display: 'flex',
     flexDirection: 'column',
     padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalS}`,
     gap: tokens.spacingVerticalXXL,
+    paddingLeft: '24px',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: tokens.spacingHorizontalM,
     paddingLeft: tokens.spacingHorizontalM,
     paddingRight: tokens.spacingHorizontalM,
@@ -68,7 +70,7 @@ export function Sidebar({ logo, appIcon, menuGroups, selectedValue, onTabSelect 
   return (
     <nav className={styles.root}>
       <div className={styles.header}>
-        <img src={logo} alt="" />
+        <img src={logo} alt="" width={48} height={48} />
         {appIcon}
       </div>
 

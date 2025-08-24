@@ -2,23 +2,19 @@
 
 import { createRoot } from 'react-dom/client';
 import React, { Suspense } from 'react';
-// --- Import hooks เพิ่ม: useLocation, useNavigate, และ NavLink ---
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Auth0Provider, withAuthenticationRequired, useAuth0 } from '@auth0/auth0-react';
+import { FluentProvider, tokens } from '@fluentui/react-components';
+
+// Import Icons ที่จะใช้ใน Sidebar
 import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  NavLink,
-  useLocation,
-  useNavigate,
-} from 'react-router-dom';
-import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
-
-// --- Import makeStyles และ tokens เพิ่ม ---
-import { FluentProvider, makeStyles, tokens } from '@fluentui/react-components';
-
-// --- Import Icons ที่จะใช้ใน Sidebar ---
-import { Home24Regular, DocumentBulletList24Regular, Apps24Regular } from '@fluentui/react-icons';
+  Home24Regular,
+  DocumentBulletList24Regular,
+  Apps24Regular,
+  Bot24Regular,
+  Book24Regular,
+  ChartMultiple24Regular,
+} from '@fluentui/react-icons';
 
 // Import ทุกอย่างที่เราต้องการจาก local packages
 import { useThemeStore } from '@arcfusion/store';
@@ -34,63 +30,48 @@ import {
   ASSETS,
 } from '@arcfusion/ui';
 
-// Import Pages และ MFE Components
-import { ServicesPage } from './pages/ServicesPage';
-const AskAi = React.lazy(() => import('ask_ai/AskAi'));
+// Import Pages ใหม่ทั้งหมด
+import { AskAiPage } from './pages/AskAiPage';
+import { StoriesPage } from './pages/StoriesPage';
+import { OverviewPage } from './pages/OverviewPage';
 const Home = React.lazy(() => import('home/Home'));
 
-// --- 1. สร้างข้อมูลสำหรับ Sidebar ---
+// --- สร้างข้อมูลสำหรับ Sidebar (อัปเดตไอคอนและ value ให้ครบ) ---
 const menuGroups: SidebarNavGroup[] = [
   {
     title: 'MAIN',
     items: [
       { value: '/', label: 'Home', icon: <Home24Regular /> },
-      { value: '/ask_ai', label: 'Ask AI', icon: <DocumentBulletList24Regular /> },
-      { value: '/stories', label: 'Stories', icon: <DocumentBulletList24Regular /> },
+      { value: '/ask_ai', label: 'Ask AI', icon: <Bot24Regular /> },
+      { value: '/stories', label: 'Stories', icon: <Book24Regular /> },
+      { value: '/services', label: 'Services', icon: <DocumentBulletList24Regular /> },
     ],
   },
   {
     title: 'DASHBOARD',
-    items: [{ value: '/overview', label: 'Overview', icon: <DocumentBulletList24Regular /> }],
+    items: [{ value: '/overview', label: 'Overview', icon: <ChartMultiple24Regular /> }],
   },
 ];
 
 // โลโก้และไอคอนตัวอย่าง
 const AppIcon = () => <Apps24Regular style={{ color: '#555' }} />;
 
-// --- 2. สร้างสไตล์สำหรับ NavLink ของเรา ---
-const useNavStyles = makeStyles({
-  link: {
-    color: tokens.colorNeutralForeground1,
-    textDecorationLine: 'none',
-    padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
-    borderRadius: tokens.borderRadiusMedium,
-    ':hover': {
-      backgroundColor: tokens.colorNeutralBackground1Hover,
-    },
-    display: 'flex', // แก้ไขเป็น flex เพื่อให้ icon กับ text อยู่ในแนวเดียวกัน
-    alignItems: 'center',
-    gap: tokens.spacingHorizontalS,
-  },
-  activeLink: {
-    backgroundColor: tokens.colorNeutralBackground1Selected,
-    fontWeight: tokens.fontWeightSemibold,
-  },
-});
-
 // Component Layout หลัก ทำหน้าที่ประกอบร่าง UI
 const AppLayout = () => {
   useGlobalStyles();
-  const location = useLocation(); // Hook สำหรับดู path ปัจจุบัน
-  const navigate = useNavigate(); // Hook สำหรับสั่งเปลี่ยนหน้า
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth0();
 
-  // หา path ที่ตรงกับ value ของ Tab, ถ้าไม่เจอให้ใช้ path ปัจจุบัน
+  // ปรับปรุง logic การหา path ที่ active ให้รองรับ nested routes ในอนาคต
   const selectedValue =
-    menuGroups.flatMap((g) => g.items).find((i) => i.value === location.pathname)?.value ||
-    location.pathname;
+    menuGroups
+      .flatMap((g) => g.items)
+      .find((i) => location.pathname.startsWith(i.value) && i.value !== '/')?.value ||
+    (location.pathname === '/' ? '/' : location.pathname);
 
   const handleTabSelect = (value: string) => {
-    navigate(value); // สั่งให้ Router เปลี่ยนหน้า
+    navigate(value);
   };
 
   return (
@@ -105,20 +86,23 @@ const AppLayout = () => {
         />
       }
       topbar={
+        // สร้าง Topbar แบบง่ายๆ ขึ้นมาใหม่
         <Topbar>
-          <Suspense fallback={<div>Loading AskAi...</div>}>
-            <AskAi />
-          </Suspense>
+          <div style={{ flexGrow: 1 }}>{/* พื้นที่สำหรับ Search bar ในอนาคต */}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM }}>
+            <ThemeToggle />
+            <span style={{ color: tokens.colorNeutralForeground1 }}>Welcome, {user?.name}</span>
+          </div>
         </Topbar>
       }
     >
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
-        <ThemeToggle />
-      </div>
-      <Suspense fallback={<div>Loading Page...</div>}>
+      {/* --- อัปเดต Routes ทั้งหมดที่นี่ --- */}
+      <Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/ask_ai" element={<AskAiPage />} />
+          <Route path="/stories" element={<StoriesPage />} />
+          <Route path="/overview" element={<OverviewPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Suspense>
