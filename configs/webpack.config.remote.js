@@ -55,7 +55,7 @@ module.exports = function createRemoteConfig({
             loader: 'babel-loader',
             options: {
               // Path ไปยัง babel.config.js กลาง
-              configFile: path.resolve(process.cwd(), '../../babel.config.js'),
+              configFile: path.resolve(process.cwd(), '../../configs/babel.config.js'),
             },
           },
         },
