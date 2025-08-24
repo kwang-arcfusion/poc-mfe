@@ -13,13 +13,7 @@ export default function Home({ navigate }: HomeProps) {
 
   return (
     <section className="space-y-4">
-      {isAuthenticated ? (
-        <h2 className="text-lg font-medium">Welcome back, {user?.name}!</h2>
-      ) : (
-        <h2 className="text-lg font-medium">Home</h2>
-      )}
-
-      <p className="text-sm text-neutral-600">This is the public content area.</p>
+      {isAuthenticated && <h2 className="text-lg font-medium">Welcome back, {user?.name}!</h2>}
 
       {/* 4. เปลี่ยน <Link> เป็น <button> ที่มี onClick และเรียกใช้ navigate() */}
       <nav className="flex flex-col items-start gap-2">

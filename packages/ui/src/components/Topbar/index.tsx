@@ -1,7 +1,7 @@
 // packages/ui/src/Topbar.tsx
 import React from 'react';
 import { makeStyles, tokens, Avatar, SearchBox } from '@fluentui/react-components';
-import type { AvatarProps } from '@fluentui/react-components';
+import { Chat24Regular, Alert24Regular } from '@fluentui/react-icons';
 import { UserMenu, type UserMenuProps } from '../UserMenu';
 
 const useStyles = makeStyles({
@@ -67,6 +67,9 @@ export function Topbar({
       <div className={styles.rightContainer}>
         <SearchBox placeholder="Search" />
         {/* เรียกใช้ UserMenu และส่ง props ที่จำเป็นลงไป */}
+        {/* ตรงนี้ */}
+        <Chat24Regular></Chat24Regular>
+        <Alert24Regular></Alert24Regular>
         <UserMenu user={user} onLogout={onLogout} />
       </div>
     </header>

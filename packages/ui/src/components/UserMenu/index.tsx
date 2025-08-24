@@ -1,4 +1,3 @@
-// packages/ui/src/UserMenu.tsx
 import React, { useState } from 'react';
 import {
   Avatar,
@@ -15,8 +14,6 @@ import {
   MenuList,
   MenuPopover,
   MenuTrigger,
-  RadioGroup,
-  Radio,
   MenuCheckedValueChangeData,
   makeStyles,
   tokens,
@@ -24,9 +21,8 @@ import {
 import { useThemeStore } from '@arcfusion/store';
 import { SignOut24Regular, Color24Regular } from '@fluentui/react-icons';
 
-// สร้าง Props Interface สำหรับ UserMenu
+// Props Interface สำหรับ UserMenu
 export interface UserMenuProps {
-  // รับ object user ทั้งหมดมาเลยจะยืดหยุ่นกว่า
   user?: {
     name?: string | null;
     email?: string | null;
@@ -43,36 +39,38 @@ const getInitials = (name?: string | null) => {
   }
   return name.substring(0, 2).toUpperCase();
 };
+
+// Styles ทั้งหมดที่ใช้ใน Component นี้
 const useStyles = makeStyles({
   fitContentSurface: {
     width: 'fit-content',
     minWidth: '200px',
   },
-  // 1. เพิ่มสไตล์สำหรับ DialogBody
   flexBody: {
     display: 'flex',
     flexDirection: 'column',
-    gap: tokens.spacingVerticalM, // เพิ่มช่องว่างระหว่าง Title, List, และ Actions
+    gap: tokens.spacingVerticalM,
   },
-  // 2. เพิ่มสไตล์สำหรับ MenuList
   growList: {
-    flexGrow: 1, // สั่งให้ขยายเต็มพื้นที่แนวตั้ง
-    width: '100%', // สั่งให้ขยายเต็มพื้นที่แนวนอน
+    flexGrow: 1,
+    width: '100%',
   },
-
   pointerCursor: {
     cursor: 'pointer',
   },
 });
+
 export function UserMenu({ user, onLogout }: UserMenuProps) {
   const styles = useStyles();
-  // State สำหรับควบคุมการเปิด/ปิด Dialog
+
+  // State สำหรับควบคุม Dialog ทั้งสอง
   const [isThemeDialogOpen, setIsThemeDialogOpen] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+
   const { theme, toggleTheme } = useThemeStore();
 
   const handleCheckedChange = (_e: React.SyntheticEvent, data: MenuCheckedValueChangeData) => {
     if (data.name !== 'theme') return;
-    // MenuItemRadio เป็น single-select => index 0
     const newTheme = (data.checkedItems[0] ?? 'light') as 'light' | 'dark';
     if (newTheme !== theme) {
       toggleTheme();
@@ -97,30 +95,26 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
         <MenuPopover>
           <MenuList>
             {user?.email && <MenuItem disabled>{user.email}</MenuItem>}
-            <MenuItem
-              icon={<Color24Regular />}
-              onClick={() => setIsThemeDialogOpen(true)} // <-- คลิกแล้วให้เปิด Dialog
-            >
+            <MenuItem icon={<Color24Regular />} onClick={() => setIsThemeDialogOpen(true)}>
               Change Theme
             </MenuItem>
-            <MenuItem icon={<SignOut24Regular />} onClick={onLogout}>
+            <MenuItem icon={<SignOut24Regular />} onClick={() => setIsLogoutDialogOpen(true)}>
               Log out
             </MenuItem>
           </MenuList>
         </MenuPopover>
       </Menu>
 
+      {/* 2. Dialog สำหรับเปลี่ยน Theme */}
       <Dialog
         open={isThemeDialogOpen}
         onOpenChange={(_event, data) => setIsThemeDialogOpen(data.open)}
       >
         <DialogSurface className={styles.fitContentSurface}>
-          {/* 3. นำ className ไปใช้ */}
           <DialogBody className={styles.flexBody}>
             <DialogTitle>Select a Theme</DialogTitle>
-
             <MenuList
-              className={styles.growList} // <--- ใส่ className ที่นี่
+              className={styles.growList}
               checkedValues={{ theme: [theme] }}
               onCheckedValueChange={handleCheckedChange}
             >
@@ -131,6 +125,27 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
                 Dark
               </MenuItemRadio>
             </MenuList>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
+
+      {/* 3. Dialog สำหรับยืนยันการ Logout */}
+      <Dialog
+        open={isLogoutDialogOpen}
+        onOpenChange={(_event, data) => setIsLogoutDialogOpen(data.open)}
+      >
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Confirm Log Out</DialogTitle>
+            Are you sure you want to log out?
+            <DialogActions>
+              <DialogTrigger disableButtonEnhancement>
+                <Button appearance="secondary">Cancel</Button>
+              </DialogTrigger>
+              <Button appearance="primary" onClick={onLogout}>
+                Confirm
+              </Button>
+            </DialogActions>
           </DialogBody>
         </DialogSurface>
       </Dialog>
