@@ -9,7 +9,7 @@ import {
   Body1,
   Badge,
 } from '@fluentui/react-components';
-import { SearchSparkle48Color, Send24Filled } from '@fluentui/react-icons';
+import { SearchSparkle48Color, Send48Color } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({
   root: {
@@ -25,7 +25,7 @@ const useStyles = makeStyles({
     ...shorthands.gap('24px'),
   },
   icon: {
-    scale: 2,
+    scale: 1.6,
   },
   title: {
     color: tokens.colorBrandForeground1,
@@ -35,7 +35,7 @@ const useStyles = makeStyles({
     justifyContent: 'center',
     flexWrap: 'wrap',
     ...shorthands.gap('12px'),
-    maxWidth: '700px',
+    maxWidth: '620px',
   },
   suggestionButton: {
     // ใช้สำหรับ Badge/Pill look
@@ -100,7 +100,7 @@ export default function AskAi() {
         />
         <Button
           appearance="transparent"
-          icon={<Send24Filled primaryFill={tokens.colorBrandForeground1} />}
+          icon={<Send48Color />}
           className={styles.sendButton}
           aria-label="Send message"
         />
