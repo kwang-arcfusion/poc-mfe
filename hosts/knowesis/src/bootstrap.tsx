@@ -44,7 +44,6 @@ const menuGroups: SidebarNavGroup[] = [
       { value: '/', label: 'Home', icon: <Home24Regular /> },
       { value: '/ask_ai', label: 'Ask AI', icon: <Bot24Regular /> },
       { value: '/stories', label: 'Stories', icon: <Book24Regular /> },
-      { value: '/services', label: 'Services', icon: <DocumentBulletList24Regular /> },
     ],
   },
   {
