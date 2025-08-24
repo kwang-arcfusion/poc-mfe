@@ -17,7 +17,7 @@ const useStyles = makeStyles({
   pageTitle: {
     fontSize: tokens.fontSizeHero800,
     fontWeight: tokens.fontWeightSemibold,
-    color: tokens.colorBrandBackground,
+    color: tokens.colorBrandForeground2,
   },
   middleContainer: {
     display: 'flex',
