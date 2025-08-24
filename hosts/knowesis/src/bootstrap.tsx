@@ -12,6 +12,7 @@ import {
   RadioGroup,
   Radio,
   tokens,
+  Spinner,
 } from '@fluentui/react-components';
 
 // Import Icons ที่จะใช้ใน Sidebar
@@ -73,18 +74,18 @@ const AppLayout = () => {
   const pageTitle = currentPage ? currentPage.label : 'Page Not Found';
 
   // 2. (ตัวอย่าง) สร้าง Methods ที่จะแสดงในแต่ละหน้า
-  let methodsLeft: React.ReactNode = null;
-  let methodsRight: React.ReactNode = null;
+  let actionsLeft: React.ReactNode = null;
+  let actionsRight: React.ReactNode = null;
 
   if (location.pathname === '/') {
-    methodsLeft = (
+    actionsLeft = (
       <RadioGroup layout="horizontal">
         <Radio value="A" label="Method A" />
         <Radio value="B" label="Method B" />
       </RadioGroup>
     );
   } else if (location.pathname === '/ask_ai') {
-    methodsRight = <FluentButton appearance="primary">Special Action</FluentButton>;
+    actionsRight = <FluentButton appearance="primary">Special Action</FluentButton>;
   }
 
   // Logic สำหรับ Sidebar
@@ -118,8 +119,8 @@ const AppLayout = () => {
           pageTitle={pageTitle}
           user={user} // <-- ส่ง user object ทั้งหมด
           onLogout={handleLogout} // <-- ส่ง logout function
-          methodsLeft={methodsLeft}
-          methodsRight={methodsRight}
+          methodsLeft={actionsLeft}
+          methodsRight={actionsRight}
         />
       }
     >
@@ -143,12 +144,15 @@ const ProtectedAppLayout = withAuthenticationRequired(AppLayout, {
     <div
       style={{
         display: 'flex',
+        flexDirection: 'column', // จัดเรียงในแนวตั้ง
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '100vh',
+        gap: '60px',
       }}
     >
-      Arcfusion Loading...
+      <img src={ASSETS.ARCFUSION_LOGO_MINIMSL} alt="arcfusion logo" />
+      <Spinner size="huge" />
     </div>
   ),
 });

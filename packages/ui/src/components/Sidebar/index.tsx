@@ -6,8 +6,7 @@ import type { TabListProps } from '@fluentui/react-components';
 const useStyles = makeStyles({
   root: {
     minWidth: '160px',
-    backgroundColor: tokens.colorNeutralBackground2,
-    borderRight: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
+    backgroundColor: tokens.colorNeutralBackground3,
     display: 'flex',
     flexDirection: 'column',
     padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalS}`,

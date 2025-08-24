@@ -21,6 +21,7 @@ const useAppShellStyles = makeStyles({
     flexDirection: 'column',
     flexGrow: 1,
     overflow: 'hidden',
+    boxShadow: tokens.shadow16,
   },
   mainContent: {
     padding: tokens.spacingHorizontalXXL,
