@@ -5,6 +5,8 @@ if (process.env.NODE_ENV !== 'production') {
   const REMOTES: Remote[] = [
     { name: 'ask_ai', url: 'ws://localhost:3001/ws' },
     { name: 'home', url: 'ws://localhost:3002/ws' },
+    { name: 'stories', url: 'ws://localhost:3003/ws' },
+    { name: 'overview', url: 'ws://localhost:3004/ws' },
   ];
 
   const state: { timer: ReturnType<typeof setTimeout> | null } = { timer: null };
