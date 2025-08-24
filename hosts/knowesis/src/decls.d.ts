@@ -14,3 +14,9 @@ declare module 'overview/Overview' {
   const Cmp: ComponentType<any>;
   export default Cmp;
 }
+
+declare module 'stories/Stories' {
+  import { ComponentType } from 'react';
+  const Cmp: ComponentType<any>;
+  export default Cmp;
+}
