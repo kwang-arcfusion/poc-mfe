@@ -8,3 +8,9 @@ declare module 'home/Home' {
   const Cmp: ComponentType<any>;
   export default Cmp;
 }
+
+declare module 'overview/Overview' {
+  import { ComponentType } from 'react';
+  const Cmp: ComponentType<any>;
+  export default Cmp;
+}

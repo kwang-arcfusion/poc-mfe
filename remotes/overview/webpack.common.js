@@ -1,9 +1,9 @@
+// remotes/overview/webpack.common.js
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
-const Dotenv = require('dotenv-webpack');
+
 module.exports = (env = {}) => {
   const isProd = env.mode === 'production';
 
@@ -14,7 +14,7 @@ module.exports = (env = {}) => {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
       clean: true,
       publicPath: 'auto',
-      uniqueName: 'knowesis',
+      uniqueName: 'overview',
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.jsx'],
@@ -27,7 +27,6 @@ module.exports = (env = {}) => {
       rules: [
         {
           test: /\.(ts|tsx|js|jsx)$/,
-          exclude: /node_modules/,
           include: [
             path.resolve(__dirname, 'src'),
             path.resolve(__dirname, '../../packages/ui/src'),
@@ -38,7 +37,7 @@ module.exports = (env = {}) => {
             options: {
               presets: [
                 ['@babel/preset-env', { targets: 'defaults' }],
-                ['@babel/preset-react', { runtime: 'automatic' }],
+                ['@babel/preset-react', { runtime: 'classic' }],
                 ['@babel/preset-typescript', { allowDeclareFields: true }],
               ],
             },
@@ -46,38 +45,28 @@ module.exports = (env = {}) => {
         },
         {
           test: /\.css$/i,
+          include: [
+            path.resolve(__dirname, 'src'),
+            path.resolve(__dirname, '../../packages/ui/src'),
+          ],
           use: [isProd ? MiniCssExtractPlugin.loader : 'style-loader', 'css-loader'],
         },
       ],
     },
     plugins: [
-      new Dotenv(),
-      new HtmlWebpackPlugin({ template: 'public/index.html' }),
       new MiniCssExtractPlugin({
         filename: isProd ? '[name].[contenthash].css' : '[name].css',
       }),
       new ModuleFederationPlugin({
-        name: 'knowesis',
+        name: 'overview',
         filename: 'remoteEntry.js',
-        remotes: {
-          ask_ai: 'ask_ai@http://localhost:3001/remoteEntry.js',
-          home: 'home@http://localhost:3002/remoteEntry.js',
-          overview: 'overview@http://localhost:3004/remoteEntry.js',
+        exposes: {
+          './Overview': './src/Overview.tsx',
         },
         shared: {
-          react: { singleton: true, requiredVersion: false, strictVersion: false, eager: false },
-          'react-dom': {
-            singleton: true,
-            requiredVersion: false,
-            strictVersion: false,
-            eager: false,
-          },
-          '@auth0/auth0-react': {
-            singleton: true,
-            requiredVersion: false,
-            strictVersion: false,
-            eager: false,
-          },
+          react: { singleton: true, requiredVersion: false },
+          'react-dom': { singleton: true, requiredVersion: false },
+          '@auth0/auth0-react': { singleton: true, requiredVersion: false },
           zustand: { singleton: true, requiredVersion: false },
           '@arcfusion/store': { singleton: true, requiredVersion: false },
         },

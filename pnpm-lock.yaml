@@ -54,6 +54,9 @@ importers:
       '@arcfusion/home':
         specifier: workspace:^
         version: link:../../remotes/home
+      '@arcfusion/overview':
+        specifier: workspace:^
+        version: link:../../remotes/overview
       '@babel/core':
         specifier: ^7.28.3
         version: 7.28.3
@@ -242,6 +245,79 @@ importers:
         version: 6.0.1
 
   remotes/home:
+    dependencies:
+      '@arcfusion/ui':
+        specifier: workspace:^
+        version: link:../../packages/ui
+      '@auth0/auth0-react':
+        specifier: ^2.4.0
+        version: 2.4.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@fluentui/react-components':
+        specifier: ^9.69.0
+        version: 9.69.0(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(scheduler@0.26.0)
+      react:
+        specifier: ^19.1.1
+        version: 19.1.1
+      react-dom:
+        specifier: ^19.1.1
+        version: 19.1.1(react@19.1.1)
+      zustand:
+        specifier: ^4.5.7
+        version: 4.5.7(@types/react@18.3.23)(react@19.1.1)
+    devDependencies:
+      '@babel/core':
+        specifier: ^7.28.3
+        version: 7.28.3
+      '@babel/preset-env':
+        specifier: ^7.28.3
+        version: 7.28.3(@babel/core@7.28.3)
+      '@babel/preset-react':
+        specifier: ^7.27.1
+        version: 7.27.1(@babel/core@7.28.3)
+      '@babel/preset-typescript':
+        specifier: 7.27.1
+        version: 7.27.1(@babel/core@7.28.3)
+      '@types/node':
+        specifier: ^20.11.30
+        version: 20.19.11
+      '@types/react':
+        specifier: ^18.3.11
+        version: 18.3.23
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.23)
+      babel-loader:
+        specifier: ^10.0.0
+        version: 10.0.0(@babel/core@7.28.3)(webpack@5.101.3(webpack-cli@6.0.1))
+      css-loader:
+        specifier: ^7.1.2
+        version: 7.1.2(webpack@5.101.3(webpack-cli@6.0.1))
+      html-webpack-plugin:
+        specifier: ^5.6.4
+        version: 5.6.4(webpack@5.101.3(webpack-cli@6.0.1))
+      mini-css-extract-plugin:
+        specifier: ^2.9.4
+        version: 2.9.4(webpack@5.101.3(webpack-cli@6.0.1))
+      style-loader:
+        specifier: ^4.0.0
+        version: 4.0.0(webpack@5.101.3(webpack-cli@6.0.1))
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.2
+      webpack:
+        specifier: ^5
+        version: 5.101.3(webpack-cli@6.0.1)
+      webpack-cli:
+        specifier: ^6
+        version: 6.0.1(webpack-dev-server@5.2.2)(webpack@5.101.3)
+      webpack-dev-server:
+        specifier: ^5
+        version: 5.2.2(webpack-cli@6.0.1)(webpack@5.101.3)
+      webpack-merge:
+        specifier: ^6.0.1
+        version: 6.0.1
+
+  remotes/overview:
     dependencies:
       '@arcfusion/ui':
         specifier: workspace:^
