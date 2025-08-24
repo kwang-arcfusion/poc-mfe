@@ -35,14 +35,18 @@ const useStyles = makeStyles({
   },
   tabList: {
     width: '100%',
-    // Selector สำหรับเปลี่ยนสี Text ของ Tab ที่ Active โดยเฉพาะ
+    // --- สไตล์สำหรับ Tab ที่ Active (เหมือนเดิม) ---
     '& [aria-selected="true"] .fui-Tab__content': {
       color: tokens.colorBrandForeground1,
     },
-
-    // (แนะนำ) ยังคงสไตล์ของขีดข้างๆ ไว้เพื่อความสวยงาม
     '& [aria-selected="true"]::before': {
       backgroundColor: tokens.colorBrandStroke1,
+    },
+
+    // --- V V V เพิ่มสไตล์สำหรับ Hover V V V ---
+    // เลือก Tab ที่ยังไม่ active (:not) และกำลังถูก hover
+    '& [role="tab"]:hover .fui-Tab__content': {
+      color: tokens.colorCompoundBrandForeground1Hover, // <-- ใช้สีสำหรับสถานะ Hover
     },
   },
 });

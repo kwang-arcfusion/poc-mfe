@@ -17,7 +17,7 @@ const useStyles = makeStyles({
   pageTitle: {
     fontSize: tokens.fontSizeHero800,
     fontWeight: tokens.fontWeightSemibold,
-    color: tokens.colorNeutralForeground1,
+    color: tokens.colorBrandBackground,
   },
   middleContainer: {
     display: 'flex',
@@ -67,8 +67,8 @@ export function Topbar({
         <SearchBox placeholder="Search" />
         {/* เรียกใช้ UserMenu และส่ง props ที่จำเป็นลงไป */}
         {/* ตรงนี้ */}
-        <Chat24Regular></Chat24Regular>
-        <Alert24Regular></Alert24Regular>
+        <Chat24Regular color={tokens.colorBrandForeground1}></Chat24Regular>
+        <Alert24Regular color={tokens.colorBrandForeground1}></Alert24Regular>
         <UserMenu user={user} onLogout={onLogout} />
       </div>
     </header>
