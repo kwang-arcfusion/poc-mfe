@@ -37,6 +37,6 @@
     "@arcfusion/store": "workspace:^",
     "@fluentui/react-components": "^9.69.0",
     "@fluentui/react-icons": "^2.0.308",
-    "zustand": "^4.5.5"
+    "zustand": "^5.0.8"
   }
 }
