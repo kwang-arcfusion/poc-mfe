@@ -59,6 +59,10 @@ const useStyles = makeStyles({
     flexGrow: 1, // สั่งให้ขยายเต็มพื้นที่แนวตั้ง
     width: '100%', // สั่งให้ขยายเต็มพื้นที่แนวนอน
   },
+
+  pointerCursor: {
+    cursor: 'pointer',
+  },
 });
 export function UserMenu({ user, onLogout }: UserMenuProps) {
   const styles = useStyles();
@@ -80,7 +84,12 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
       {/* 1. Menu หลักที่ถูก Trigger ด้วย Avatar */}
       <Menu>
         <MenuTrigger disableButtonEnhancement>
-          <Avatar color="brand" name={user?.name || undefined} aria-label="User menu">
+          <Avatar
+            className={styles.pointerCursor}
+            color="brand"
+            name={user?.name || undefined}
+            aria-label="User menu"
+          >
             {getInitials(user?.name)}
           </Avatar>
         </MenuTrigger>
@@ -122,12 +131,6 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
                 Dark
               </MenuItemRadio>
             </MenuList>
-
-            <DialogActions>
-              <DialogTrigger disableButtonEnhancement>
-                <Button appearance="secondary">Close</Button>
-              </DialogTrigger>
-            </DialogActions>
           </DialogBody>
         </DialogSurface>
       </Dialog>
