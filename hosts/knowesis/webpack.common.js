@@ -16,7 +16,13 @@ module.exports = (env = {}) => {
       publicPath: 'auto',
       uniqueName: 'knowesis',
     },
-    resolve: { extensions: ['.ts', '.tsx', '.js', '.jsx'] },
+    resolve: {
+      extensions: ['.ts', '.tsx', '.js', '.jsx'],
+      alias: {
+        '@arcfusion/ui': path.resolve(__dirname, '../../packages/ui/src'),
+        '@arcfusion/store': path.resolve(__dirname, '../../packages/store/src'),
+      },
+    },
     module: {
       rules: [
         {

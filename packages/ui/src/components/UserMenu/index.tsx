@@ -16,6 +16,8 @@ import {
   MenuPopover,
   MenuTrigger,
   RadioGroup,
+  Radio,
+  MenuCheckedValueChangeData,
 } from '@fluentui/react-components';
 import { useThemeStore } from '@arcfusion/store';
 import { SignOut24Regular, Color24Regular } from '@fluentui/react-icons';
@@ -44,6 +46,15 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
   // State สำหรับควบคุมการเปิด/ปิด Dialog
   const [isThemeDialogOpen, setIsThemeDialogOpen] = useState(false);
   const { theme, toggleTheme } = useThemeStore();
+
+  const handleCheckedChange = (_e: React.SyntheticEvent, data: MenuCheckedValueChangeData) => {
+    if (data.name !== 'theme') return;
+    // MenuItemRadio เป็น single-select => index 0
+    const newTheme = (data.checkedItems[0] ?? 'light') as 'light' | 'dark';
+    if (newTheme !== theme) {
+      toggleTheme();
+    }
+  };
 
   return (
     <>
@@ -79,13 +90,10 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
         <DialogSurface>
           <DialogBody>
             <DialogTitle>Select a Theme</DialogTitle>
-            <RadioGroup
-              value={theme}
-              onChange={(_ev, data) => {
-                if (theme !== data.value) {
-                  toggleTheme();
-                }
-              }}
+            <MenuList
+              // คุม state ที่นี่ (record<string, string[]>)
+              checkedValues={{ theme: [theme] }}
+              onCheckedValueChange={handleCheckedChange}
             >
               <MenuItemRadio name="theme" value="light">
                 Light
@@ -93,7 +101,9 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
               <MenuItemRadio name="theme" value="dark">
                 Dark
               </MenuItemRadio>
-            </RadioGroup>
+
+              {/* รายการเมนูอื่น ๆ */}
+            </MenuList>
             <DialogActions>
               <DialogTrigger disableButtonEnhancement>
                 <Button appearance="secondary">Close</Button>
