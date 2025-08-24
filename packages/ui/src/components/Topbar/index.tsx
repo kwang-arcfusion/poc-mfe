@@ -28,6 +28,7 @@ const useStyles = makeStyles({
   },
   methodsLeft: {
     display: 'flex',
+    width: '100%',
     gap: tokens.spacingHorizontalS,
   },
   methodsRight: {
