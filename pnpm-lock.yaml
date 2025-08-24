@@ -99,9 +99,6 @@ importers:
       style-loader:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.101.3(webpack-cli@6.0.1))
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.2
       webpack:
         specifier: ^5
         version: 5.101.3(webpack-cli@6.0.1)
@@ -124,9 +121,6 @@ importers:
       tsup:
         specifier: ^8.2.3
         version: 8.5.0(jiti@2.5.1)(postcss@8.5.6)(typescript@5.9.2)
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.2
       webpack-dev-server:
         specifier: ^5
         version: 5.2.2(webpack@5.101.3(esbuild@0.25.9))
@@ -164,9 +158,6 @@ importers:
       tsup:
         specifier: ^8.2.3
         version: 8.5.0(jiti@2.5.1)(postcss@8.5.6)(typescript@5.9.2)
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.2
       webpack-dev-server:
         specifier: ^5
         version: 5.2.2(webpack@5.101.3(esbuild@0.25.9))
@@ -231,9 +222,6 @@ importers:
       style-loader:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.101.3(webpack-cli@6.0.1))
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.2
       webpack:
         specifier: ^5
         version: 5.101.3(webpack-cli@6.0.1)
@@ -304,9 +292,6 @@ importers:
       style-loader:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.101.3(webpack-cli@6.0.1))
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.2
       webpack:
         specifier: ^5
         version: 5.101.3(webpack-cli@6.0.1)
@@ -377,9 +362,6 @@ importers:
       style-loader:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.101.3(webpack-cli@6.0.1))
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.2
       webpack:
         specifier: ^5
         version: 5.101.3(webpack-cli@6.0.1)
@@ -450,9 +432,6 @@ importers:
       style-loader:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.101.3(webpack-cli@6.0.1))
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.2
       webpack:
         specifier: ^5
         version: 5.101.3(webpack-cli@6.0.1)
