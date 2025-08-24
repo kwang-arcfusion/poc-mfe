@@ -18,6 +18,8 @@ import {
   RadioGroup,
   Radio,
   MenuCheckedValueChangeData,
+  makeStyles,
+  tokens,
 } from '@fluentui/react-components';
 import { useThemeStore } from '@arcfusion/store';
 import { SignOut24Regular, Color24Regular } from '@fluentui/react-icons';
@@ -41,8 +43,25 @@ const getInitials = (name?: string | null) => {
   }
   return name.substring(0, 2).toUpperCase();
 };
-
+const useStyles = makeStyles({
+  fitContentSurface: {
+    width: 'fit-content',
+    minWidth: '200px',
+  },
+  // 1. เพิ่มสไตล์สำหรับ DialogBody
+  flexBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: tokens.spacingVerticalM, // เพิ่มช่องว่างระหว่าง Title, List, และ Actions
+  },
+  // 2. เพิ่มสไตล์สำหรับ MenuList
+  growList: {
+    flexGrow: 1, // สั่งให้ขยายเต็มพื้นที่แนวตั้ง
+    width: '100%', // สั่งให้ขยายเต็มพื้นที่แนวนอน
+  },
+});
 export function UserMenu({ user, onLogout }: UserMenuProps) {
+  const styles = useStyles();
   // State สำหรับควบคุมการเปิด/ปิด Dialog
   const [isThemeDialogOpen, setIsThemeDialogOpen] = useState(false);
   const { theme, toggleTheme } = useThemeStore();
@@ -82,16 +101,17 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
         </MenuPopover>
       </Menu>
 
-      {/* 2. Dialog สำหรับเปลี่ยน Theme */}
       <Dialog
         open={isThemeDialogOpen}
         onOpenChange={(_event, data) => setIsThemeDialogOpen(data.open)}
       >
-        <DialogSurface>
-          <DialogBody>
+        <DialogSurface className={styles.fitContentSurface}>
+          {/* 3. นำ className ไปใช้ */}
+          <DialogBody className={styles.flexBody}>
             <DialogTitle>Select a Theme</DialogTitle>
+
             <MenuList
-              // คุม state ที่นี่ (record<string, string[]>)
+              className={styles.growList} // <--- ใส่ className ที่นี่
               checkedValues={{ theme: [theme] }}
               onCheckedValueChange={handleCheckedChange}
             >
@@ -101,9 +121,8 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
               <MenuItemRadio name="theme" value="dark">
                 Dark
               </MenuItemRadio>
-
-              {/* รายการเมนูอื่น ๆ */}
             </MenuList>
+
             <DialogActions>
               <DialogTrigger disableButtonEnhancement>
                 <Button appearance="secondary">Close</Button>
