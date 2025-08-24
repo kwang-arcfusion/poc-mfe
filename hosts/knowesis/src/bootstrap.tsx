@@ -17,11 +17,15 @@ import {
 
 // Import Icons ที่จะใช้ใน Sidebar
 import {
-  Home24Regular,
   Apps24Regular,
-  Bot24Regular,
+  Apps28Color,
+  ArrowTrendingLines24Color,
   Book24Regular,
-  ChartMultiple24Regular,
+  ChatMultiple24Color,
+  DataPie32Color,
+  Home28Color,
+  Home32Color,
+  Library28Color,
 } from '@fluentui/react-icons';
 
 // Import ทุกอย่างที่เราต้องการจาก local packages
@@ -48,19 +52,18 @@ const menuGroups: SidebarNavGroup[] = [
   {
     title: 'MAIN',
     items: [
-      { value: '/', label: 'Home', icon: <Home24Regular /> },
-      { value: '/ask_ai', label: 'Ask AI', icon: <Bot24Regular /> },
-      { value: '/stories', label: 'Stories', icon: <Book24Regular /> },
+      { value: '/', label: 'Home', icon: <Home32Color /> },
+      { value: '/ask_ai', label: 'Ask AI', icon: <ChatMultiple24Color /> },
+      { value: '/stories', label: 'Stories', icon: <Library28Color /> },
     ],
   },
   {
     title: 'DASHBOARD',
-    items: [{ value: '/overview', label: 'Overview', icon: <ChartMultiple24Regular /> }],
+    items: [{ value: '/overview', label: 'Overview', icon: <DataPie32Color /> }],
   },
 ];
 
 // ไอคอนตัวอย่าง
-const AppIcon = () => <Apps24Regular style={{ color: '#555' }} />;
 
 // Component Layout หลัก ทำหน้าที่ประกอบร่าง UI
 const AppLayout = () => {
@@ -108,7 +111,7 @@ const AppLayout = () => {
       sidebar={
         <Sidebar
           logo={ASSETS.MOCK_LOGO_MINIMAL}
-          appIcon={<AppIcon />}
+          appIcon={<Apps28Color />}
           menuGroups={menuGroups}
           selectedValue={selectedValue}
           onTabSelect={handleTabSelect}

@@ -27,14 +27,23 @@ const useStyles = makeStyles({
     gap: tokens.spacingVerticalL,
   },
   groupTitle: {
-    fontSize: tokens.fontSizeBase200,
-    fontWeight: tokens.fontWeightSemibold,
-    color: tokens.colorNeutralForeground3,
+    fontSize: tokens.fontSizeBase300,
+    fontWeight: tokens.fontWeightRegular,
     paddingLeft: tokens.spacingHorizontalM,
     paddingRight: tokens.spacingHorizontalM,
+    color: tokens.colorNeutralForeground4,
   },
   tabList: {
     width: '100%',
+    // Selector สำหรับเปลี่ยนสี Text ของ Tab ที่ Active โดยเฉพาะ
+    '& [aria-selected="true"] .fui-Tab__content': {
+      color: tokens.colorBrandForeground1,
+    },
+
+    // (แนะนำ) ยังคงสไตล์ของขีดข้างๆ ไว้เพื่อความสวยงาม
+    '& [aria-selected="true"]::before': {
+      backgroundColor: tokens.colorBrandStroke1,
+    },
   },
 });
 
