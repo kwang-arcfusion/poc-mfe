@@ -2,12 +2,23 @@
 
 import { createRoot } from 'react-dom/client';
 import React, { Suspense } from 'react';
-// --- Import NavLink เพิ่มเข้ามา ---
-import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom';
+// --- Import hooks เพิ่ม: useLocation, useNavigate, และ NavLink ---
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  NavLink,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
 
-// --- Import makeStyles และ tokens เพิ่มเข้ามา ---
+// --- Import makeStyles และ tokens เพิ่ม ---
 import { FluentProvider, makeStyles, tokens } from '@fluentui/react-components';
+
+// --- Import Icons ที่จะใช้ใน Sidebar ---
+import { Home24Regular, DocumentBulletList24Regular, Apps24Regular } from '@fluentui/react-icons';
 
 // Import ทุกอย่างที่เราต้องการจาก local packages
 import { useThemeStore } from '@arcfusion/store';
@@ -19,6 +30,8 @@ import {
   useGlobalStyles,
   arcusionLightTheme,
   arcusionDarkTheme,
+  type SidebarNavGroup,
+  ASSETS,
 } from '@arcfusion/ui';
 
 // Import Pages และ MFE Components
@@ -26,7 +39,26 @@ import { ServicesPage } from './pages/ServicesPage';
 const AskAi = React.lazy(() => import('ask_ai/AskAi'));
 const Home = React.lazy(() => import('home/Home'));
 
-// --- สร้างสไตล์สำหรับ NavLink ของเรา ---
+// --- 1. สร้างข้อมูลสำหรับ Sidebar ---
+const menuGroups: SidebarNavGroup[] = [
+  {
+    title: 'MAIN',
+    items: [
+      { value: '/', label: 'Home', icon: <Home24Regular /> },
+      { value: '/ask_ai', label: 'Ask AI', icon: <DocumentBulletList24Regular /> },
+      { value: '/stories', label: 'Stories', icon: <DocumentBulletList24Regular /> },
+    ],
+  },
+  {
+    title: 'DASHBOARD',
+    items: [{ value: '/overview', label: 'Overview', icon: <DocumentBulletList24Regular /> }],
+  },
+];
+
+// โลโก้และไอคอนตัวอย่าง
+const AppIcon = () => <Apps24Regular style={{ color: '#555' }} />;
+
+// --- 2. สร้างสไตล์สำหรับ NavLink ของเรา ---
 const useNavStyles = makeStyles({
   link: {
     color: tokens.colorNeutralForeground1,
@@ -36,7 +68,9 @@ const useNavStyles = makeStyles({
     ':hover': {
       backgroundColor: tokens.colorNeutralBackground1Hover,
     },
-    display: 'block',
+    display: 'flex', // แก้ไขเป็น flex เพื่อให้ icon กับ text อยู่ในแนวเดียวกัน
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalS,
   },
   activeLink: {
     backgroundColor: tokens.colorNeutralBackground1Selected,
@@ -46,30 +80,29 @@ const useNavStyles = makeStyles({
 
 // Component Layout หลัก ทำหน้าที่ประกอบร่าง UI
 const AppLayout = () => {
-  const navStyles = useNavStyles();
+  useGlobalStyles();
+  const location = useLocation(); // Hook สำหรับดู path ปัจจุบัน
+  const navigate = useNavigate(); // Hook สำหรับสั่งเปลี่ยนหน้า
+
+  // หา path ที่ตรงกับ value ของ Tab, ถ้าไม่เจอให้ใช้ path ปัจจุบัน
+  const selectedValue =
+    menuGroups.flatMap((g) => g.items).find((i) => i.value === location.pathname)?.value ||
+    location.pathname;
+
+  const handleTabSelect = (value: string) => {
+    navigate(value); // สั่งให้ Router เปลี่ยนหน้า
+  };
 
   return (
     <AppShell
       sidebar={
-        <Sidebar>
-          {/* --- เปลี่ยนจาก <a> tag มาเป็น <NavLink> --- */}
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              isActive ? `${navStyles.link} ${navStyles.activeLink}` : navStyles.link
-            }
-          >
-            Home
-          </NavLink>
-          <NavLink
-            to="/services"
-            className={({ isActive }) =>
-              isActive ? `${navStyles.link} ${navStyles.activeLink}` : navStyles.link
-            }
-          >
-            Services
-          </NavLink>
-        </Sidebar>
+        <Sidebar
+          logo={ASSETS.MOCK_LOGO_MINIMAL}
+          appIcon={<AppIcon />}
+          menuGroups={menuGroups}
+          selectedValue={selectedValue}
+          onTabSelect={handleTabSelect}
+        />
       }
       topbar={
         <Topbar>
