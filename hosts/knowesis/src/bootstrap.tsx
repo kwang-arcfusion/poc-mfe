@@ -1,10 +1,18 @@
 // hosts/knowesis/src/bootstrap.tsx
 
 import { createRoot } from 'react-dom/client';
-import React, { Suspense } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Auth0Provider, withAuthenticationRequired, useAuth0 } from '@auth0/auth0-react';
-import { FluentProvider, tokens } from '@fluentui/react-components';
+
+// Import จาก Fluent UI
+import {
+  FluentProvider,
+  Button as FluentButton,
+  RadioGroup,
+  Radio,
+  tokens,
+} from '@fluentui/react-components';
 
 // Import Icons ที่จะใช้ใน Sidebar
 import {
@@ -36,7 +44,7 @@ import { StoriesPage } from './pages/StoriesPage';
 import { OverviewPage } from './pages/OverviewPage';
 const Home = React.lazy(() => import('home/Home'));
 
-// --- สร้างข้อมูลสำหรับ Sidebar (อัปเดตไอคอนและ value ให้ครบ) ---
+// --- สร้างข้อมูลสำหรับ Sidebar ---
 const menuGroups: SidebarNavGroup[] = [
   {
     title: 'MAIN',
@@ -44,6 +52,8 @@ const menuGroups: SidebarNavGroup[] = [
       { value: '/', label: 'Home', icon: <Home24Regular /> },
       { value: '/ask_ai', label: 'Ask AI', icon: <Bot24Regular /> },
       { value: '/stories', label: 'Stories', icon: <Book24Regular /> },
+      // เรายังไม่มีหน้า Services ใน Routes ดังนั้นผมจะ comment ไว้ก่อน
+      // { value: '/services', label: 'Services', icon: <DocumentBulletList24Regular /> },
     ],
   },
   {
@@ -52,17 +62,47 @@ const menuGroups: SidebarNavGroup[] = [
   },
 ];
 
-// โลโก้และไอคอนตัวอย่าง
+// ไอคอนตัวอย่าง
 const AppIcon = () => <Apps24Regular style={{ color: '#555' }} />;
 
 // Component Layout หลัก ทำหน้าที่ประกอบร่าง UI
 const AppLayout = () => {
-  useGlobalStyles();
+  useGlobalStyles(); // <-- เรียกใช้ Global Styles ที่นี่
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth0();
 
-  // ปรับปรุง logic การหา path ที่ active ให้รองรับ nested routes ในอนาคต
+  // 1. หา Page Title จาก menuGroups
+  const currentPage = menuGroups.flatMap((g) => g.items).find((i) => i.value === location.pathname);
+  const pageTitle = currentPage ? currentPage.label : 'Page Not Found';
+
+  // 2. หา User Initials
+  const getInitials = (name?: string) => {
+    if (!name) return '??';
+    const parts = name.split(' ');
+    if (parts.length > 1) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+  const userInitials = getInitials(user?.name);
+
+  // 3. (ตัวอย่าง) สร้าง Methods ที่จะแสดงในแต่ละหน้า
+  let methodsLeft: React.ReactNode = null;
+  let methodsRight: React.ReactNode = null;
+
+  if (location.pathname === '/') {
+    methodsLeft = (
+      <RadioGroup layout="horizontal">
+        <Radio value="A" label="Method A" />
+        <Radio value="B" label="Method B" />
+      </RadioGroup>
+    );
+  } else if (location.pathname === '/ask_ai') {
+    methodsRight = <FluentButton appearance="primary">Special Action</FluentButton>;
+  }
+
+  // Logic สำหรับ Sidebar
   const selectedValue =
     menuGroups
       .flatMap((g) => g.items)
@@ -85,26 +125,29 @@ const AppLayout = () => {
         />
       }
       topbar={
-        // สร้าง Topbar แบบง่ายๆ ขึ้นมาใหม่
-        <Topbar>
-          <div style={{ flexGrow: 1 }}>{/* พื้นที่สำหรับ Search bar ในอนาคต */}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: tokens.spacingHorizontalM }}>
-            <ThemeToggle />
-            <span style={{ color: tokens.colorNeutralForeground1 }}>Welcome, {user?.name}</span>
-          </div>
-        </Topbar>
+        <Topbar
+          pageTitle={pageTitle}
+          userInitials={userInitials}
+          userName={user?.name}
+          methodsLeft={methodsLeft}
+          methodsRight={methodsRight}
+        />
       }
     >
-      {/* --- อัปเดต Routes ทั้งหมดที่นี่ --- */}
-      <Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+        <ThemeToggle />
+      </div>
+      <React.Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/ask_ai" element={<AskAiPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/overview" element={<OverviewPage />} />
+          {/* ผม comment services route ออกไปก่อนเพราะยังไม่มีในเมนู */}
+          {/* <Route path="/services" element={<ServicesPage />} /> */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </Suspense>
+      </React.Suspense>
     </AppShell>
   );
 };
