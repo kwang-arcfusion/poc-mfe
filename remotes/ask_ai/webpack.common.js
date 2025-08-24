@@ -40,11 +40,7 @@ module.exports = (env = {}) => {
           use: {
             loader: 'babel-loader',
             options: {
-              presets: [
-                ['@babel/preset-env', { targets: 'defaults' }],
-                ['@babel/preset-react', { runtime: 'automatic' }],
-                ['@babel/preset-typescript', { allowDeclareFields: true }],
-              ],
+              configFile: path.resolve(__dirname, '../../babel.config.js'),
             },
           },
         },
