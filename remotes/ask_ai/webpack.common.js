@@ -4,6 +4,9 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
 
+const packageJson = require('./package.json');
+const deps = packageJson.dependencies;
+
 // ไม่ต้องใช้ HtmlWebpackPlugin และ Dotenv อีกต่อไป
 
 module.exports = (env = {}) => {
@@ -71,6 +74,14 @@ module.exports = (env = {}) => {
           '@auth0/auth0-react': { singleton: true, requiredVersion: false },
           zustand: { singleton: true, requiredVersion: false },
           '@arcfusion/store': { singleton: true, requiredVersion: false },
+          '@fluentui/react-components': {
+            singleton: true,
+            requiredVersion: deps['@fluentui/react-components'],
+          },
+          '@fluentui/react-icons': {
+            singleton: true,
+            requiredVersion: deps['@fluentui/react-icons'],
+          },
         },
       }),
     ],

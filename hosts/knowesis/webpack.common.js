@@ -4,6 +4,10 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
 const Dotenv = require('dotenv-webpack');
+
+const packageJson = require('./package.json');
+const deps = packageJson.dependencies;
+
 module.exports = (env = {}) => {
   const isProd = env.mode === 'production';
 
@@ -77,6 +81,14 @@ module.exports = (env = {}) => {
           },
           zustand: { singleton: true, requiredVersion: false },
           '@arcfusion/store': { singleton: true, requiredVersion: false },
+          '@fluentui/react-components': {
+            singleton: true,
+            requiredVersion: deps['@fluentui/react-components'],
+          },
+          '@fluentui/react-icons': {
+            singleton: true,
+            requiredVersion: deps['@fluentui/react-icons'],
+          },
         },
       }),
     ],
