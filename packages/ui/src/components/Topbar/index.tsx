@@ -7,8 +7,7 @@ import { UserMenu, type UserMenuProps } from '../UserMenu';
 const useStyles = makeStyles({
   root: {
     height: '60px',
-    backgroundColor: tokens.colorNeutralBackground1,
-    borderBottom: `${tokens.strokeWidthThin} solid ${tokens.colorNeutralStroke2}`,
+    backgroundColor: tokens.colorNeutralBackground2,
     display: 'flex',
     alignItems: 'center',
     padding: `0 ${tokens.spacingHorizontalXXL}`,

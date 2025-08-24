@@ -13,7 +13,7 @@ const useAppShellStyles = makeStyles({
   root: {
     display: 'flex',
     height: '100vh',
-    backgroundColor: tokens.colorNeutralBackground1,
+    backgroundColor: tokens.colorNeutralBackground2,
     color: tokens.colorNeutralForeground1,
   },
   contentContainer: {
