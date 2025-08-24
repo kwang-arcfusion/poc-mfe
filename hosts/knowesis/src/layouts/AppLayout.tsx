@@ -10,7 +10,6 @@ import {
   ASSETS,
   type SidebarNavGroup,
 } from '@arcfusion/ui';
-import { useTopbar } from '../hooks/useTopbar';
 
 // Import Icons
 import {
@@ -20,6 +19,7 @@ import {
   Home32Color,
   Library28Color,
 } from '@fluentui/react-icons';
+import { useTopbarStore } from '../stores/topbarStore';
 
 // ข้อมูลสำหรับ Sidebar
 const menuGroups: SidebarNavGroup[] = [
@@ -42,7 +42,7 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth0();
-  const { actions } = useTopbar();
+  const { actions } = useTopbarStore();
 
   // หา Page Title จาก menuGroups
   const currentPage = menuGroups.flatMap((g) => g.items).find((i) => i.value === location.pathname);

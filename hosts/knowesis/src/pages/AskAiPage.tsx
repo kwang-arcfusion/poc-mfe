@@ -1,12 +1,12 @@
 // hosts/knowesis/src/pages/AskAiPage.tsx
 import React, { Suspense, useEffect } from 'react';
 import { Button as FluentButton } from '@fluentui/react-components';
-import { useTopbar } from '../hooks/useTopbar';
+import { useTopbarStore } from '../stores/topbarStore';
 
 const AskAi = React.lazy(() => import('ask_ai/AskAi'));
 
 export function AskAiPage() {
-  const { setActions } = useTopbar();
+  const { setActions } = useTopbarStore();
 
   useEffect(() => {
     // กำหนด actions สำหรับหน้านี้

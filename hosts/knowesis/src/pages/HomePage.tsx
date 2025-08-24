@@ -2,7 +2,7 @@
 import React, { Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RadioGroup, Radio } from '@fluentui/react-components';
-import { useTopbar } from '../hooks/useTopbar';
+import { useTopbarStore } from '../stores/topbarStore';
 
 const Home = React.lazy(() => import('home/Home'));
 
@@ -16,7 +16,7 @@ const HomeActions = () => (
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { setActions } = useTopbar();
+  const { setActions } = useTopbarStore();
 
   // useEffect จะทำงานเมื่อ component ถูก mount
   useEffect(() => {
