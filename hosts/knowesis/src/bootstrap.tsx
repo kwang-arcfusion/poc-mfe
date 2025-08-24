@@ -126,7 +126,7 @@ const AppLayout = () => {
       {/* ThemeToggle ถูกย้ายเข้าไปอยู่ใน UserMenu ภายใน Topbar แล้ว จึงไม่จำเป็นต้องมีตรงนี้ */}
       <Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home navigate={navigate} />} />
           <Route path="/ask_ai" element={<AskAiPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/overview" element={<OverviewPage />} />
