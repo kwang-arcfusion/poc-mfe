@@ -13,6 +13,7 @@ import {
   tokens,
   Divider,
   MenuButtonProps,
+  Spinner,
 } from '@fluentui/react-components';
 import { ChevronDown24Filled } from '@fluentui/react-icons';
 import { useTopbarStore } from '../stores/topbarStore';
@@ -40,6 +41,9 @@ const useTopbarStyles = makeStyles({
     left: '-9999px',
     display: 'flex',
     gap: tokens.spacingHorizontalS, // ต้องมี gap เหมือน container จริง
+  },
+  bookmarkText: {
+    fontWeight: 'normal',
   },
 });
 
@@ -159,7 +163,7 @@ const AskAiTopbarActions = () => {
         {/* 2. Render Visible Bookmark Buttons */}
         {visibleItems.map((bookmark, index) => (
           <React.Fragment key={index}>
-            <Button appearance="transparent" style={{ flexShrink: 0 }}>
+            <Button appearance="transparent" className={styles.bookmarkText}>
               {bookmark}
             </Button>
             <Divider vertical className={styles.divider} />
@@ -210,7 +214,7 @@ export function AskAiPage() {
   }, [setActions]);
 
   return (
-    <Suspense fallback={<div>Loading AskAI Component...</div>}>
+    <Suspense fallback={<Spinner size="huge" />}>
       <AskAi />
     </Suspense>
   );
