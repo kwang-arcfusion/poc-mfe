@@ -1,4 +1,4 @@
-import type { AssetGroup } from './types';
+import type { AssetGroup } from '../types';
 
 export type TextBlock = {
   kind: 'text';

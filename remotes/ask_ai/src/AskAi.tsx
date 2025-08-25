@@ -1,4 +1,5 @@
-import * as React from 'react';
+import React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { makeStyles, tokens, shorthands, Textarea, Button } from '@fluentui/react-components';
 import { Send24Regular } from '@fluentui/react-icons';
 
@@ -8,8 +9,8 @@ import { ChatMessage } from './components/ChatMessage';
 import { InitialView } from './components/InitialView';
 import { AssetTabs } from './components/AssetTabs';
 
-import type { Block, TextBlock } from './blocks';
-import { findLastAiTextIndex } from './blocks';
+import type { Block, TextBlock } from './helpers/blocks';
+import { findLastAiTextIndex } from './helpers/blocks';
 
 const useStyles = makeStyles({
   root: { display: 'flex', flexDirection: 'column', width: '100%', height: '100%' },
@@ -53,17 +54,17 @@ export default function AskAi() {
   const styles = useStyles();
 
   // state หลัก
-  const [inputValue, setInputValue] = React.useState('');
-  const [blocks, setBlocks] = React.useState<Block[]>([]);
-  const [activePrompt, setActivePrompt] = React.useState<string | null>(null);
+  const [inputValue, setInputValue] = useState('');
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [activePrompt, setActivePrompt] = useState<string | null>(null);
 
   // สตรีม JSON events (mock) — พร้อมสลับเป็น WS/SSE จริง
   const { status, startStreaming, lastEvent } = useJsonEventStreaming();
   const isStreaming = status === 'streaming';
 
   // auto scroll
-  const contentAreaRef = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
+  const contentAreaRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
     if (contentAreaRef.current) {
       contentAreaRef.current.scrollTop = contentAreaRef.current.scrollHeight;
     }
@@ -90,7 +91,7 @@ export default function AskAi() {
   };
 
   // apply JSON events → สร้าง/ต่อบล็อกตามลำดับ: text → assets → text → assets
-  React.useEffect(() => {
+  useEffect(() => {
     if (!lastEvent) return;
 
     setBlocks((prev) => {
