@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { makeStyles, Title3, Badge, tokens, shorthands } from '@fluentui/react-components';
+import { makeStyles, Title3, Badge, tokens, shorthands, Button } from '@fluentui/react-components';
 import { SearchSparkle48Color } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({
@@ -21,6 +21,18 @@ const useStyles = makeStyles({
     ...shorthands.gap('12px'),
     maxWidth: '620px',
   },
+  buttonStartConversation: {
+    // --- สถานะปกติ ---
+    color: tokens.colorBrandForeground1, // สีตัวอักษร
+    fontSize: tokens.fontSizeBase200,
+    ...shorthands.borderColor(tokens.colorBrandStroke1), // สีขอบ
+
+    // --- ตอนเมาส์ชี้ (Hover) ---
+    ':hover': {
+      color: tokens.colorBrandForeground1, // เปลี่ยนสีตัวอักษรเพื่อให้อ่านง่ายขึ้น
+      backgroundColor: tokens.colorNeutralBackground4,
+    },
+  },
 });
 
 const conversationStarters = [
@@ -40,14 +52,14 @@ export function InitialView({ onSuggestionClick }: { onSuggestionClick: (text: s
       </Title3>
       <div className={styles.suggestionsContainer}>
         {conversationStarters.map((text, index) => (
-          <Badge
+          <Button
+            className={styles.buttonStartConversation}
             key={index}
-            size="extra-large"
-            appearance="ghost"
+            appearance="secondary"
             onClick={() => onSuggestionClick(text)}
           >
             {text}
-          </Badge>
+          </Button>
         ))}
       </div>
     </div>
