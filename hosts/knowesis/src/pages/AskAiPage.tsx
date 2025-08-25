@@ -15,7 +15,7 @@ import {
   MenuButtonProps,
   Spinner,
 } from '@fluentui/react-components';
-import { ChevronDown24Filled } from '@fluentui/react-icons';
+import { Bookmark16Color, Bookmark16Regular, ChevronDown24Filled } from '@fluentui/react-icons';
 import { useTopbarStore } from '../stores/topbarStore';
 
 const AskAi = React.lazy(() => import('ask_ai/AskAi'));
@@ -29,9 +29,6 @@ const useTopbarStyles = makeStyles({
     overflow: 'hidden',
     minWidth: 0, // สำคัญมากสำหรับ Flexbox item เพื่อให้สามารถย่อขนาดได้
     width: '100%',
-  },
-  divider: {
-    height: '20px',
   },
   // ใช้สำหรับซ่อน element ที่ใช้ในการวัดขนาดเท่านั้น
   hiddenMeasurer: {
@@ -158,15 +155,16 @@ const AskAiTopbarActions = () => {
           </Menu>
         </div>
 
-        <Divider vertical className={styles.divider} />
-
         {/* 2. Render Visible Bookmark Buttons */}
         {visibleItems.map((bookmark, index) => (
           <React.Fragment key={index}>
-            <Button appearance="transparent" className={styles.bookmarkText}>
+            <Button
+              appearance="transparent"
+              className={styles.bookmarkText}
+              icon={<Bookmark16Regular />}
+            >
               {bookmark}
             </Button>
-            <Divider vertical className={styles.divider} />
           </React.Fragment>
         ))}
 
@@ -184,7 +182,9 @@ const AskAiTopbarActions = () => {
             <MenuPopover>
               <MenuList>
                 {overflowItems.map((item, index) => (
-                  <MenuItem key={index}>{item}</MenuItem>
+                  <MenuItem key={index} icon={<Bookmark16Regular />}>
+                    {item}
+                  </MenuItem>
                 ))}
               </MenuList>
             </MenuPopover>

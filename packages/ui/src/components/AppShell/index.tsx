@@ -24,7 +24,6 @@ const useAppShellStyles = makeStyles({
     boxShadow: tokens.shadow16,
   },
   mainContent: {
-    padding: tokens.spacingHorizontalXXL,
     overflowY: 'auto',
     flexGrow: 1,
   },
