@@ -34,6 +34,9 @@ const useStyles = makeStyles({
     alignItems: 'center',
     ...shorthands.gap(tokens.spacingHorizontalS),
   },
+  brandButton: {
+    color: tokens.colorBrandForeground1, // ข้อความ + icon
+  },
 });
 
 interface ChatTitleBarProps {
@@ -50,10 +53,10 @@ export function ChatTitleBar({ title }: ChatTitleBarProps) {
         <Body1Strong>{title}</Body1Strong>
       </div>
       <div className={styles.actionsContainer}>
-        <Button appearance="subtle" icon={<BookmarkAdd24Regular />}>
+        <Button appearance="secondary" icon={<BookmarkAdd24Regular />}>
           Add to Bookmark
         </Button>
-        <Button appearance="subtle" icon={<ArrowExportLtr24Regular />}>
+        <Button appearance="primary" icon={<ArrowExportLtr24Regular />}>
           Export this file
         </Button>
       </div>
