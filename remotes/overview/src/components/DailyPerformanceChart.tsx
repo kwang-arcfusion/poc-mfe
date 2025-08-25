@@ -28,7 +28,7 @@ export const DailyPerformanceChart: React.FC<{ data: DailyDataPoint[] }> = ({ da
   const styles = useStyles();
   return (
     <section>
-      <Text as="h2" size={600} weight="semibold" style={{ marginBottom: '16px' }}>
+      <Text as="h2" size={600} weight="semibold">
         Daily Performance
       </Text>
       <Card className={styles.card}>

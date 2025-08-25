@@ -16,6 +16,7 @@ import { ChannelPerformance } from '../types';
 const useStyles = makeStyles({
   tableCard: {
     padding: 0,
+    marginTop: '12px',
   },
 });
 
@@ -36,7 +37,7 @@ export const ByChannelTable: React.FC<{ items: ChannelPerformance[] }> = ({ item
   const styles = useStyles();
   return (
     <section>
-      <Text as="h2" size={600} weight="semibold" style={{ marginBottom: '16px' }}>
+      <Text as="h2" size={600} weight="semibold">
         By Channel
       </Text>
       <Card className={styles.tableCard}>

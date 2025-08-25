@@ -5,6 +5,7 @@ export interface Metric {
   value: number;
   change: number;
   isCurrency?: boolean;
+  sparklineData?: number[];
 }
 
 // ข้อมูลสำหรับกราฟ Daily Performance (แต่ละจุด)
@@ -39,4 +40,13 @@ export interface FilterValues {
   campaigns?: string[];
   ads?: string[];
   channels?: string[];
+}
+
+// State สำหรับการ Filter
+export interface FilterValues {
+  channels?: string[];
+  campaigns?: string[];
+  ads?: string[];
+  groupBy?: string[];
+  metrics?: string[];
 }
