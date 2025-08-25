@@ -1,4 +1,4 @@
-// AskAIPage.tsx
+// hosts/knowesis/src/pages/AskAiPage.tsx
 
 import React, { Suspense, useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react';
 import {
@@ -11,17 +11,19 @@ import {
   MenuTrigger,
   makeStyles,
   tokens,
-  Divider,
   MenuButtonProps,
   Spinner,
 } from '@fluentui/react-components';
-import { Bookmark16Color, Bookmark16Regular, ChevronDown24Filled } from '@fluentui/react-icons';
+import { Bookmark16Regular, ChevronDown24Filled } from '@fluentui/react-icons';
 import { useTopbarStore } from '../stores/topbarStore';
 
 const AskAi = React.lazy(() => import('ask_ai/AskAi'));
 
 // --- Styles สำหรับ Topbar Actions ---
 const useTopbarStyles = makeStyles({
+  buttonModel: {
+    whiteSpace: 'nowrap',
+  },
   container: {
     display: 'flex',
     alignItems: 'center',
@@ -41,6 +43,7 @@ const useTopbarStyles = makeStyles({
   },
   bookmarkText: {
     fontWeight: 'normal',
+    whiteSpace: 'nowrap',
   },
 });
 
@@ -54,19 +57,15 @@ const bookmarks = [
   'Audience Insights',
 ];
 
-// --- สร้าง Component ของ Actions สำหรับหน้านี้โดยเฉพาะ (เวอร์ชันแก้ไข) ---
+// --- สร้าง Component ของ Actions สำหรับหน้านี้โดยเฉพาะ (เวอร์ชันแก้ไขสมบูรณ์) ---
 const AskAiTopbarActions = () => {
   const styles = useTopbarStyles();
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Refs สำหรับวัดขนาด element ที่สำคัญ
   const splitButtonRef = useRef<HTMLDivElement>(null);
-  const overflowButtonRef = useRef<HTMLButtonElement>(null);
-  const measurerRef = useRef<HTMLDivElement>(null); // Ref สำหรับ container ที่ซ่อนไว้
+  const overflowButtonRef = useRef<HTMLButtonElement>(null); // Ref นี้ยังจำเป็นสำหรับ UI แต่ไม่ใช้ใน logic คำนวณหลัก
+  const measurerRef = useRef<HTMLDivElement>(null);
 
-  // State เพื่อเก็บจำนวน item ที่จะแสดงผล
   const [visibleItemCount, setVisibleItemCount] = useState(bookmarks.length);
-  // State เพื่อเก็บขนาดของปุ่ม bookmark ที่วัดได้จริง
   const [itemWidths, setItemWidths] = useState<number[]>([]);
 
   // Step 1: วัดขนาดของปุ่มทั้งหมดเพียงครั้งเดียวหลังจาก Render ครั้งแรก
@@ -79,49 +78,55 @@ const AskAiTopbarActions = () => {
     }
   }, []); // ทำงานแค่ครั้งเดียว
 
-  // Step 2: ฟังก์ชันคำนวณที่จะถูกเรียกใช้ทุกครั้งที่มีการ Resize
+  // Step 2: ฟังก์ชันคำนวณที่ถูกเรียกใช้ทุกครั้งที่มีการ Resize
   const calculateVisibleItems = useCallback(() => {
     if (!containerRef.current || itemWidths.length === 0) {
-      // ยังไม่พร้อมคำนวณถ้า container หรือขนาดปุ่มยังไม่มี
       return;
     }
 
     const containerWidth = containerRef.current.clientWidth;
-
-    // วัดขนาดของ Element ที่อยู่นิ่ง (SplitButton, Divider, OverflowButton)
-    // ใช้ offsetWidth จาก ref เพื่อความแม่นยำ
     const splitButtonWidth = splitButtonRef.current?.offsetWidth || 0;
-    const dividerWidth = 8; // ความกว้างของ Divider + gap
-    const overflowButtonWidth =
-      overflowItems.length > 0 ? (overflowButtonRef.current?.offsetWidth || 0) + 8 : 0;
+    const gapWidth = 8; // คือค่า tokens.spacingHorizontalS
 
-    const initialOffset = splitButtonWidth + dividerWidth;
+    // **[FIX 1]** ใช้ค่าคงที่สำหรับปุ่ม Overflow เพื่อป้องกัน Race Condition
+    // ค่า 40px มาจาก (ความกว้างปุ่มไอคอนประมาณ 32px + gap 8px)
+    const OVERFLOW_BUTTON_WIDTH = 40;
+
+    const initialOffset = splitButtonWidth;
     let currentWidth = initialOffset;
     let newVisibleCount = 0;
 
     for (const itemWidth of itemWidths) {
-      // + dividerWidth เพราะทุกปุ่มจะมี Divider ตามหลัง
-      const totalItemWidth = itemWidth + dividerWidth;
+      // พื้นที่ที่ต้องใช้สำหรับปุ่มถัดไป (รวม gap)
+      const requiredWidthForItem = itemWidth + gapWidth;
 
-      // ตรวจสอบว่าถ้าเพิ่มปุ่มนี้เข้าไป จะเกินพื้นที่ที่ใช้ได้หรือไม่
-      // พื้นที่ที่ใช้ได้คือความกว้างทั้งหมด ลบด้วยปุ่ม Overflow
-      if (currentWidth + totalItemWidth > containerWidth - overflowButtonWidth) {
-        break; // ถ้าเกิน ให้หยุดนับ
+      // **[FIX 2]** ตรวจสอบว่า "พื้นที่ปัจจุบัน + ปุ่มถัดไป" จะไปกินที่ "ที่จองไว้ให้ปุ่ม Overflow" หรือไม่
+      if (currentWidth + requiredWidthForItem > containerWidth - OVERFLOW_BUTTON_WIDTH) {
+        break; // ถ้าใช่ ให้หยุดนับ
       }
 
-      currentWidth += totalItemWidth;
+      currentWidth += requiredWidthForItem;
       newVisibleCount++;
     }
 
-    // อัปเดต state เฉพาะเมื่อค่ามีการเปลี่ยนแปลงเพื่อลด re-render ที่ไม่จำเป็น
+    // **[FIX 3]** จัดการกรณีที่ทุกรายการแสดงได้พอดี เพื่อไม่ให้เหลือที่จองไว้ว่างๆ
+    let totalRealWidth = initialOffset;
+    itemWidths.forEach((w) => {
+      totalRealWidth += w + gapWidth;
+    });
+
+    if (totalRealWidth <= containerWidth) {
+      newVisibleCount = bookmarks.length;
+    }
+
+    // อัปเดต state เฉพาะเมื่อค่ามีการเปลี่ยนแปลง
     if (newVisibleCount !== visibleItemCount) {
       setVisibleItemCount(newVisibleCount);
     }
-  }, [itemWidths, visibleItemCount]); // Dependencies: ขนาดของปุ่ม และจำนวนที่แสดงผลอยู่
+  }, [itemWidths, visibleItemCount]);
 
   // Step 3: ติดตั้ง ResizeObserver เพื่อเรียกใช้การคำนวณ
   useLayoutEffect(() => {
-    // คำนวณครั้งแรกเมื่อพร้อม
     calculateVisibleItems();
 
     const observer = new ResizeObserver(calculateVisibleItems);
@@ -140,11 +145,13 @@ const AskAiTopbarActions = () => {
       {/* Container ที่มองเห็นและใช้งานจริง */}
       <div ref={containerRef} className={styles.container}>
         {/* 1. SplitButton */}
-        <div ref={splitButtonRef}>
+        <div ref={splitButtonRef} style={{ flexShrink: 0 }}>
           <Menu positioning="below-end">
             <MenuTrigger disableButtonEnhancement>
               {(triggerProps: MenuButtonProps) => (
-                <SplitButton menuButton={triggerProps}>Normal Model</SplitButton>
+                <SplitButton menuButton={triggerProps} className={styles.buttonModel}>
+                  Normal Model
+                </SplitButton>
               )}
             </MenuTrigger>
             <MenuPopover>
@@ -157,15 +164,14 @@ const AskAiTopbarActions = () => {
 
         {/* 2. Render Visible Bookmark Buttons */}
         {visibleItems.map((bookmark, index) => (
-          <React.Fragment key={index}>
-            <Button
-              appearance="transparent"
-              className={styles.bookmarkText}
-              icon={<Bookmark16Regular />}
-            >
-              {bookmark}
-            </Button>
-          </React.Fragment>
+          <Button
+            key={index}
+            appearance="transparent"
+            className={styles.bookmarkText}
+            icon={<Bookmark16Regular />}
+          >
+            {bookmark}
+          </Button>
         ))}
 
         {/* 3. Render Overflow Menu Button */}
@@ -192,10 +198,15 @@ const AskAiTopbarActions = () => {
         )}
       </div>
 
-      {/* Container ที่ซ่อนไว้สำหรับวัดขนาดเท่านั้น */}
+      {/* **[FIX 4]** Container ที่ซ่อนไว้สำหรับวัดขนาด (ต้องเหมือนกับปุ่มจริงทุกประการ) */}
       <div ref={measurerRef} className={styles.hiddenMeasurer} aria-hidden="true">
         {bookmarks.map((bookmark, index) => (
-          <Button key={index} appearance="transparent">
+          <Button
+            key={index}
+            appearance="transparent"
+            className={styles.bookmarkText}
+            icon={<Bookmark16Regular />}
+          >
             {bookmark}
           </Button>
         ))}

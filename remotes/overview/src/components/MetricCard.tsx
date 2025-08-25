@@ -7,7 +7,6 @@ const useStyles = makeStyles({
   card: {
     width: '100%',
     minWidth: '200px',
-    height: '120px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -47,16 +46,14 @@ export const MetricCard: React.FC<{ metric: Metric }> = ({ metric }) => {
   return (
     <Card className={styles.card}>
       <div className={styles.header}>
-        <Text size={400}>{metric.title}</Text>
+        <Text>{metric.title}</Text>
       </div>
       <Text as="p" className={styles.value}>
         {formatValue(metric.value, metric.isCurrency)}
       </Text>
       <div className={`${styles.footer} ${isPositive ? styles.positive : styles.negative}`}>
         {isPositive ? <ArrowTrending24Regular /> : <ArrowTrendingDown24Regular />}
-        <Text size={300} weight="semibold">
-          {metric.change.toFixed(1)}%
-        </Text>
+        <Text weight="semibold">{metric.change.toFixed(1)}%</Text>
       </div>
     </Card>
   );

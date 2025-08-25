@@ -18,6 +18,7 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeHero800,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorBrandForeground1,
+    whiteSpace: 'nowrap',
   },
   middleContainer: {
     display: 'flex',
@@ -25,15 +26,18 @@ const useStyles = makeStyles({
     alignItems: 'center',
     flexGrow: 1,
     gap: tokens.spacingHorizontalM,
+    minWidth: 0,
   },
   methodsLeft: {
     display: 'flex',
-    width: '100%',
+    flexGrow: 1,
+    minWidth: 0,
     gap: tokens.spacingHorizontalS,
   },
   methodsRight: {
     display: 'flex',
     gap: tokens.spacingHorizontalS,
+    flexShrink: 0,
   },
   rightContainer: {
     display: 'flex',

@@ -66,10 +66,10 @@ export default function Overview({ navigate }: OverviewProps) {
     setFilters(newFilters);
   };
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
       <div className={styles.loadingContainer}>
-        <Spinner size="huge" />
+        <Spinner size="huge" label="Loading Overview..." />
       </div>
     );
   }
