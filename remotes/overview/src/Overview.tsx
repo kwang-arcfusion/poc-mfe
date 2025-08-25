@@ -35,6 +35,10 @@ const useStyles = makeStyles({
   },
   header: {
     display: 'flex',
+    position: 'sticky',
+    top: 0,
+    backgroundColor: tokens.colorNeutralBackground2,
+    zIndex: 10,
     alignItems: 'center',
     ...shorthands.gap('12px'),
     flexWrap: 'wrap',
@@ -69,7 +73,7 @@ export default function Overview({ navigate }: OverviewProps) {
   if (isLoading && !data) {
     return (
       <div className={styles.loadingContainer}>
-        <Spinner size="huge" label="Loading Overview..." />
+        <Spinner size="huge" />
       </div>
     );
   }

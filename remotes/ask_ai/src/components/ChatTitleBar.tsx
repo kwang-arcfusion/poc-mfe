@@ -5,6 +5,7 @@ import {
   PenSparkle24Regular,
   BookmarkAdd24Regular,
   ArrowExportLtr24Regular,
+  SearchSparkle24Filled,
 } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({
@@ -13,7 +14,7 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    ...shorthands.padding(0, tokens.spacingHorizontalXXXL),
+    ...shorthands.padding(0, tokens.spacingHorizontalXXL),
     ...shorthands.borderBottom('1px', 'solid', tokens.colorNeutralStroke2),
     paddingBottom: tokens.spacingHorizontalXS,
     boxSizing: 'border-box',
@@ -48,7 +49,7 @@ export function ChatTitleBar({ title }: ChatTitleBarProps) {
   return (
     <div className={styles.root}>
       <div className={styles.titleContainer}>
-        <PenSparkle24Regular />
+        <SearchSparkle24Filled />
         <Body1Strong>{title}</Body1Strong>
       </div>
       <div className={styles.actionsContainer}>
