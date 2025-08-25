@@ -1,7 +1,6 @@
 // remotes/ask_ai/src/components/ChatMessage.tsx
 import React from 'react';
 import { makeStyles, shorthands, tokens, Body1, Spinner, Avatar } from '@fluentui/react-components';
-import { Person24Regular, Bot24Regular } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({
   root: {
@@ -9,7 +8,6 @@ const useStyles = makeStyles({
     ...shorthands.gap(tokens.spacingHorizontalM),
     maxWidth: '85%',
     width: 'fit-content',
-    // --- สไตล์สำหรับจัดตำแหน่ง ---
     '&[data-sender="user"]': {
       alignSelf: 'flex-end',
       flexDirection: 'row-reverse', // สลับ Avatar ไปทางขวา
@@ -23,7 +21,6 @@ const useStyles = makeStyles({
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
     whiteSpace: 'pre-wrap',
     wordWrap: 'break-word',
-    // --- สไตล์สำหรับสีของ Bubble ---
     '&[data-sender="user"]': {
       backgroundColor: tokens.colorNeutralBackground1,
       color: tokens.colorNeutralForeground1,

@@ -53,12 +53,12 @@ const useStyles = makeStyles({
 export default function AskAi() {
   const styles = useStyles();
 
-  // state หลัก
+  // state
   const [inputValue, setInputValue] = useState('');
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [activePrompt, setActivePrompt] = useState<string | null>(null);
 
-  // สตรีม JSON events (mock) — พร้อมสลับเป็น WS/SSE จริง
+  // steam JSON events (mock) — production ready with real WS/SSE
   const { status, startStreaming, lastEvent } = useJsonEventStreaming();
   const isStreaming = status === 'streaming';
 
@@ -73,7 +73,7 @@ export default function AskAi() {
   // helper
   const lastAiIndex = findLastAiTextIndex(blocks);
 
-  // ส่งข้อความ
+  // send messange
   const sendMessage = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -90,7 +90,7 @@ export default function AskAi() {
     setInputValue('');
   };
 
-  // apply JSON events → สร้าง/ต่อบล็อกตามลำดับ: text → assets → text → assets
+  // apply JSON events → create: text → assets → text → assets
   useEffect(() => {
     if (!lastEvent) return;
 
@@ -100,7 +100,6 @@ export default function AskAi() {
       switch (lastEvent.type) {
         case 'answer.delta': {
           const text = lastEvent.payload?.text || '';
-          // ถ้าบล็อกท้ายสุดเป็น text ของ AI → ต่อ; ไม่งั้นเปิดบล็อกใหม่
           const tail = next[next.length - 1];
           if (tail && tail.kind === 'text' && tail.sender === 'ai') {
             next[next.length - 1] = { ...tail, content: tail.content + text } as TextBlock;
@@ -120,7 +119,6 @@ export default function AskAi() {
 
       return next;
     });
-    // ใช้ seq เป็นคีย์ให้ effect ทำงานเฉพาะเมื่อมีอีเวนต์ใหม่
   }, [lastEvent?.seq]);
 
   return (

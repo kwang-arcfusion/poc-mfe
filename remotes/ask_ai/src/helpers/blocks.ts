@@ -15,7 +15,7 @@ export type AssetsBlock = {
 
 export type Block = TextBlock | AssetsBlock;
 
-/** หา index ของบล็อกข้อความ AI ล่าสุด (เช่นไว้โชว์ typing indicator) */
+/** find index of block data AI latest (such as typing indicator) */
 export function findLastAiTextIndex(blocks: Block[]): number {
   for (let i = blocks.length - 1; i >= 0; i--) {
     const b = blocks[i];

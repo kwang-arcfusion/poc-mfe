@@ -151,7 +151,7 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
         ))}
       </TabList>
 
-      {/* render เฉพาะแท็บที่เลือก (ไม่ใช้ TabPanel) */}
+      {/* render only that choose */}
       <div>{activeTab.render()}</div>
     </div>
   );

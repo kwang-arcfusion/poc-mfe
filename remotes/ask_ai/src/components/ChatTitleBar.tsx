@@ -3,7 +3,6 @@ import React from 'react';
 import { Button, makeStyles, shorthands, tokens, Body1Strong } from '@fluentui/react-components';
 import {
   PenSparkle24Regular,
-  Bookmark24Regular,
   BookmarkAdd24Regular,
   ArrowExportLtr24Regular,
 } from '@fluentui/react-icons';
@@ -35,7 +34,7 @@ const useStyles = makeStyles({
     ...shorthands.gap(tokens.spacingHorizontalS),
   },
   brandButton: {
-    color: tokens.colorBrandForeground1, // ข้อความ + icon
+    color: tokens.colorBrandForeground1,
   },
 });
 
