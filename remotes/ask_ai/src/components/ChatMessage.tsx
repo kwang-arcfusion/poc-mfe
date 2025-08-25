@@ -38,7 +38,7 @@ const useStyles = makeStyles({
     alignItems: 'center',
     ...shorthands.gap(tokens.spacingHorizontalS),
     color: tokens.colorNeutralForeground3,
-    marginTop: tokens.spacingVerticalM,
+    marginBottom: tokens.spacingVerticalM,
   },
 });
 
