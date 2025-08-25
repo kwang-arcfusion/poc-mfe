@@ -25,11 +25,11 @@ const useStyles = makeStyles({
     wordWrap: 'break-word',
     // --- สไตล์สำหรับสีของ Bubble ---
     '&[data-sender="user"]': {
-      backgroundColor: tokens.colorBrandBackground,
-      color: tokens.colorNeutralForegroundOnBrand,
+      backgroundColor: tokens.colorNeutralBackground1,
+      color: tokens.colorNeutralForeground1,
     },
     '&[data-sender="ai"]': {
-      backgroundColor: tokens.colorNeutralBackground3,
+      backgroundColor: tokens.colorNeutralBackground2,
       color: tokens.colorNeutralForeground1,
     },
   },

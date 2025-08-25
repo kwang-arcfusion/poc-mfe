@@ -12,9 +12,9 @@ import type { AssetGroup } from '../types';
 
 const useStyles = makeStyles({
   assetGroup: {
-    ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
+    ...shorthands.border('2px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
-    backgroundColor: tokens.colorNeutralBackground1,
+    backgroundColor: tokens.colorNeutralBackground3,
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
   },
   tabPanelPad: { ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS) },
