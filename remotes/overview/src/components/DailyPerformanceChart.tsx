@@ -15,6 +15,7 @@ const useStyles = makeStyles({
   card: {
     ...shorthands.padding('24px'),
     height: '400px',
+    marginTop: '12px',
   },
 });
 

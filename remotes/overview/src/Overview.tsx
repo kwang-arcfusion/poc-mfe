@@ -53,23 +53,31 @@ const useStyles = makeStyles({
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
-    ...shorthands.gap(tokens.spacingVerticalS, tokens.spacingHorizontalM),
+    ...shorthands.gap(tokens.spacingVerticalL, tokens.spacingHorizontalM),
   },
   filterGroup: {
     display: 'flex',
     alignItems: 'center',
-    ...shorthands.gap(tokens.spacingHorizontalS),
+    ...shorthands.gap(tokens.spacingHorizontalXXS),
     // เพิ่ม border, padding, และ borderRadius
-    ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
+    ...shorthands.border('1px', 'solid', tokens.colorBrandBackground),
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    paddingLeft: '6px',
+    padding: '6px',
+  },
+  filterGroupTitle: {
+    color: tokens.colorBrandForeground1,
+
+    marginRight: tokens.spacingHorizontalXS,
   },
   filterButton: {
     fontSize: tokens.fontSizeBase200,
     fontWeight: tokens.fontWeightRegular,
+    '&[aria-pressed="true"], &[aria-pressed="true"]:hover, &[aria-pressed="true"]:hover:active': {
+      backgroundColor: tokens.colorBrandBackground,
+      color: tokens.colorNeutralForegroundStaticInverted,
+    },
   },
 });
-// --- ⬆️ สิ้นสุดการแก้ไข Styles ⬆️ ---
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -165,15 +173,14 @@ export default function Overview({ navigate, isFilterOpen, setIsFilterOpen }: Ov
         onFiltersChange={handleFilterChange}
       />
       <header className={styles.header}>
-        <Filter24Regular></Filter24Regular>
         <div className={styles.tagContainer}>
           {/* --- ⬇️ [2] แก้ไข JSX ⬇️ --- */}
           {Object.entries(visibleFilterOptions)
             .filter(([, options]) => options && options.length > 0)
             .map(([category, options]) => (
               <div key={category} className={styles.filterGroup}>
-                <Label size="small" weight="semibold">
-                  {capitalize(category)}:
+                <Label size="small" weight="semibold" className={styles.filterGroupTitle}>
+                  {capitalize(category)}
                 </Label>
                 {(options as string[]).map((option: string) => (
                   <ToggleButton
