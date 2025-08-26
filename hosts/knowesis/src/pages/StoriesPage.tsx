@@ -8,8 +8,7 @@ export function StoriesPage() {
 
   return (
     <div>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Stories</h1>
-      <Suspense fallback={<div>Loading Stories Component...</div>}>
+      <Suspense>
         <Stories navigate={navigate} />
       </Suspense>
     </div>
