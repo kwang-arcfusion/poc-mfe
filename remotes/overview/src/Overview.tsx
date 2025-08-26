@@ -1,15 +1,6 @@
 // remotes/overview/src/Overview.tsx
 import React, { useState, useEffect } from 'react';
-import {
-  makeStyles,
-  shorthands,
-  Spinner,
-  Button,
-  tokens,
-  Label,
-  ToggleButton,
-  Divider, // Divider ยังคง import อยู่ แต่เราจะไม่ใช้ใน JSX แล้ว
-} from '@fluentui/react-components';
+import { makeStyles, shorthands, Spinner, tokens } from '@fluentui/react-components';
 
 import { OverviewData, FilterValues } from './types';
 import { fetchOverviewData } from './services/api';
@@ -17,18 +8,15 @@ import { fetchOverviewData } from './services/api';
 import { OverallPerformance } from './components/OverallPerformance';
 import { DailyPerformanceChart } from './components/DailyPerformanceChart';
 import { ByChannelTable } from './components/ByChannelTable';
-import { FilterPanel } from './components/FilterPanel';
-import { Filter24Regular } from '@fluentui/react-icons';
+import { FilterGroupSelect } from './components/FilterGroupSelect';
+import { Filter28Filled } from '@fluentui/react-icons';
 
-// --- ⬇️ [1] แก้ไข Styles ⬇️ ---
 const useStyles = makeStyles({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    ...shorthands.gap('12px'),
-    paddingLeft: '24px',
-    paddingRight: '24px',
-    paddingBottom: '24px',
+    ...shorthands.gap('24px'),
+    ...shorthands.padding('0px', '24px', '24px', '24px'),
     height: '100%',
     boxSizing: 'border-box',
   },
@@ -40,55 +28,27 @@ const useStyles = makeStyles({
   },
   header: {
     display: 'flex',
-    alignItems: 'flex-start',
-    ...shorthands.gap('12px'),
+    alignItems: 'center',
     flexWrap: 'wrap',
+    ...shorthands.gap('12px'),
     position: 'sticky',
     top: 0,
     zIndex: 10,
     backgroundColor: tokens.colorNeutralBackground2,
-    paddingBottom: '12px',
-  },
-  tagContainer: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    ...shorthands.gap(tokens.spacingVerticalL, tokens.spacingHorizontalM),
-  },
-  filterGroup: {
-    display: 'flex',
-    alignItems: 'center',
-    ...shorthands.gap(tokens.spacingHorizontalXXS),
-    // เพิ่ม border, padding, และ borderRadius
-    ...shorthands.border('1px', 'solid', tokens.colorBrandBackground),
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    padding: '6px',
-  },
-  filterGroupTitle: {
-    color: tokens.colorBrandForeground1,
-
-    marginRight: tokens.spacingHorizontalXS,
-  },
-  filterButton: {
-    fontSize: tokens.fontSizeBase200,
-    fontWeight: tokens.fontWeightRegular,
-    '&[aria-pressed="true"], &[aria-pressed="true"]:hover, &[aria-pressed="true"]:hover:active': {
-      backgroundColor: tokens.colorBrandBackground,
-      color: tokens.colorNeutralForegroundStaticInverted,
-    },
+    ...shorthands.padding('16px', '0px'),
   },
 });
 
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
+// --- [1] เพิ่ม Ads และ Metrics กลับเข้ามาใน options ---
 const allFilterOptions = {
   channels: ['Facebook', 'Google', 'TikTok', 'Instagram'],
   campaigns: ['Campaign Alpha', 'Campaign Beta', 'Campaign Charlie', 'Summer Sale'],
   groupBy: ['Day', 'Week', 'Campaign', 'Ad Set'],
-  metrics: ['Impressions', 'Clicks', 'CTR', 'Conversions'],
   ads: ['Ad Creative 1', 'Ad Creative 2', 'Video Ad A', 'Carousel Ad B'],
+  metrics: ['Impressions', 'Clicks', 'CTR', 'Conversions'],
 };
 
+// --- [2] เพิ่ม Ads และ Metrics กลับเข้ามาในค่าเริ่มต้น ---
 const initialFilters: FilterValues = {
   channels: ['Facebook', 'Google', 'TikTok'],
   campaigns: [],
@@ -99,16 +59,13 @@ const initialFilters: FilterValues = {
 
 interface OverviewProps {
   navigate: (path: string) => void;
-  isFilterOpen: boolean;
-  setIsFilterOpen: (isOpen: boolean) => void;
 }
 
-export default function Overview({ navigate, isFilterOpen, setIsFilterOpen }: OverviewProps) {
+export default function Overview({ navigate }: OverviewProps) {
   const styles = useStyles();
   const [data, setData] = useState<OverviewData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<FilterValues>(initialFilters);
-  const [visibleFilterOptions, setVisibleFilterOptions] = useState<FilterValues>(initialFilters);
 
   useEffect(() => {
     setIsLoading(true);
@@ -118,38 +75,11 @@ export default function Overview({ navigate, isFilterOpen, setIsFilterOpen }: Ov
     });
   }, [filters]);
 
-  const handleFilterChange = (newFilters: FilterValues) => {
-    setFilters(newFilters);
-    setVisibleFilterOptions((prevVisible) => {
-      const newVisible = { ...prevVisible };
-      Object.keys(allFilterOptions).forEach((cat) => {
-        const category = cat as keyof FilterValues;
-        const existingVisibleItems = new Set(prevVisible[category] || []);
-        const newlySelectedItems = newFilters[category] || [];
-        newlySelectedItems.forEach((item) => existingVisibleItems.add(item));
-        newVisible[category] = Array.from(existingVisibleItems);
-      });
-      return newVisible;
-    });
-  };
-
-  const handleToggleFilter = (category: keyof FilterValues, option: string) => {
-    setFilters((prevFilters) => {
-      const currentSelection = prevFilters[category] || [];
-      const isSelected = currentSelection.includes(option);
-      let newSelection;
-
-      if (isSelected) {
-        newSelection = currentSelection.filter((item) => item !== option);
-      } else {
-        newSelection = [...currentSelection, option];
-      }
-
-      return {
-        ...prevFilters,
-        [category]: newSelection,
-      };
-    });
+  const handleFilterChange = (category: keyof FilterValues, selection: string[]) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [category]: selection,
+    }));
   };
 
   if (isLoading && !data) {
@@ -166,39 +96,39 @@ export default function Overview({ navigate, isFilterOpen, setIsFilterOpen }: Ov
 
   return (
     <div className={styles.root}>
-      <FilterPanel
-        isOpen={isFilterOpen}
-        onOpenChange={setIsFilterOpen}
-        filters={filters}
-        onFiltersChange={handleFilterChange}
-      />
       <header className={styles.header}>
-        <div className={styles.tagContainer}>
-          {/* --- ⬇️ [2] แก้ไข JSX ⬇️ --- */}
-          {Object.entries(visibleFilterOptions)
-            .filter(([, options]) => options && options.length > 0)
-            .map(([category, options]) => (
-              <div key={category} className={styles.filterGroup}>
-                <Label size="small" weight="semibold" className={styles.filterGroupTitle}>
-                  {capitalize(category)}
-                </Label>
-                {(options as string[]).map((option: string) => (
-                  <ToggleButton
-                    key={option}
-                    className={styles.filterButton}
-                    size="small"
-                    appearance="subtle"
-                    checked={filters[category as keyof FilterValues]?.includes(option) ?? false}
-                    onClick={() => handleToggleFilter(category as keyof FilterValues, option)}
-                  >
-                    {option}
-                  </ToggleButton>
-                ))}
-              </div>
-              // --- ลบ Divider ออกจากตรงนี้ ---
-            ))}
-          {/* --- ⬆️ สิ้นสุดการแก้ไข JSX ⬆️ --- */}
-        </div>
+        <Filter28Filled />
+        <FilterGroupSelect
+          label="Channels"
+          options={allFilterOptions.channels}
+          selectedOptions={filters.channels || []}
+          onSelectionChange={(selection) => handleFilterChange('channels', selection)}
+        />
+        <FilterGroupSelect
+          label="Campaigns"
+          options={allFilterOptions.campaigns}
+          selectedOptions={filters.campaigns || []}
+          onSelectionChange={(selection) => handleFilterChange('campaigns', selection)}
+        />
+        <FilterGroupSelect
+          label="Group By"
+          options={allFilterOptions.groupBy}
+          selectedOptions={filters.groupBy || []}
+          onSelectionChange={(selection) => handleFilterChange('groupBy', selection)}
+        />
+        {/* --- [3] เพิ่ม Component สำหรับ Ads และ Metrics --- */}
+        <FilterGroupSelect
+          label="Ads"
+          options={allFilterOptions.ads}
+          selectedOptions={filters.ads || []}
+          onSelectionChange={(selection) => handleFilterChange('ads', selection)}
+        />
+        <FilterGroupSelect
+          label="Metrics"
+          options={allFilterOptions.metrics}
+          selectedOptions={filters.metrics || []}
+          onSelectionChange={(selection) => handleFilterChange('metrics', selection)}
+        />
       </header>
 
       <OverallPerformance metrics={data.metrics} />

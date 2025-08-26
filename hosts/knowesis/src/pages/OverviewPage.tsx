@@ -1,45 +1,33 @@
-import React, { Suspense, useState, useEffect } from 'react';
+// hosts/knowesis/src/pages/OverviewPage.tsx
+
+import React, { Suspense, useEffect } from 'react'; // ลบ useState
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@fluentui/react-components';
-import { Filter24Regular } from '@fluentui/react-icons';
+// import { Button } from '@fluentui/react-components'; // ไม่ใช้แล้ว
+// import { Filter24Regular } from '@fluentui/react-icons'; // ไม่ใช้แล้ว
 import { useTopbarStore } from '../stores/topbarStore';
 
 const Overview = React.lazy(() => import('overview/Overview'));
 
-// 1. สร้าง Component สำหรับปุ่ม Action ที่จะแสดงบน Topbar
-const OverviewTopbarActions = ({ onFilterClick }: { onFilterClick: () => void }) => {
-  return (
-    <Button icon={<Filter24Regular />} onClick={onFilterClick}>
-      Filter
-    </Button>
-  );
-};
+// ลบ OverviewTopbarActions component ทิ้งไปทั้งหมด
 
 export function OverviewPage() {
   const navigate = useNavigate();
   const { setActions } = useTopbarStore();
 
-  // 2. ย้าย State การเปิด/ปิด Panel มาไว้ที่นี่
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  // ไม่ต้องมี State isFilterOpen อีกต่อไป
 
-  // 3. ใช้ useEffect เพื่อกำหนด Action ให้กับ Topbar
+  // useEffect จะยังคงอยู่เพื่อเคลียร์ actions ของหน้าอื่น
   useEffect(() => {
-    setActions({
-      left: <OverviewTopbarActions onFilterClick={() => setIsFilterOpen(true)} />,
-    });
-    // Cleanup เมื่อออกจากหน้านี้
+    // ไม่มีการตั้งค่า actions ใดๆ สำหรับหน้านี้
+    setActions({});
     return () => setActions({});
-  }, [setActions, setIsFilterOpen]);
+  }, [setActions]);
 
   return (
     <div>
-      <Suspense>
-        {/* 4. ส่ง State และฟังก์ชัน Setter ลงไปเป็น Props ให้ Component */}
-        <Overview
-          navigate={navigate}
-          isFilterOpen={isFilterOpen}
-          setIsFilterOpen={setIsFilterOpen}
-        />
+      <Suspense fallback={<div>Loading...</div>}>
+        {/* ส่งแค่ navigate prop ลงไปพอ */}
+        <Overview navigate={navigate} />
       </Suspense>
     </div>
   );

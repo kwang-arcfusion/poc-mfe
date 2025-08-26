@@ -4,6 +4,6 @@
     "composite": true,
     "types": ["node"]
   },
-  "include": ["src", "webpack.*.js", "postcss.config.mjs"],
+  "include": ["src", "webpack.*.js", "postcss.config.mjs", "../overview/src/components/FilterGroupSelect.tsx"],
   "references": [{ "path": "../../packages/ui" }]
 }
