@@ -25,8 +25,7 @@ export function OverviewPage() {
 
   return (
     <div>
-      <Suspense fallback={<div>Loading...</div>}>
-        {/* ส่งแค่ navigate prop ลงไปพอ */}
+      <Suspense>
         <Overview navigate={navigate} />
       </Suspense>
     </div>
