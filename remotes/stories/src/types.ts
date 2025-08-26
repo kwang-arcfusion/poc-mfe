@@ -11,7 +11,7 @@ export interface Story {
   kpi: {
     value: string;
     title: string;
-    subtitle: string;
+    metric: string;
     tag?: string;
   };
   chartHighlightLabel: string;

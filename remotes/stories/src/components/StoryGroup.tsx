@@ -15,13 +15,14 @@ const useStyles = makeStyles({
     display: 'flex',
     alignItems: 'center',
     ...shorthands.gap('12px'),
-    paddingBottom: '8px',
-    ...shorthands.borderBottom('1px', 'solid', tokens.colorNeutralStroke2),
   },
   groupTitle: {
     fontSize: tokens.fontSizeHero800,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
+  },
+  storyBadge: {
+    marginTop: '8px',
   },
   cardGrid: {
     display: 'flex',
@@ -88,7 +89,7 @@ export const StoryGroup: React.FC<StoryGroupProps> = ({ title, stories, isLatest
     <section className={styles.groupContainer}>
       <div className={styles.groupHeader}>
         <h2 className={styles.groupTitle}>{title}</h2>
-        <Badge color="brand" shape="rounded" size="large">
+        <Badge className={styles.storyBadge} appearance="tint" size="extra-large">
           {stories.length} Stories
         </Badge>
       </div>

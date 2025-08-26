@@ -48,8 +48,8 @@ const useStyles = makeStyles({
   },
 
   // --- Block 2: Title (Subtitle from data) ---
-  subtitleText: {
-    fontSize: tokens.fontSizeBase400,
+  titleText: {
+    fontSize: tokens.fontSizeBase500,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
     lineHeight: 1.4,
@@ -67,9 +67,9 @@ const useStyles = makeStyles({
     alignItems: 'flex-start',
     ...shorthands.gap(tokens.spacingVerticalXS), // ระยะห่างระหว่าง Badge กับ Kpi Title
   },
-  kpiTitle: {
+  kpiMetric: {
     // Style สำหรับ "Conversion Rate" ที่เป็นสีฟ้า
-    fontSize: '20px',
+    fontSize: tokens.fontSizeBase500,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorBrandForeground1, // ใช้สี Brand หลัก (สีฟ้า)
     lineHeight: 1.2,
@@ -140,7 +140,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
       </div>
 
       {/* --- Block 2: Title (using subtitle from data) --- */}
-      <div className={styles.subtitleText}>{story.kpi.subtitle}</div>
+      <div className={styles.titleText}>{story.kpi.title}</div>
 
       {/* --- Block 3: KPI & Badge (Updated Layout) --- */}
       <div className={styles.kpiContainer}>
@@ -150,7 +150,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
               {story.kpi.tag}
             </Badge>
           )}
-          <div className={styles.kpiTitle}>{story.kpi.title}</div>
+          <div className={styles.kpiMetric}>{story.kpi.metric}</div>
         </div>
         <div className={styles.kpiValue}>{story.kpi.value}</div>
       </div>
