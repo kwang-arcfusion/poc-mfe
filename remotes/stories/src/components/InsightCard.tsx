@@ -1,11 +1,12 @@
 // remotes/stories/src/components/InsightCard.tsx
 import React from 'react';
-import { makeStyles, shorthands, tokens } from '@fluentui/react-components';
+import { makeStyles, shorthands, tokens, Badge } from '@fluentui/react-components';
+import { Sparkle24Regular } from '@fluentui/react-icons';
 import { Story } from '../types';
 
 // --- Component Styles ---
-// Using Fluent UI's makeStyles for consistent styling
 const useStyles = makeStyles({
+  // --- Main Card Styles ---
   insightCard: {
     backgroundColor: tokens.colorNeutralBackground1,
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
@@ -13,81 +14,113 @@ const useStyles = makeStyles({
     ...shorthands.padding('24px'),
     width: '100%',
     maxWidth: '400px',
-    minWidth: '320px', // Ensure card doesn't get too small
+    minWidth: '320px',
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     transitionProperty: 'box-shadow, transform',
     transitionDuration: '0.2s',
     transitionTimingFunction: 'ease-in-out',
     boxSizing: 'border-box',
-    flex: '1 1 320px', // Flex properties for wrapping grid
+    flex: '1 1 320px',
+    display: 'flex',
+    flexDirection: 'column',
+    ...shorthands.gap('16px'),
     ':hover': {
       boxShadow: tokens.shadow16,
       transform: 'translateY(-2px)',
     },
   },
+
+  // --- Block 1: Header ---
   cardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '16px',
+    width: '100%',
   },
   platformIcon: {
     fontSize: '24px',
     fontWeight: tokens.fontWeightBold,
-    color: '#1877F2', // Facebook Blue
+    color: '#1877F2',
   },
   timeAgo: {
     fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground3,
   },
-  cardBody: {},
-  kpiMain: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    ...shorthands.gap('16px'),
-    marginBottom: '8px',
-  },
-  kpiValue: {
-    fontSize: '48px',
-    fontWeight: tokens.fontWeightBold,
-    color: tokens.colorPaletteRedForeground1, // Negative Red
-    lineHeight: 1,
-  },
-  kpiDetails: {
-    paddingTop: '4px',
-  },
-  kpiTitle: {
-    fontSize: tokens.fontSizeBase500,
+
+  // --- Block 2: Title (Subtitle from data) ---
+  subtitleText: {
+    fontSize: tokens.fontSizeBase400,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
-    margin: 0,
+    lineHeight: 1.4,
   },
-  kpiSubtitle: {
-    fontSize: tokens.fontSizeBase300,
-    color: tokens.colorNeutralForeground2,
-    margin: '4px 0 0 0',
+
+  // --- Block 3: KPI & Badge ---
+  kpiContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end', //จัดให้ชิดล่างเพื่อให้ Badge กับ Value ตรงกันสวยงาม
   },
-  statusTag: {
-    display: 'inline-block',
-    backgroundColor: '#fcf0e4',
-    color: '#af6418',
-    ...shorthands.padding('4px', '10px'),
-    ...shorthands.borderRadius(tokens.borderRadiusCircular),
-    fontSize: tokens.fontSizeBase200,
-    fontWeight: tokens.fontWeightMedium,
-    marginTop: '8px',
+  kpiLeft: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    ...shorthands.gap(tokens.spacingVerticalXS), // ระยะห่างระหว่าง Badge กับ Kpi Title
   },
+  kpiTitle: {
+    // Style สำหรับ "Conversion Rate" ที่เป็นสีฟ้า
+    fontSize: '20px',
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorBrandForeground1, // ใช้สี Brand หลัก (สีฟ้า)
+    lineHeight: 1.2,
+  },
+  kpiValue: {
+    fontSize: '32px',
+    fontWeight: tokens.fontWeightBold,
+    color: tokens.colorPaletteRedForeground1,
+    lineHeight: 1,
+  },
+
+  // --- Block 4: Graph ---
   chartContainer: {
     width: '100%',
-    marginTop: '20px',
+    height: '80px',
+    display: 'flex',
+    ...shorthands.gap(tokens.spacingHorizontalM),
+  },
+  yAxis: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    ...shorthands.padding(0, tokens.spacingHorizontalM, 0, 0),
+    ...shorthands.borderRight('1px', 'solid', tokens.colorNeutralStroke2),
+    fontSize: tokens.fontSizeBase200,
+    color: tokens.colorNeutralForeground3,
+    flexShrink: 0,
+  },
+  graphArea: {
+    flexGrow: 1,
+    position: 'relative',
+  },
+
+  // --- Block 5: Summary ---
+  summaryContainer: {
+    display: 'flex',
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    alignItems: 'flex-start',
+    ...shorthands.borderTop('1px', 'solid', tokens.colorNeutralStroke2),
+    paddingTop: '16px',
   },
   summaryText: {
     fontSize: tokens.fontSizeBase300,
     color: tokens.colorNeutralForeground2,
     lineHeight: 1.5,
-    marginTop: '16px',
-    ...shorthands.borderTop('1px', 'solid', tokens.colorNeutralStroke2),
-    paddingTop: '16px',
+  },
+  sparkleIcon: {
+    color: tokens.colorBrandForeground1,
+    flexShrink: 0,
+    marginTop: '2px',
   },
 });
 
@@ -95,67 +128,84 @@ interface InsightCardProps {
   story: Story;
 }
 
-// --- InsightCard Component ---
-// This component renders a single story card with the improved design.
 export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
   const styles = useStyles();
 
   return (
     <div className={styles.insightCard}>
+      {/* --- Block 1: Header --- */}
       <div className={styles.cardHeader}>
-        {/* Platform icon (e.g., 'f' for Facebook) */}
         <div className={styles.platformIcon}>{story.platform.icon}</div>
         <span className={styles.timeAgo}>{story.timeAgo}</span>
       </div>
-      <div className={styles.cardBody}>
-        <div className={styles.kpiMain}>
-          <div className={styles.kpiValue}>{story.kpi.value}</div>
-          <div className={styles.kpiDetails}>
-            <h2 className={styles.kpiTitle}>{story.kpi.title}</h2>
-            <p className={styles.kpiSubtitle}>{story.kpi.subtitle}</p>
-            {story.kpi.tag && <div className={styles.statusTag}>{story.kpi.tag}</div>}
-          </div>
-        </div>
 
-        <div className={styles.chartContainer}>
-          {/* SVG chart for data visualization */}
-          <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+      {/* --- Block 2: Title (using subtitle from data) --- */}
+      <div className={styles.subtitleText}>{story.kpi.subtitle}</div>
+
+      {/* --- Block 3: KPI & Badge (Updated Layout) --- */}
+      <div className={styles.kpiContainer}>
+        <div className={styles.kpiLeft}>
+          {story.kpi.tag && (
+            <Badge appearance="tint" color="danger" size="large">
+              {story.kpi.tag}
+            </Badge>
+          )}
+          <div className={styles.kpiTitle}>{story.kpi.title}</div>
+        </div>
+        <div className={styles.kpiValue}>{story.kpi.value}</div>
+      </div>
+
+      {/* --- Block 4: Graph --- */}
+      <div className={styles.chartContainer}>
+        <div className={styles.yAxis}>
+          <span>1.5%</span>
+          <span>0%</span>
+        </div>
+        <div className={styles.graphArea}>
+          <svg width="100%" height="100%" viewBox="0 0 100 40" preserveAspectRatio="none">
             <path
-              d="M 0,15 C 10,5 20,25 35,22 L 50,20 L 60,35 L 75,37 L 85,34 L 100,32"
-              stroke="#6C63FF"
+              d="M 0,25 C 10,15 25,10 40,20 L 60,35 L 75,30 L 100,28"
+              stroke={tokens.colorBrandStroke1}
               strokeWidth="1.5"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <line
-              x1="50"
-              y1="20"
-              x2="60"
-              y2="35"
+            <path
+              d="M 40,20 L 60,35"
               stroke={tokens.colorPaletteRedBorderActive}
               strokeWidth="2"
               fill="none"
+              strokeLinecap="round"
             />
-            <line
-              x1="60"
-              y1="10"
-              x2="60"
-              y2="35"
-              stroke={tokens.colorNeutralStroke2}
-              strokeWidth="0.5"
-              strokeDasharray="2 2"
-            />
-            <circle cx="50" cy="20" r="1.5" fill="#6C63FF" />
+            <circle cx="40" cy="20" r="1.5" fill={tokens.colorBrandStroke1} />
             <circle cx="60" cy="35" r="1.5" fill={tokens.colorPaletteRedBorderActive} />
-            <text x="62" y="10" fontSize="4" fill={tokens.colorNeutralForeground2}>
+            <text
+              x="38"
+              y="40"
+              fontSize="5"
+              textAnchor="middle"
+              fill={tokens.colorNeutralForeground3}
+            >
+              Aug 7
+            </text>
+            <text
+              x="60"
+              y="40"
+              fontSize="5"
+              textAnchor="middle"
+              fill={tokens.colorNeutralForeground3}
+            >
               {story.chartHighlightLabel}
             </text>
           </svg>
         </div>
+      </div>
 
+      {/* --- Block 5: Summary --- */}
+      <div className={styles.summaryContainer}>
+        <Sparkle24Regular className={styles.sparkleIcon} />
         <div className={styles.summaryText}>
-          {/* Use dangerouslySetInnerHTML to render bold tags from data */}
           <span dangerouslySetInnerHTML={{ __html: story.summary }} />
         </div>
       </div>
