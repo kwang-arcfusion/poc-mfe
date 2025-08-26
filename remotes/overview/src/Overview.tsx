@@ -35,7 +35,7 @@ const useStyles = makeStyles({
     top: 0,
     zIndex: 10,
     backgroundColor: tokens.colorNeutralBackground2,
-    ...shorthands.padding('16px', '0px'),
+    paddingBottom: '16px',
   },
 });
 
