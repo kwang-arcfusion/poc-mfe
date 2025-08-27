@@ -126,7 +126,9 @@ export const OverallPerformance: React.FC<{ metrics: Metric[] }> = ({ metrics })
           <DialogSurface className={styles.dialogSurface}>
             <DialogBody className={styles.dialogBody}>
               <DialogTitle>
-                <Text size={700}>Overall Performance</Text>
+                <Text size={700} weight="semibold">
+                  Overall Performance
+                </Text>
               </DialogTitle>
               <div className={styles.grid}>
                 {metrics.map((metric) => (
