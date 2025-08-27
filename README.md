@@ -1,135 +1,159 @@
-# Turborepo starter
+# ArcFusion Monorepo
 
-This Turborepo starter is maintained by the Turborepo core team.
+A Turborepo-based monorepo for the ArcFusion demo, built with Webpack Module Federation.
 
-## Using this example
+## Structure
 
-Run the following command:
+- Apps (Webpack Module Federation)
+  - Host: `hosts/knowesis` (port 3000)
+  - Remotes:
+    - `remotes/ask_ai` (port 3001)
+    - `remotes/home` (port 3002)
+    - `remotes/overview` (port 3003)
+    - `remotes/stories` (port 3004)
+- Packages
+  - `packages/ui` (shared Fluent UI components, themes)
+  - `packages/store` (shared Zustand stores)
 
-```sh
-npx create-turbo@latest
+## Prerequisites
+
+- Node.js >= 18
+- pnpm 9 (repo uses `packageManager: pnpm@9.0.0`)
+
+Install pnpm (one-time):
+
+```bash
+npm i -g pnpm@9
 ```
 
-## What's inside?
+## Install dependencies
 
-This Turborepo includes the following packages/apps:
+From the repo root:
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+pnpm install
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Environment
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+The host (`hosts/knowesis`) reads remote URLs from an `.env` file. Create `hosts/knowesis/.env` with:
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+```bash
+# hosts/knowesis/.env
 
-### Develop
+AUTH0_DOMAIN=
+AUTH0_CLIENT_ID=
 
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+REMOTE_URL_ASK_AI=http://localhost:3001
+REMOTE_URL_HOME=http://localhost:3002
+REMOTE_URL_OVERVIEW=http://localhost:3003
+REMOTE_URL_STORIES=http://localhost:3004
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+Notes:
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+- The host auto-loads this file via `dotenv` and injects it into the client using `dotenv-webpack`.
+- If you change ports, update this file accordingly.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+## Development
 
-### Remote Caching
+### Option A: Run everything in parallel (recommended)
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+This starts host + all remotes (and package watchers) concurrently:
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```bash
+pnpm dev:all
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Then open the host:
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+http://localhost:3000
 ```
 
-## Useful Links
+### Option B: Run apps individually (separate terminals)
 
-Learn more about the power of Turborepo:
+- Ask AI remote:
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+```bash
+pnpm --filter @arcfusion/ask_ai dev
+```
+
+- Home remote:
+
+```bash
+pnpm --filter @arcfusion/home dev
+```
+
+- Overview remote:
+
+```bash
+pnpm --filter @arcfusion/overview dev
+```
+
+- Stories remote:
+
+```bash
+pnpm --filter @arcfusion/stories dev
+```
+
+- Host (Knowesis):
+
+```bash
+pnpm --filter @arcfusion/knowesis dev
+```
+
+Packages (optional, if you want to run just the package watchers):
+
+```bash
+pnpm --filter @arcfusion/ui dev
+pnpm --filter @arcfusion/store dev
+```
+
+## Build
+
+Build everything:
+
+```bash
+pnpm build
+```
+
+Build an individual app/package:
+
+```bash
+pnpm --filter @arcfusion/knowesis build
+pnpm --filter @arcfusion/ask_ai build
+pnpm --filter @arcfusion/home build
+pnpm --filter @arcfusion/overview build
+pnpm --filter @arcfusion/stories build
+pnpm --filter @arcfusion/ui build
+pnpm --filter @arcfusion/store build
+```
+
+## Useful scripts (root)
+
+- `pnpm dev:all`: Start all apps in dev (parallel)
+- `pnpm d:knowesis`: Start only the host (depends on remotes running)
+- `pnpm build`: Build all
+- `pnpm lint`: Lint (if configured per package)
+- `pnpm format`: Prettier format
+- `pnpm check-types`: Type check
+
+## Ports
+
+- Host (Knowesis): 3000
+- Remotes: Ask AI 3001, Home 3002, Overview 3003, Stories 3004
+
+## Troubleshooting
+
+- If the host can’t load a remote, verify `hosts/knowesis/.env` values and that each remote is running on the expected port.
+- After changing `.env`, restart the host dev server.
+- Clear the browser cache or do a hard refresh if module federation artifacts seem stale.
+
+## Tech stack
+
+- Build tooling: Turborepo, pnpm workspaces
+- Apps: React 19, Webpack 5, Module Federation
+- UI: Fluent UI (v9)
+- State: Zustand
+- Charts: Recharts (Overview)
