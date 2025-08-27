@@ -51,7 +51,7 @@ export function AppShell({ sidebar, topbar, children, classNames }: AppShellProp
         {/* 3. ใช้ inline style เพื่อ override ค่า overflowY */}
         <main
           className={mergeClasses(styles.mainContent, classNames?.mainContent)}
-          style={{ overflowY: mainOverflow }} // <-- ✨ จุดสำคัญ ✨
+          style={{ overflowY: mainOverflow }}
         >
           {children}
         </main>

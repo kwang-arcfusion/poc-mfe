@@ -7,7 +7,7 @@ const StoryDetailRemotePage = React.lazy(() => import('stories/StoryDetailPage')
 export function StoryDetailPage() {
   return (
     <Suspense fallback={<Spinner size="huge" />}>
-        <StoryDetailRemotePage />
+      <StoryDetailRemotePage />
     </Suspense>
   );
 }

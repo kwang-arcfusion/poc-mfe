@@ -40,6 +40,12 @@ const useStyles = makeStyles({
     height: 'calc(100vh - 60px)',
     backgroundColor: tokens.colorNeutralBackground2,
   },
+  askAiButton: {
+    position: 'fixed',
+    top: '62px',
+    right: '36px',
+    zIndex: 10,
+  },
   singleGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr',
@@ -178,37 +184,36 @@ export default function StoryDetailPage() {
 
   return (
     <div className={s.outer}>
+      {!aiOpen && (
+        <Button
+          className={s.askAiButton}
+          icon={<Sparkle24Regular />}
+          onClick={() => setAiOpen((v) => !v)}
+        >
+          Ask AI
+        </Button>
+      )}
+
       <div className={aiOpen ? s.splitGrid : s.singleGrid}>
         {/* LEFT (content) */}
         <section className={s.leftPane}>
           <div className={s.page}>
             {/* Hero / Alert */}
-            <div className={s.hero}>
-              {/* Toolbar ด้านบนหัวเรื่อง: ปุ่ม Ask AI */}
-              <div className={s.heroToolbar}>
-                <Button
-                  appearance={aiOpen ? 'secondary' : 'primary'}
-                  icon={<Sparkle24Regular />}
-                  onClick={() => setAiOpen((v) => !v)}
-                >
-                  {aiOpen ? 'Close AI' : 'Ask AI'}
-                </Button>
-              </div>
+            {/* Toolbar ด้านบนหัวเรื่อง: ปุ่ม Ask AI */}
 
-              <div className={s.heroTitleRow}>
-                <Title1 as="h1">Conversions ร่วงแรงที่ขั้นชำระเงิน</Title1>
-                <div className={s.detailRow}>
-                  <span className={s.deltaPill}>▼ −88% vs prior 7 days</span>
-                  {/* Context chips */}
-                  <div className={s.chips} role="toolbar" aria-label="page context">
-                    <Badge appearance="outline">
-                      <strong>Facebook</strong>
-                    </Badge>
-                    <Badge appearance="outline">ช่วง: 3–9 ส.ค. 2025</Badge>
-                    <Badge appearance="outline">เทียบกับ: 27 ก.ค.–2 ส.ค. 2025</Badge>
-                    <Badge appearance="outline">Metric: Conversions</Badge>
-                    <Badge appearance="outline">ประเทศ: TH</Badge>
-                  </div>
+            <div className={s.heroTitleRow}>
+              <Title1 as="h1">Conversions ร่วงแรงที่ขั้นชำระเงิน</Title1>
+              <div className={s.detailRow}>
+                <span className={s.deltaPill}>▼ −88% vs prior 7 days</span>
+                {/* Context chips */}
+                <div className={s.chips} role="toolbar" aria-label="page context">
+                  <Badge appearance="outline">
+                    <strong>Facebook</strong>
+                  </Badge>
+                  <Badge appearance="outline">ช่วง: 3–9 ส.ค. 2025</Badge>
+                  <Badge appearance="outline">เทียบกับ: 27 ก.ค.–2 ส.ค. 2025</Badge>
+                  <Badge appearance="outline">Metric: Conversions</Badge>
+                  <Badge appearance="outline">ประเทศ: TH</Badge>
                 </div>
               </div>
             </div>
