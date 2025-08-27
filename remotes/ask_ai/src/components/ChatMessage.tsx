@@ -10,7 +10,7 @@ const useStyles = makeStyles({
     width: 'fit-content',
     '&[data-sender="user"]': {
       alignSelf: 'flex-end',
-      flexDirection: 'row-reverse', // สลับ Avatar ไปทางขวา
+      flexDirection: 'row-reverse', // Swap Avatar to the right
     },
     '&[data-sender="ai"]': {
       alignSelf: 'flex-start',

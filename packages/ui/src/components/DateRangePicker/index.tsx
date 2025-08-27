@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { makeStyles, tokens, shorthands, Button, mergeClasses } from '@fluentui/react-components';
-// <-- [1] import ไอคอนเพิ่ม และลบไอคอนที่ไม่ใช้ออก
+// <-- [1] Import new icons and remove unused ones
 import {
   ArrowRight16Regular,
   DismissCircle20Regular,
@@ -32,7 +32,7 @@ export type DateRangePickerProps = {
   className?: string;
 };
 
-// <-- [2] แก้ไข Styles ทั้งหมด
+// <-- [2] Edit all styles
 const useStyles = makeStyles({
   root: {
     display: 'flex',
@@ -71,7 +71,7 @@ const useStyles = makeStyles({
     marginRight: '6px',
   },
   pickerStart: {
-    // ซ่อนกรอบของ DatePicker เดิม
+    // Hide the original DatePicker border
     direction: 'rtl',
     '--spacingHorizontalMNudge': '0',
     ...shorthands.border('none'),
@@ -88,7 +88,7 @@ const useStyles = makeStyles({
     },
   },
   pickerEnd: {
-    // ซ่อนกรอบของ DatePicker เดิม
+    // Hide the original DatePicker border
     '--spacingHorizontalMNudge': '0',
     ...shorthands.border('none'),
     '& input': {
@@ -99,7 +99,7 @@ const useStyles = makeStyles({
       cursor: 'pointer',
       width: '76px',
     },
-    // <-- [แก้ไข] เปลี่ยน selector ตรงนี้ให้เจาะจงมากขึ้น
+    // <-- [Edit] Make this selector more specific
     '& .fui-Input__contentAfter': {
       display: 'none',
     },
@@ -259,7 +259,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   return (
     <div ref={rootRef} className={mergeClasses(styles.root, className)}>
-      {/* <-- [3] แก้ไขโครงสร้าง JSX ทั้งหมด --> */}
+      {/* <-- [3] Edit the entire JSX structure --> */}
       <div className={styles.group} aria-label="Date range" role="group">
         <div className={styles.field}>
           <DatePicker

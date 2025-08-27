@@ -1,24 +1,24 @@
 // hosts/knowesis/src/pages/OverviewPage.tsx
 
-import React, { Suspense, useEffect } from 'react'; // ลบ useState
+import React, { Suspense, useEffect } from 'react'; // remove useState
 import { useNavigate } from 'react-router-dom';
-// import { Button } from '@fluentui/react-components'; // ไม่ใช้แล้ว
-// import { Filter24Regular } from '@fluentui/react-icons'; // ไม่ใช้แล้ว
+// import { Button } from '@fluentui/react-components'; // not used
+// import { Filter24Regular } from '@fluentui/react-icons'; // not used
 import { useTopbarStore } from '../stores/topbarStore';
 
 const Overview = React.lazy(() => import('overview/Overview'));
 
-// ลบ OverviewTopbarActions component ทิ้งไปทั้งหมด
+// Remove the OverviewTopbarActions component entirely
 
 export function OverviewPage() {
   const navigate = useNavigate();
   const { setActions } = useTopbarStore();
 
-  // ไม่ต้องมี State isFilterOpen อีกต่อไป
+  // State 'isFilterOpen' is no longer needed
 
-  // useEffect จะยังคงอยู่เพื่อเคลียร์ actions ของหน้าอื่น
+  // useEffect remains to clear actions from other pages
   useEffect(() => {
-    // ไม่มีการตั้งค่า actions ใดๆ สำหรับหน้านี้
+    // No actions are set for this page
     setActions({});
     return () => setActions({});
   }, [setActions]);

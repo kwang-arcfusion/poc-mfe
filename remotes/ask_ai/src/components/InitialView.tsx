@@ -22,14 +22,18 @@ const useStyles = makeStyles({
     maxWidth: '620px',
   },
   buttonStartConversation: {
-    // --- สถานะปกติ ---
-    color: tokens.colorBrandForeground1, // สีตัวอักษร
+    // --- Normal state ---
+    // Text color
+    // Border color
+    // --- On hover ---
+    // Change text color for better readability
+    color: tokens.colorBrandForeground1, // Text color
     fontSize: tokens.fontSizeBase200,
-    ...shorthands.borderColor(tokens.colorBrandStroke1), // สีขอบ
+    ...shorthands.borderColor(tokens.colorBrandStroke1), // Border color
 
-    // --- ตอนเมาส์ชี้ (Hover) ---
+    // --- On hover ---
     ':hover': {
-      color: tokens.colorBrandForeground1, // เปลี่ยนสีตัวอักษรเพื่อให้อ่านง่ายขึ้น
+      color: tokens.colorBrandForeground1, // Change text color for better readability
       backgroundColor: tokens.colorNeutralBackground4,
     },
   },

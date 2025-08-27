@@ -19,7 +19,7 @@ const useStyles = makeStyles({
   },
 });
 
-// Function ช่วย format วันที่สำหรับแกน X
+// Helper function to format dates for the X axis
 const formatXAxis = (tickItem: string) => {
   const date = new Date(tickItem);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });

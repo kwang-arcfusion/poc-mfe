@@ -83,7 +83,7 @@ export default function AskAi() {
     setBlocks((prev) => [
       ...prev,
       { kind: 'text', id: t, sender: 'user', content: trimmed },
-      { kind: 'text', id: t + 1, sender: 'ai', content: '' }, // bubble สำหรับสตรีมรอบนี้
+      { kind: 'text', id: t + 1, sender: 'ai', content: '' }, // bubble for this streaming round
     ]);
 
     startStreaming();

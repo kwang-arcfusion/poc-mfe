@@ -1,10 +1,10 @@
 // remotes/overview/src/services/api.ts
 import { OverviewData } from '../types';
 
-// --- ⬇️ [1] สร้างฟังก์ชันสำหรับสุ่มข้อมูลกราฟเส้นเล็กๆ ⬇️ ---
+// --- ⬇️ [1] Create a function to generate small sparkline data ⬇️ ---
 const generateSparkline = () => Array.from({ length: 12 }, () => Math.random() * 100 + 50);
 
-// --- ⬇️ [2] เพิ่ม `sparklineData` เข้าไปใน metrics แต่ละตัว ⬇️ ---
+// --- ⬇️ [2] Add `sparklineData` to each metric ⬇️ ---
 const mockData: OverviewData = {
   metrics: [
     {
@@ -117,7 +117,7 @@ const mockData: OverviewData = {
   ],
 };
 
-// จำลองการ fetch ข้อมูล
+// Simulate fetching data
 export const fetchOverviewData = (filters?: any): Promise<OverviewData> => {
   console.log('Fetching data with filters:', filters);
   return new Promise((resolve) => {

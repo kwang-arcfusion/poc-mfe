@@ -1,23 +1,23 @@
 // hosts/knowesis/src/stores/topbarStore.ts
 import { create } from 'zustand';
 
-// กำหนด Type ของ Actions
+// Define the type of Actions
 export interface TopbarActions {
   left?: React.ReactNode;
   right?: React.ReactNode;
 }
 
-// กำหนด Type ของ State และ Actions ภายใน Store
+// Define the type of State and Actions within the store
 export interface TopbarState {
-  // ✨ แก้ไขโดยการเพิ่ม export
+  // ✨ Updated by adding export
   actions: TopbarActions;
   setActions: (actions: TopbarActions) => void;
 }
 
-// สร้าง Zustand store
+// Create Zustand store
 export const useTopbarStore = create<TopbarState>((set) => ({
-  // ค่าเริ่มต้นของ state
+  // Initial state value
   actions: {},
-  // Action สำหรับอัปเดต state
+  // Action to update state
   setActions: (newActions) => set({ actions: newActions }),
 }));

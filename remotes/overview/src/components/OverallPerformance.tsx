@@ -19,7 +19,7 @@ import { MetricCard } from './MetricCard';
 const CARD_MIN_WIDTH = 200;
 const GAP_WIDTH = 16;
 
-// --- ⬇️ [1] แก้ไข Styles ทั้งหมดที่เกี่ยวข้องกับ Dialog ⬇️ ---
+// --- ⬇️ [1] Update all styles related to Dialog ⬇️ ---
 const useStyles = makeStyles({
   dynamicContainer: {
     display: 'flex',
@@ -46,32 +46,32 @@ const useStyles = makeStyles({
     maxWidth: '80vw',
     width: '1200px',
     maxHeight: '85vh',
-    // ทำให้ Surface เป็น Flex Container
+    // Make the Surface a flex container
     display: 'flex',
     padding: 0,
   },
 
   dialogBody: {
-    // ทำให้ Body ขยายเต็มพื้นที่ของ Surface
+    // Make the Body expand to fill the Surface
     flexGrow: 1,
-    // ทำให้ Body เป็น Flex Container (สำหรับ Title และ Grid)
+    // Make the Body a flex container (for Title and Grid)
     display: 'flex',
     flexDirection: 'column',
-    // ยังคงให้ scroll ได้เหมือนเดิม
+    // Keep scroll behavior the same
     overflowY: 'auto',
-    // ย้าย padding มาที่นี่เพื่อให้สวยงาม
+    // Move padding here for better appearance
     ...shorthands.padding(tokens.spacingVerticalL, tokens.spacingHorizontalL),
   },
   grid: {
     display: 'grid',
     ...shorthands.gap(`${GAP_WIDTH}px`),
     gridTemplateColumns: `repeat(auto-fill, minmax(${CARD_MIN_WIDTH}px, 1fr))`,
-    // ทำให้ Grid ขยายเต็มพื้นที่ที่เหลือใน Body
+    // Make the Grid expand to fill the remaining space in the Body
     flexGrow: 1,
     marginTop: '24px',
   },
 });
-// --- ⬆️ สิ้นสุดการแก้ไข Styles ⬆️ ---
+// --- ⬆️ End of style updates ⬆️ ---
 
 export const OverallPerformance: React.FC<{ metrics: Metric[] }> = ({ metrics }) => {
   const styles = useStyles();

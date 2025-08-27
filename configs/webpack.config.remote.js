@@ -23,10 +23,10 @@ module.exports = function createRemoteConfig({
   const isProd = mode === 'production';
 
   return {
-    // เราจะรัน webpack จากในโฟลเดอร์ของ remote นั้นๆ ดังนั้น entry path ไม่ต้องเปลี่ยน
+    // We will run webpack from within the remote's folder, so the entry path doesn't need to change.
     entry: './src/index.tsx',
     output: {
-      // ใช้ path.resolve กับ process.cwd() เพื่อให้แน่ใจว่า path จะชี้ไปที่ dist ของ remote ที่กำลัง build อยู่เสมอ
+      // Use path.resolve with process.cwd() to ensure the path always points to the dist of the remote being built.
       path: path.resolve(process.cwd(), 'dist'),
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
       clean: true,
@@ -36,7 +36,7 @@ module.exports = function createRemoteConfig({
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.jsx'],
       alias: {
-        // Path ต้องปรับให้ถูกต้องจากตำแหน่งของ remote ไปยัง packages
+        // Paths must be adjusted correctly from the remote's location to the packages.
         '@arcfusion/ui': path.resolve(process.cwd(), '../../packages/ui/src'),
         '@arcfusion/store': path.resolve(process.cwd(), '../../packages/store/src'),
       },
@@ -54,7 +54,7 @@ module.exports = function createRemoteConfig({
           use: {
             loader: 'babel-loader',
             options: {
-              // Path ไปยัง babel.config.js กลาง
+              // Path to the central babel.config.js
               configFile: path.resolve(process.cwd(), '../../configs/babel.config.js'),
             },
           },

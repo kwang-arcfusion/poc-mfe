@@ -39,7 +39,7 @@ const useStyles = makeStyles({
   },
 });
 
-// --- [1] เพิ่ม Ads และ Metrics กลับเข้ามาใน options ---
+// --- [1] Add Ads and Metrics back to options ---
 const allFilterOptions = {
   channels: ['Facebook', 'Google', 'TikTok', 'Instagram'],
   campaigns: ['Campaign Alpha', 'Campaign Beta', 'Campaign Charlie', 'Summer Sale'],
@@ -48,7 +48,7 @@ const allFilterOptions = {
   metrics: ['Impressions', 'Clicks', 'CTR', 'Conversions'],
 };
 
-// --- [2] เพิ่ม Ads และ Metrics กลับเข้ามาในค่าเริ่มต้น ---
+// --- [2] Add Ads and Metrics back to the initial values ---
 const initialFilters: FilterValues = {
   channels: ['Facebook', 'Google', 'TikTok'],
   campaigns: [],
@@ -118,7 +118,7 @@ export default function Overview({ navigate }: OverviewProps) {
           selectedOptions={filters.groupBy || []}
           onSelectionChange={(selection) => handleFilterChange('groupBy', selection)}
         />
-        {/* --- [3] เพิ่ม Component สำหรับ Ads และ Metrics --- */}
+        {/* --- [3] Add Components for Ads and Metrics --- */}
         <MultiSelect
           label="Ads"
           options={allFilterOptions.ads}

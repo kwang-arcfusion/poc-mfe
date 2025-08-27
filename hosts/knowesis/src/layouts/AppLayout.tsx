@@ -21,7 +21,7 @@ import {
 } from '@fluentui/react-icons';
 import { useTopbarStore } from '../stores/topbarStore';
 
-// ข้อมูลสำหรับ Sidebar
+// Data for Sidebar
 const menuGroups: SidebarNavGroup[] = [
   {
     title: 'MAIN',
@@ -44,11 +44,11 @@ export function AppLayout() {
   const { user, logout } = useAuth0();
   const { actions } = useTopbarStore();
 
-  // หา Page Title จาก menuGroups
+  // Find page title from menuGroups
   const currentPage = menuGroups.flatMap((g) => g.items).find((i) => i.value === location.pathname);
   const pageTitle = currentPage ? currentPage.label : 'Page Not Found';
 
-  // Logic สำหรับ Sidebar
+  // Sidebar logic
   const selectedValue =
     menuGroups
       .flatMap((g) => g.items)

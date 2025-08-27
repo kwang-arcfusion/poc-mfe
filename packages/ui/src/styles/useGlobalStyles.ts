@@ -8,5 +8,5 @@ export const useGlobalStyles = makeStaticStyles({
     '-webkit-font-smoothing': 'antialiased',
     '-moz-osx-font-smoothing': 'grayscale',
   },
-  // ในอนาคตถ้ามี global styles อื่นๆ ก็มาเพิ่มที่นี่
+  // Add other global styles here in the future
 });

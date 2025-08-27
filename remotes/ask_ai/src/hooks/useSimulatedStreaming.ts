@@ -10,7 +10,7 @@ export type JsonEvent =
   | { seq: number; type: 'done' }
   | { seq: number; type: 'error'; payload: { message: string } };
 
-/** ---------- EventInput: ยูเนียนที่ตัด seq ออกแบบชัดเจน ---------- */
+/** ---------- EventInput: a union that explicitly omits seq ---------- */
 type AnswerDeltaInput = { type: 'answer.delta'; payload: { text: string } };
 type AssetsPushInput = { type: 'assets.push'; payload: AssetGroup };
 type DoneInput = { type: 'done' };
@@ -124,7 +124,7 @@ export function useJsonEventStreaming() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const seqRef = useRef(0);
 
-  // ใช้ EventInput แทน Omit<JsonEvent,'seq'> เพื่อเลี่ยง excess property check บน union
+  // Use EventInput instead of Omit<JsonEvent,'seq'> to avoid excess property checks on union
   const emit = useCallback((e: EventInput) => {
     const evt: JsonEvent = { ...(e as any), seq: ++seqRef.current };
     setLastEvent(evt);

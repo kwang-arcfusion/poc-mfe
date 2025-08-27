@@ -6,9 +6,9 @@ import {
   mergeClasses, // <-- 1. Import mergeClasses
 } from '@fluentui/react-components';
 
-// (ส่วนของ Sidebar, Topbar, ThemeToggle ที่ import เข้ามาจะถูกลบออกไป เพราะ AppShell ไม่ควรรู้จักมัน)
+// (The imported Sidebar, Topbar, ThemeToggle parts were removed because AppShell should not know them)
 
-// สไตล์ default ของ AppShell
+// Default styles for AppShell
 const useAppShellStyles = makeStyles({
   root: {
     display: 'flex',
@@ -29,7 +29,7 @@ const useAppShellStyles = makeStyles({
   },
 });
 
-// 2. กำหนด Type สำหรับ classNames prop
+// 2. Define type for the classNames prop
 export type AppShellClassNames = {
   root?: string;
   contentContainer?: string;
@@ -40,14 +40,14 @@ export interface AppShellProps {
   sidebar: React.ReactNode;
   topbar: React.ReactNode;
   children: React.ReactNode;
-  classNames?: AppShellClassNames; // <-- เพิ่ม prop ใหม่
+  classNames?: AppShellClassNames; // <-- Add new prop
 }
 
 export function AppShell({ sidebar, topbar, children, classNames }: AppShellProps) {
   const styles = useAppShellStyles();
 
   return (
-    // 3. ใช้ mergeClasses เพื่อรวม default class กับ class ที่ส่งเข้ามา
+    // 3. Use mergeClasses to combine default classes with provided classes
     <div className={mergeClasses(styles.root, classNames?.root)}>
       {sidebar}
       <div className={mergeClasses(styles.contentContainer, classNames?.contentContainer)}>

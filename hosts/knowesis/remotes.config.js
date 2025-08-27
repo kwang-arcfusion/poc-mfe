@@ -1,6 +1,6 @@
 // hosts/knowesis/configs/remotes.js
 
-// 1. อ่านค่าจาก process.env โดยตรง
+// 1. Read values directly from process.env
 const remoteUrls = {
   ask_ai: process.env.REMOTE_URL_ASK_AI,
   home: process.env.REMOTE_URL_HOME,

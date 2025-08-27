@@ -1,6 +1,6 @@
 // remotes/home/webpack.common.js
 const path = require('path');
-const createRemoteConfig = require('../../configs/webpack.config.remote'); // <-- แก้ path ให้ถูกต้อง
+const createRemoteConfig = require('../../configs/webpack.config.remote'); // <-- Fix path correctly
 
 module.exports = (env = {}) =>
   createRemoteConfig({
@@ -8,7 +8,7 @@ module.exports = (env = {}) =>
     exposes: {
       './Home': './src/Home.tsx',
     },
-    // ส่ง path ไปยัง package.json ของตัวเอง
+    // Pass the path to its own package.json
     packageJsonPath: path.resolve(__dirname, './package.json'),
     mode: env.mode,
   });

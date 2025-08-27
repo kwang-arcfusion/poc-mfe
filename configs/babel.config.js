@@ -1,13 +1,13 @@
 // /babel.config.js
 module.exports = {
   presets: [
-    // 1. ทำงานเป็นอันดับที่ 3: แปลง JS สมัยใหม่ให้รองรับเบราว์เซอร์เป้าหมาย
+    // 1. Runs 3rd: transpile modern JS to target browsers
     ['@babel/preset-env', { targets: 'defaults' }],
 
-    // 2. ทำงานเป็นอันดับที่ 2: แปลง React JSX ให้เป็น JavaScript
+    // 2. Runs 2nd: transform React JSX into JavaScript
     ['@babel/preset-react', { runtime: 'automatic' }],
 
-    // 3. ทำงานเป็นอันดับที่ 1: แยกและลบ Type ของ TypeScript ออกไปก่อน
+    // 3. Runs 1st: strip TypeScript types first
     ['@babel/preset-typescript'],
   ],
 };

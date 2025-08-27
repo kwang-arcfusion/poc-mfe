@@ -3,15 +3,15 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
-const DotenvPlugin = require('dotenv-webpack'); // เปลี่ยนชื่อตัวแปรเพื่อไม่ให้สับสนกับ library `dotenv`
+const DotenvPlugin = require('dotenv-webpack'); // Rename variable to avoid confusion with `dotenv` library
 
 // ===================================================================
-// 1. โหลด .env ด้วยตัวเองทันทีที่ไฟล์นี้ถูกอ่าน
-// บรรทัดนี้จะทำให้ process.env มีค่าพร้อมใช้งานสำหรับโค้ดทั้งหมดในไฟล์นี้
+// 1. Load .env manually as soon as this file is read.
+// This line makes process.env available for all code in this file.
 // ===================================================================
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
-// 2. ตอนนี้เราสามารถ require ที่ข้างบนสุดได้แล้ว เพราะ process.env มีค่าแล้ว
+// 2. Now we can require this at the top, because process.env is populated.
 const remotesConfig = require('./remotes.config');
 
 const packageJson = require('./package.json');
@@ -60,8 +60,8 @@ module.exports = (env = {}) => {
       ],
     },
     plugins: [
-      // 3. เรายังคงต้องใช้ DotenvPlugin อยู่
-      // เพื่อให้มันส่งค่า process.env เข้าไปในโค้ดฝั่ง Browser ของเรา (เช่นในไฟล์ bootstrap.tsx)
+      // 3. We still need to use DotenvPlugin
+      // to inject process.env values into our browser-side code (e.g., in bootstrap.tsx).
       new DotenvPlugin({
         path: path.resolve(__dirname, './.env'),
       }),

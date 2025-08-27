@@ -35,7 +35,7 @@ const useStyles = makeStyles({
   },
   tabList: {
     width: '100%',
-    // --- สไตล์สำหรับ Tab ที่ Active (เหมือนเดิม) ---
+    // --- Styles for Active Tab (same as before) ---
     '& [aria-selected="true"] .fui-Tab__content': {
       color: tokens.colorBrandForeground1,
     },
@@ -43,15 +43,15 @@ const useStyles = makeStyles({
       backgroundColor: tokens.colorBrandStroke1,
     },
 
-    // --- V V V เพิ่มสไตล์สำหรับ Hover V V V ---
-    // เลือก Tab ที่ยังไม่ active (:not) และกำลังถูก hover
+    // --- V V V Add styles for Hover V V V ---
+    // Select a tab that is not active (:not) and is being hovered
     '& [role="tab"]:hover .fui-Tab__content': {
-      color: tokens.colorCompoundBrandForeground1Hover, // <-- ใช้สีสำหรับสถานะ Hover
+      color: tokens.colorCompoundBrandForeground1Hover, // <-- Use color for Hover state
     },
   },
 });
 
-// --- Data Structures (จากขั้นตอนที่ 1) ---
+// --- Data Structures (from step 1) ---
 export interface SidebarNavItem {
   value: string;
   label: string;

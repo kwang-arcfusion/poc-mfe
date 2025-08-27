@@ -9,13 +9,13 @@ import { useGlobalStyles, arcusionLightTheme, arcusionDarkTheme, ASSETS } from '
 
 import { AppLayout } from './layouts/AppLayout';
 
-// Import Pages ทั้งหมด
+// Import all Pages
 import { HomePage } from './pages/HomePage';
 import { AskAiPage } from './pages/AskAiPage';
 import { StoriesPage } from './pages/StoriesPage';
 import { OverviewPage } from './pages/OverviewPage';
 
-// Component "ยาม" เฝ้าแอป
+// "Guard" component for the app
 const ProtectedApp = withAuthenticationRequired(AppLayout, {
   onRedirecting: () => (
     <div
@@ -34,7 +34,7 @@ const ProtectedApp = withAuthenticationRequired(AppLayout, {
   ),
 });
 
-// Component ศูนย์กลางที่ประกอบร่างทุกอย่างเข้าด้วยกัน
+// Central component that assembles everything together
 function ThemedApp() {
   useGlobalStyles();
   const { theme } = useThemeStore();
@@ -57,7 +57,7 @@ function ThemedApp() {
   );
 }
 
-// App Component หลัก
+// Main App Component
 export function App() {
   return (
     <BrowserRouter>

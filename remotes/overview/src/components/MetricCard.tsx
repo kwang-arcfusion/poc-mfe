@@ -4,7 +4,7 @@ import { Card, Text, makeStyles, shorthands, tokens } from '@fluentui/react-comp
 import { ArrowTrending24Regular, ArrowTrendingDown24Regular } from '@fluentui/react-icons';
 import { Metric } from '../types';
 
-// --- ⬇️ [1] เปลี่ยน import จาก react-sparklines เป็น recharts ⬇️ ---
+// --- ⬇️ [1] Change import from react-sparklines to recharts ⬇️ ---
 import { ResponsiveContainer, LineChart, Line } from 'recharts';
 
 const useStyles = makeStyles({
@@ -51,7 +51,7 @@ export const MetricCard: React.FC<{ metric: Metric }> = ({ metric }) => {
   const styles = useStyles();
   const isPositive = metric.change >= 0;
 
-  // --- ⬇️ [2] แปลงข้อมูลให้อยู่ในรูปแบบที่ recharts ต้องการ ⬇️ ---
+  // --- ⬇️ [2] Transform data into the format required by recharts ⬇️ ---
   const rechartsData = metric.sparklineData?.map((val) => ({ value: val }));
 
   return (
@@ -67,7 +67,7 @@ export const MetricCard: React.FC<{ metric: Metric }> = ({ metric }) => {
         <Text weight="semibold">{metric.change.toFixed(1)}%</Text>
       </div>
 
-      {/* --- ⬇️ [3] เปลี่ยนมาใช้ Component จาก recharts ⬇️ --- */}
+      {/* --- ⬇️ [3] Switch to using components from recharts ⬇️ --- */}
       {rechartsData && rechartsData.length > 0 && (
         <div className={styles.sparklineContainer}>
           <ResponsiveContainer width="100%" height="100%">
@@ -81,7 +81,7 @@ export const MetricCard: React.FC<{ metric: Metric }> = ({ metric }) => {
                     : tokens.colorPaletteRedForeground3
                 }
                 strokeWidth={2}
-                dot={false} // ไม่แสดงจุดบนกราฟ
+                dot={false} // Do not show dots on the graph
               />
             </LineChart>
           </ResponsiveContainer>

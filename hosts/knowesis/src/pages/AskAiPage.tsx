@@ -19,7 +19,7 @@ import { useTopbarStore } from '../stores/topbarStore';
 
 const AskAi = React.lazy(() => import('ask_ai/AskAi'));
 
-// --- Styles สำหรับ Topbar Actions ---
+// --- Styles for Topbar Actions ---
 const useTopbarStyles = makeStyles({
   buttonModel: {
     whiteSpace: 'nowrap',
@@ -29,17 +29,17 @@ const useTopbarStyles = makeStyles({
     alignItems: 'center',
     gap: tokens.spacingHorizontalS,
     overflow: 'hidden',
-    minWidth: 0, // สำคัญมากสำหรับ Flexbox item เพื่อให้สามารถย่อขนาดได้
+    minWidth: 0, // Important for Flexbox items to allow shrinking
     width: '100%',
   },
-  // ใช้สำหรับซ่อน element ที่ใช้ในการวัดขนาดเท่านั้น
+  // Used to hide the element used for measuring only
   hiddenMeasurer: {
     visibility: 'hidden',
     position: 'absolute',
     top: '-9999px',
     left: '-9999px',
     display: 'flex',
-    gap: tokens.spacingHorizontalS, // ต้องมี gap เหมือน container จริง
+    gap: tokens.spacingHorizontalS, // Must match the gap of the real container
   },
   bookmarkText: {
     fontWeight: 'normal',
@@ -47,7 +47,7 @@ const useTopbarStyles = makeStyles({
   },
 });
 
-// --- Data สำหรับ Bookmarks ---
+// --- Data for Bookmarks ---
 const bookmarks = [
   'Customer Segmentation Q3',
   'Weekly Performance Report',
@@ -57,18 +57,18 @@ const bookmarks = [
   'Audience Insights',
 ];
 
-// --- สร้าง Component ของ Actions สำหรับหน้านี้โดยเฉพาะ (เวอร์ชันแก้ไขสมบูรณ์) ---
+// --- Create the Actions component specifically for this page (final revised version) ---
 const AskAiTopbarActions = () => {
   const styles = useTopbarStyles();
   const containerRef = useRef<HTMLDivElement>(null);
   const splitButtonRef = useRef<HTMLDivElement>(null);
-  const overflowButtonRef = useRef<HTMLButtonElement>(null); // Ref นี้ยังจำเป็นสำหรับ UI แต่ไม่ใช้ใน logic คำนวณหลัก
+  const overflowButtonRef = useRef<HTMLButtonElement>(null); // This ref is still needed for UI but not used in main calculation logic
   const measurerRef = useRef<HTMLDivElement>(null);
 
   const [visibleItemCount, setVisibleItemCount] = useState(bookmarks.length);
   const [itemWidths, setItemWidths] = useState<number[]>([]);
 
-  // Step 1: วัดขนาดของปุ่มทั้งหมดเพียงครั้งเดียวหลังจาก Render ครั้งแรก
+  // Step 1: Measure the widths of all buttons once after the first render
   useLayoutEffect(() => {
     if (measurerRef.current) {
       const measuredWidths = Array.from(measurerRef.current.children).map(
@@ -76,9 +76,9 @@ const AskAiTopbarActions = () => {
       );
       setItemWidths(measuredWidths);
     }
-  }, []); // ทำงานแค่ครั้งเดียว
+  }, []); // Run only once
 
-  // Step 2: ฟังก์ชันคำนวณที่ถูกเรียกใช้ทุกครั้งที่มีการ Resize
+  // Step 2: Calculation function called on every resize
   const calculateVisibleItems = useCallback(() => {
     if (!containerRef.current || itemWidths.length === 0) {
       return;
@@ -86,10 +86,10 @@ const AskAiTopbarActions = () => {
 
     const containerWidth = containerRef.current.clientWidth;
     const splitButtonWidth = splitButtonRef.current?.offsetWidth || 0;
-    const gapWidth = 8; // คือค่า tokens.spacingHorizontalS
+    const gapWidth = 8; // equals tokens.spacingHorizontalS
 
-    // **[FIX 1]** ใช้ค่าคงที่สำหรับปุ่ม Overflow เพื่อป้องกัน Race Condition
-    // ค่า 40px มาจาก (ความกว้างปุ่มไอคอนประมาณ 32px + gap 8px)
+    // **[FIX 1]** Use a constant width for the Overflow button to avoid race conditions
+    // 40px comes from (icon button width ~32px + 8px gap)
     const OVERFLOW_BUTTON_WIDTH = 40;
 
     const initialOffset = splitButtonWidth;
@@ -97,19 +97,19 @@ const AskAiTopbarActions = () => {
     let newVisibleCount = 0;
 
     for (const itemWidth of itemWidths) {
-      // พื้นที่ที่ต้องใช้สำหรับปุ่มถัดไป (รวม gap)
+      // Space required for the next button (including gap)
       const requiredWidthForItem = itemWidth + gapWidth;
 
-      // **[FIX 2]** ตรวจสอบว่า "พื้นที่ปัจจุบัน + ปุ่มถัดไป" จะไปกินที่ "ที่จองไว้ให้ปุ่ม Overflow" หรือไม่
+      // **[FIX 2]** Check whether "current space + next button" would eat into the space reserved for the Overflow button
       if (currentWidth + requiredWidthForItem > containerWidth - OVERFLOW_BUTTON_WIDTH) {
-        break; // ถ้าใช่ ให้หยุดนับ
+        break; // if so, stop counting
       }
 
       currentWidth += requiredWidthForItem;
       newVisibleCount++;
     }
 
-    // **[FIX 3]** จัดการกรณีที่ทุกรายการแสดงได้พอดี เพื่อไม่ให้เหลือที่จองไว้ว่างๆ
+    // **[FIX 3]** Handle the case where all items fit exactly, so no reserved space remains unused
     let totalRealWidth = initialOffset;
     itemWidths.forEach((w) => {
       totalRealWidth += w + gapWidth;
@@ -119,13 +119,13 @@ const AskAiTopbarActions = () => {
       newVisibleCount = bookmarks.length;
     }
 
-    // อัปเดต state เฉพาะเมื่อค่ามีการเปลี่ยนแปลง
+    // Update state only when the value changes
     if (newVisibleCount !== visibleItemCount) {
       setVisibleItemCount(newVisibleCount);
     }
   }, [itemWidths, visibleItemCount]);
 
-  // Step 3: ติดตั้ง ResizeObserver เพื่อเรียกใช้การคำนวณ
+  // Step 3: Install ResizeObserver to trigger calculations
   useLayoutEffect(() => {
     calculateVisibleItems();
 
@@ -142,7 +142,7 @@ const AskAiTopbarActions = () => {
 
   return (
     <>
-      {/* Container ที่มองเห็นและใช้งานจริง */}
+      {/* Visible and interactive container */}
       <div ref={containerRef} className={styles.container}>
         {/* 1. SplitButton */}
         <div ref={splitButtonRef} style={{ flexShrink: 0 }}>
@@ -162,7 +162,7 @@ const AskAiTopbarActions = () => {
           </Menu>
         </div>
 
-        {/* 2. Render Visible Bookmark Buttons */}
+        {/* 2. Render visible bookmark buttons */}
         {visibleItems.map((bookmark, index) => (
           <Button
             key={index}
@@ -174,7 +174,7 @@ const AskAiTopbarActions = () => {
           </Button>
         ))}
 
-        {/* 3. Render Overflow Menu Button */}
+        {/* 3. Render overflow menu button */}
         {overflowItems.length > 0 && (
           <Menu>
             <MenuTrigger>
@@ -198,7 +198,7 @@ const AskAiTopbarActions = () => {
         )}
       </div>
 
-      {/* **[FIX 4]** Container ที่ซ่อนไว้สำหรับวัดขนาด (ต้องเหมือนกับปุ่มจริงทุกประการ) */}
+      {/* **[FIX 4]** Hidden container for measuring (must be identical to the real buttons) */}
       <div ref={measurerRef} className={styles.hiddenMeasurer} aria-hidden="true">
         {bookmarks.map((bookmark, index) => (
           <Button
@@ -215,7 +215,7 @@ const AskAiTopbarActions = () => {
   );
 };
 
-// --- ส่วนที่เหลือของไฟล์ AskAiPage.tsx ไม่ต้องแก้ไข ---
+// --- The rest of AskAiPage.tsx requires no changes ---
 export function AskAiPage() {
   const { setActions } = useTopbarStore();
 

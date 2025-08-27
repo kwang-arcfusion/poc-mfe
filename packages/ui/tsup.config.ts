@@ -8,6 +8,6 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   external: ['react'],
-  // --- เพิ่มบรรทัดนี้ ---
+  // --- Add this line ---
   tsconfig: 'tsconfig.json',
 });

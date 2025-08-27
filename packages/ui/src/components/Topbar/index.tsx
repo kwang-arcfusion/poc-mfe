@@ -56,8 +56,8 @@ export function Topbar({
   pageTitle,
   methodsLeft,
   methodsRight,
-  user, // <-- รับ user object
-  onLogout, // <-- รับ onLogout function
+  user, // <-- Accept user object
+  onLogout, // <-- Accept onLogout function
 }: TopbarProps) {
   const styles = useStyles();
 
@@ -70,8 +70,7 @@ export function Topbar({
       </div>
       <div className={styles.rightContainer}>
         <SearchBox placeholder="Search" />
-        {/* เรียกใช้ UserMenu และส่ง props ที่จำเป็นลงไป */}
-        {/* ตรงนี้ */}
+        {/* Call UserMenu and pass down necessary props */}
         <Chat24Regular color={tokens.colorBrandForeground1}></Chat24Regular>
         <Alert24Regular color={tokens.colorBrandForeground1}></Alert24Regular>
         <UserMenu user={user} onLogout={onLogout} />

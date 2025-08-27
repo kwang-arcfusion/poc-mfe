@@ -59,19 +59,19 @@ const useStyles = makeStyles({
   kpiContainer: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-end', //จัดให้ชิดล่างเพื่อให้ Badge กับ Value ตรงกันสวยงาม
+    alignItems: 'flex-end', // Align bottom so Badge and Value align nicely
   },
   kpiLeft: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    ...shorthands.gap(tokens.spacingVerticalXS), // ระยะห่างระหว่าง Badge กับ Kpi Title
+    ...shorthands.gap(tokens.spacingVerticalXS), // Spacing between Badge and KPI title
   },
   kpiMetric: {
-    // Style สำหรับ "Conversion Rate" ที่เป็นสีฟ้า
+    // Style for "Conversion Rate" in blue
     fontSize: tokens.fontSizeBase500,
     fontWeight: tokens.fontWeightSemibold,
-    color: tokens.colorBrandForeground1, // ใช้สี Brand หลัก (สีฟ้า)
+    color: tokens.colorBrandForeground1, // Use primary brand color (blue)
     lineHeight: 1.2,
   },
   kpiValue: {

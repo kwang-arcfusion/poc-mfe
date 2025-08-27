@@ -1,3 +1,3 @@
 // remotes/ask_ai/src/index.tsx
-// ทำหน้าที่แค่ export เท่านั้น
+// Acts as a simple export barrel only
 export { default } from './AskAi';

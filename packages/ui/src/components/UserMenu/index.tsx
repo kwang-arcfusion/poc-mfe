@@ -17,7 +17,7 @@ import {
   shorthands,
   tokens,
   Card,
-  DialogActions, // ยังใช้ใน Logout dialog
+  DialogActions, // still used in the Logout dialog
 } from '@fluentui/react-components';
 import { useThemeStore } from '@arcfusion/store';
 import { SignOut24Regular, Color24Regular, CheckmarkCircle24Regular } from '@fluentui/react-icons';
@@ -132,7 +132,7 @@ const useStyles = makeStyles({
   growList: { flexGrow: 1, width: '100%' },
 });
 
-// hardcode palette สำหรับพรีวิว
+// Hardcoded palettes for preview
 const LIGHT_PALETTE = {
   bg: '#F6F7FB',
   surface: '#FFFFFF',
@@ -166,7 +166,7 @@ function ThemePreview({
   palette: typeof LIGHT_PALETTE;
   selected: boolean;
   label: string;
-  onApply: () => void; // คลิกแล้ว apply ทันที
+  onApply: () => void; // click to apply immediately
 }) {
   const styles = useStyles();
 
@@ -247,7 +247,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
 
   const { theme, toggleTheme } = useThemeStore();
 
-  // คลิกการ์ดแล้วสลับทันที (จะ toggle เฉพาะตอนเลือกต่างจากปัจจุบัน)
+  // Click card to toggle immediately (will toggle only when different from current)
   const applyTheme = (target: ThemeName) => {
     if (target !== (theme as ThemeName)) {
       toggleTheme();
@@ -282,7 +282,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
         </MenuPopover>
       </Menu>
 
-      {/* THEME DIALOG (คลิกการ์ด = Apply ทันที / ไม่มีปุ่ม) */}
+      {/* THEME DIALOG (click card = apply immediately / no buttons) */}
       <Dialog open={isThemeDialogOpen} onOpenChange={(_e, d) => setIsThemeDialogOpen(d.open)}>
         <DialogSurface className={styles.fitContentSurface}>
           <DialogBody className={styles.dialogBody}>
@@ -303,7 +303,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
               />
             </div>
 
-            {/* ไม่มี DialogActions เพื่อให้ผู้ใช้ปิด dialog เอง */}
+            {/* No DialogActions so the user closes the dialog themselves */}
           </DialogBody>
         </DialogSurface>
       </Dialog>

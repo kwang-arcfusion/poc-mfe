@@ -45,7 +45,7 @@ const useStyles = makeStyles({
   },
 });
 
-// ✨ 1. เปลี่ยนชื่อ Interface
+// ✨ 1. Rename Interface
 export interface MultiSelectProps {
   label: string;
   options: string[];
@@ -53,7 +53,7 @@ export interface MultiSelectProps {
   onSelectionChange: (newSelection: string[]) => void;
 }
 
-// ✨ 2. เปลี่ยนชื่อ Component
+// ✨ 2. Rename Component
 export const MultiSelect: React.FC<MultiSelectProps> = ({
   label,
   options,

@@ -1,4 +1,4 @@
-// ข้อมูลสำหรับ Metric Card แต่ละใบ
+// Data for each Metric Card
 export interface Metric {
   id: string;
   title: string;
@@ -8,13 +8,13 @@ export interface Metric {
   sparklineData?: number[];
 }
 
-// ข้อมูลสำหรับกราฟ Daily Performance (แต่ละจุด)
+// Data for the Daily Performance chart (each point)
 export interface DailyDataPoint {
   date: string; // "YYYY-MM-DD"
   value: number;
 }
 
-// ข้อมูลสำหรับตาราง By Channel (แต่ละแถว)
+// Data for the By Channel table (each row)
 export interface ChannelPerformance {
   channel: 'Facebook' | 'Google' | 'TikTok' | 'Other';
   impr: number;
@@ -28,21 +28,21 @@ export interface ChannelPerformance {
   cvr: number;
 }
 
-// โครงสร้างข้อมูลทั้งหมดสำหรับหน้า Overview
+// Overall data structure for the Overview page
 export interface OverviewData {
   metrics: Metric[];
   dailyPerformance: DailyDataPoint[];
   channelPerformance: ChannelPerformance[];
 }
 
-// State สำหรับการ Filter
+// State for Filters
 export interface FilterValues {
   campaigns?: string[];
   ads?: string[];
   channels?: string[];
 }
 
-// State สำหรับการ Filter
+// State for Filters
 export interface FilterValues {
   channels?: string[];
   campaigns?: string[];

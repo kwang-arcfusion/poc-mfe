@@ -6,7 +6,7 @@ import { useTopbarStore } from '../stores/topbarStore';
 
 const Home = React.lazy(() => import('home/Home'));
 
-// สร้าง Component ของ Actions สำหรับหน้านี้โดยเฉพาะ
+// Create page-specific Actions component
 const HomeActions = () => (
   <RadioGroup layout="horizontal">
     <Radio value="A" label="Method A" />
@@ -18,12 +18,12 @@ export function HomePage() {
   const navigate = useNavigate();
   const { setActions } = useTopbarStore();
 
-  // useEffect จะทำงานเมื่อ component ถูก mount
+  // useEffect runs when the component is mounted
   useEffect(() => {
-    // กำหนด actions สำหรับหน้านี้
+    // Set actions for this page
     setActions({ left: <HomeActions /> });
 
-    // Cleanup function: จะทำงานเมื่อ component ถูก unmount
+    // Cleanup function: runs when the component is unmounted
     return () => setActions({});
   }, [setActions]);
 
