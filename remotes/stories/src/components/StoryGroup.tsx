@@ -4,7 +4,6 @@ import { makeStyles, shorthands, tokens, Badge } from '@fluentui/react-component
 import { Story } from '../types';
 import { InsightCard } from './InsightCard';
 
-// --- Component Styles (No changes here) ---
 const useStyles = makeStyles({
   groupContainer: {
     display: 'flex',
@@ -25,21 +24,20 @@ const useStyles = makeStyles({
     marginTop: '8px',
   },
   cardGrid: {
-    display: 'flex',
-    flexWrap: 'wrap',
+    // --- [THE FINAL GRID SOLUTION] ---
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))',
     ...shorthands.gap('24px'),
   },
 });
 
+// ... The rest of the component is unchanged
 interface StoryGroupProps {
   title: string;
   stories: Story[];
 }
-
-// The component is now simpler. It just renders the title and all cards.
 export const StoryGroup: React.FC<StoryGroupProps> = ({ title, stories }) => {
   const styles = useStyles();
-
   return (
     <section className={styles.groupContainer}>
       <div className={styles.groupHeader}>
@@ -48,7 +46,6 @@ export const StoryGroup: React.FC<StoryGroupProps> = ({ title, stories }) => {
           {stories.length} Stories
         </Badge>
       </div>
-
       <div className={styles.cardGrid}>
         {stories.map((story) => (
           <InsightCard key={story.id} story={story} />

@@ -4,23 +4,17 @@ import { makeStyles, shorthands, tokens, Badge } from '@fluentui/react-component
 import { Sparkle24Regular } from '@fluentui/react-icons';
 import { Story } from '../types';
 
-// --- Component Styles ---
 const useStyles = makeStyles({
-  // --- Main Card Styles ---
   insightCard: {
     backgroundColor: tokens.colorNeutralBackground1,
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
     boxShadow: tokens.shadow8,
     ...shorthands.padding('24px'),
-    width: '100%',
-    maxWidth: '400px',
-    minWidth: '320px',
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     transitionProperty: 'box-shadow, transform',
     transitionDuration: '0.2s',
     transitionTimingFunction: 'ease-in-out',
     boxSizing: 'border-box',
-    flex: '1 1 320px',
     display: 'flex',
     flexDirection: 'column',
     ...shorthands.gap('16px'),
@@ -29,8 +23,7 @@ const useStyles = makeStyles({
       transform: 'translateY(-2px)',
     },
   },
-
-  // --- Block 1: Header ---
+  // ... The rest of the styles are unchanged
   cardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -46,32 +39,27 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground3,
   },
-
-  // --- Block 2: Title (Subtitle from data) ---
   titleText: {
     fontSize: tokens.fontSizeBase500,
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
     lineHeight: 1.4,
   },
-
-  // --- Block 3: KPI & Badge ---
   kpiContainer: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-end', // Align bottom so Badge and Value align nicely
+    alignItems: 'flex-end',
   },
   kpiLeft: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    ...shorthands.gap(tokens.spacingVerticalXS), // Spacing between Badge and KPI title
+    ...shorthands.gap(tokens.spacingVerticalXS),
   },
   kpiMetric: {
-    // Style for "Conversion Rate" in blue
     fontSize: tokens.fontSizeBase500,
     fontWeight: tokens.fontWeightSemibold,
-    color: tokens.colorBrandForeground1, // Use primary brand color (blue)
+    color: tokens.colorBrandForeground1,
     lineHeight: 1.2,
   },
   kpiValue: {
@@ -80,8 +68,6 @@ const useStyles = makeStyles({
     color: tokens.colorPaletteRedForeground1,
     lineHeight: 1,
   },
-
-  // --- Block 4: Graph ---
   chartContainer: {
     width: '100%',
     height: '80px',
@@ -103,8 +89,6 @@ const useStyles = makeStyles({
     flexGrow: 1,
     position: 'relative',
   },
-
-  // --- Block 5: Summary ---
   summaryContainer: {
     display: 'flex',
     ...shorthands.gap(tokens.spacingHorizontalS),
@@ -124,25 +108,19 @@ const useStyles = makeStyles({
   },
 });
 
+// ... The rest of the component is unchanged
 interface InsightCardProps {
   story: Story;
 }
-
 export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
   const styles = useStyles();
-
   return (
     <div className={styles.insightCard}>
-      {/* --- Block 1: Header --- */}
       <div className={styles.cardHeader}>
         <div className={styles.platformIcon}>{story.platform.icon}</div>
         <span className={styles.timeAgo}>{story.timeAgo}</span>
       </div>
-
-      {/* --- Block 2: Title (using subtitle from data) --- */}
       <div className={styles.titleText}>{story.kpi.title}</div>
-
-      {/* --- Block 3: KPI & Badge (Updated Layout) --- */}
       <div className={styles.kpiContainer}>
         <div className={styles.kpiLeft}>
           {story.kpi.tag && (
@@ -154,8 +132,6 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
         </div>
         <div className={styles.kpiValue}>{story.kpi.value}</div>
       </div>
-
-      {/* --- Block 4: Graph --- */}
       <div className={styles.chartContainer}>
         <div className={styles.yAxis}>
           <span>1.5%</span>
@@ -201,8 +177,6 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
           </svg>
         </div>
       </div>
-
-      {/* --- Block 5: Summary --- */}
       <div className={styles.summaryContainer}>
         <Sparkle24Regular className={styles.sparkleIcon} />
         <div className={styles.summaryText}>
