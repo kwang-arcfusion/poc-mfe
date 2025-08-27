@@ -183,7 +183,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 }) => {
   const styles = useStyles();
   const rootRef = React.useRef<HTMLDivElement>(null);
-
   const [range, setRange] = useControllable<DateRange>(value, defaultValue, onChange);
 
   const [openStart, setOpenStart] = React.useState(false);
@@ -297,16 +296,18 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             onOpenChange={onEndOpenChange}
           />
         </div>
-        <Button
-          className={styles.clearBtn}
-          appearance="transparent"
-          size={size === 'small' ? 'small' : 'medium'}
-          icon={<DismissCircle20Regular />}
-          aria-label="Clear date range"
-          title="Clear"
-          onClick={clearAll}
-          disabled={disabled || (!range.start && !range.end)}
-        />
+        {range.start && (
+          <Button
+            className={styles.clearBtn}
+            appearance="transparent"
+            size={size === 'small' ? 'small' : 'medium'}
+            icon={<DismissCircle20Regular />}
+            aria-label="Clear date range"
+            title="Clear"
+            onClick={clearAll}
+            disabled={disabled || (!range.start && !range.end)}
+          />
+        )}
       </div>
     </div>
   );

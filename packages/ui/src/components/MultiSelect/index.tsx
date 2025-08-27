@@ -1,4 +1,4 @@
-// remotes/overview/src/components/FilterGroupSelect.tsx
+// packages/ui/src/components/MultiSelect/index.tsx
 import React, { useMemo, useState } from 'react';
 import {
   Badge,
@@ -45,14 +45,16 @@ const useStyles = makeStyles({
   },
 });
 
-interface FilterGroupSelectProps {
+// ✨ 1. เปลี่ยนชื่อ Interface
+export interface MultiSelectProps {
   label: string;
   options: string[];
   selectedOptions: string[];
   onSelectionChange: (newSelection: string[]) => void;
 }
 
-export const FilterGroupSelect: React.FC<FilterGroupSelectProps> = ({
+// ✨ 2. เปลี่ยนชื่อ Component
+export const MultiSelect: React.FC<MultiSelectProps> = ({
   label,
   options,
   selectedOptions,
@@ -73,19 +75,15 @@ export const FilterGroupSelect: React.FC<FilterGroupSelectProps> = ({
     onSelectionChange(data.checkedItems);
   };
 
-  // --- [✨] ปรับ Logic ตรงนี้ให้ Clean ขึ้น ---
   const triggerContent = useMemo(() => {
     const count = selectedOptions.length;
-
-    // 1. เตรียมข้อความที่จะแสดงตามเงื่อนไขก่อน
     const selectionText =
       count === 0
-        ? 'All' // ถ้ายังไม่เลือก ให้ใช้คำว่า 'All'
+        ? 'All'
         : count === 1
           ? selectedOptions[0]
           : `${selectedOptions[0]}, +${count - 1}`;
 
-    // 2. Return โครงสร้าง JSX แบบเดียวเสมอ
     return (
       <span className={styles.triggerButtonContents}>
         <Badge appearance="tint" size="large">
@@ -108,7 +106,6 @@ export const FilterGroupSelect: React.FC<FilterGroupSelectProps> = ({
           {triggerContent}
         </Button>
       </MenuTrigger>
-
       <MenuPopover className={styles.popoverSurface}>
         <div className={styles.searchContainer}>
           <Input
@@ -127,7 +124,6 @@ export const FilterGroupSelect: React.FC<FilterGroupSelectProps> = ({
             }
           />
         </div>
-
         <MenuList
           className={styles.menuList}
           checkedValues={{ [label]: selectedOptions }}
@@ -135,7 +131,7 @@ export const FilterGroupSelect: React.FC<FilterGroupSelectProps> = ({
         >
           {filteredOptions.map((option) => (
             <MenuItemCheckbox key={option} name={label} value={option}>
-              {option}
+              {option} 
             </MenuItemCheckbox>
           ))}
         </MenuList>

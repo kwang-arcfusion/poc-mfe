@@ -8,9 +8,8 @@ import { fetchOverviewData } from './services/api';
 import { OverallPerformance } from './components/OverallPerformance';
 import { DailyPerformanceChart } from './components/DailyPerformanceChart';
 import { ByChannelTable } from './components/ByChannelTable';
-import { FilterGroupSelect } from './components/FilterGroupSelect';
 import { Filter28Filled } from '@fluentui/react-icons';
-import { DateRangePicker, type DateRange } from '@arcfusion/ui';
+import { DateRangePicker, type DateRange, MultiSelect } from '@arcfusion/ui';
 
 const useStyles = makeStyles({
   root: {
@@ -101,32 +100,32 @@ export default function Overview({ navigate }: OverviewProps) {
       <header className={styles.header}>
         <Filter28Filled />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
-        <FilterGroupSelect
+        <MultiSelect
           label="Channels"
           options={allFilterOptions.channels}
           selectedOptions={filters.channels || []}
           onSelectionChange={(selection) => handleFilterChange('channels', selection)}
         />
-        <FilterGroupSelect
+        <MultiSelect
           label="Campaigns"
           options={allFilterOptions.campaigns}
           selectedOptions={filters.campaigns || []}
           onSelectionChange={(selection) => handleFilterChange('campaigns', selection)}
         />
-        <FilterGroupSelect
+        <MultiSelect
           label="Group By"
           options={allFilterOptions.groupBy}
           selectedOptions={filters.groupBy || []}
           onSelectionChange={(selection) => handleFilterChange('groupBy', selection)}
         />
         {/* --- [3] เพิ่ม Component สำหรับ Ads และ Metrics --- */}
-        <FilterGroupSelect
+        <MultiSelect
           label="Ads"
           options={allFilterOptions.ads}
           selectedOptions={filters.ads || []}
           onSelectionChange={(selection) => handleFilterChange('ads', selection)}
         />
-        <FilterGroupSelect
+        <MultiSelect
           label="Metrics"
           options={allFilterOptions.metrics}
           selectedOptions={filters.metrics || []}

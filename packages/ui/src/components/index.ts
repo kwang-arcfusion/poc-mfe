@@ -14,3 +14,6 @@ export type { UserMenuProps } from './UserMenu';
 
 export * from './DateRangePicker';
 export type { DateRange } from './DateRangePicker';
+
+export * from './MultiSelect';
+export type { MultiSelectProps } from './MultiSelect';
