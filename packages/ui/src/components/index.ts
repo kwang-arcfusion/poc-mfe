@@ -11,3 +11,6 @@ export type { AppShellProps } from './AppShell';
 
 export * from './UserMenu';
 export type { UserMenuProps } from './UserMenu';
+
+export * from './DateRangePicker';
+export type { DateRange } from './DateRangePicker';
