@@ -1,25 +1,20 @@
 // remotes/stories/src/StoryDetailPage.tsx
-
 import * as React from 'react';
 import {
   Badge,
   Button,
   Title1,
   Text,
-  Card,
   makeStyles,
   shorthands,
   tokens,
 } from '@fluentui/react-components';
 import { Sparkle24Regular } from '@fluentui/react-icons';
 import { useLayoutStore } from '@arcfusion/store';
-
 import { WrapupKpis } from './storyDetail/WrapupKpis';
 import { NarrativeCard } from './storyDetail/NarrativeCard';
 import { ActionsCard } from './storyDetail/ActionsCard';
 import { EvidenceSection } from './storyDetail/EvidenceSection';
-
-// mock for evidence (สอดคล้องกับ narrative)
 import {
   trendCurrent,
   trendPrior,
@@ -27,16 +22,12 @@ import {
   breakdownDevice,
   breakdownRegion,
 } from './storyDetail/mock';
+// ✨ 1. Import local panel component
+import { AskAiPanel } from './askAiPanel/AskAiPanel';
 
-/* =============================
-   Styles (Fluent UI tokens only)
-============================= */
 const useStyles = makeStyles({
-  /** ─────────────── NEW: split wrapper + panes ─────────────── **/
   outer: {
-    // wrapper นอกสุดต้อง hidden เพื่อกัน body/parent scroll
     overflow: 'hidden',
-    // ให้เต็ม viewport ยกเว้น topbar 60px
     height: 'calc(100vh - 60px)',
     backgroundColor: tokens.colorNeutralBackground2,
   },
@@ -53,41 +44,25 @@ const useStyles = makeStyles({
   },
   splitGrid: {
     display: 'grid',
-    // ซ้ายใหญ่กว่า: 2 ส่วน : 1 ส่วน
     gridTemplateColumns: '2fr 1fr',
     columnGap: '12px',
     height: '100%',
-    // padding ขอบรวมทั้งสองฝั่ง
     paddingLeft: '12px',
     paddingRight: '12px',
-    paddingTop: '0px',
-    paddingBottom: '0px',
     boxSizing: 'border-box',
   },
   leftPane: {
     height: '100%',
-    overflow: 'auto', // สกอของฝั่งซ้าย
+    overflow: 'auto', // ส่วนเนื้อหา scroll ได้
   },
+  // ✨ 2. ปรับแก้ rightPane ให้ไม่ scroll เอง
   rightPane: {
     height: '100%',
-    overflow: 'auto', // สกอของฝั่งขวา
+    overflow: 'hidden', // Pane นี้ไม่ต้องมี scrollbar
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
     backgroundColor: tokens.colorNeutralBackground1,
   },
-  rightInner: {
-    display: 'flex',
-    flexDirection: 'column',
-    rowGap: '12px',
-    ...shorthands.padding('16px'),
-  },
-  rightHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  /** ─────────────── existing page styles (ซ้าย) ─────────────── **/
   page: {
     display: 'flex',
     flexDirection: 'column',
@@ -98,25 +73,6 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground2,
     boxSizing: 'border-box',
   },
-
-  // hero + title area
-  hero: {
-    position: 'relative',
-    ...shorthands.padding('18px'),
-    ...shorthands.borderRadius(tokens.borderRadiusLarge),
-    backgroundImage: `linear-gradient(180deg, ${tokens.colorNeutralBackground1}, ${tokens.colorNeutralBackground2})`,
-    ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
-    display: 'flex',
-    flexDirection: 'column',
-    rowGap: '8px',
-  },
-  /** NEW: toolbar บนหัวเรื่องสำหรับปุ่ม Ask AI **/
-  heroToolbar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-
   heroTitleRow: {
     display: 'flex',
     flexDirection: 'column',
@@ -147,8 +103,6 @@ const useStyles = makeStyles({
     columnGap: '8px',
     rowGap: '8px',
   },
-
-  // main two columns (Narrative | Actions)
   mainGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr',
@@ -164,23 +118,15 @@ const useStyles = makeStyles({
 
 export default function StoryDetailPage() {
   const s = useStyles();
-  // 2. ดึง action `setMainOverflow` มาจาก store
   const { setMainOverflow } = useLayoutStore();
-  // 3. ใช้ useEffect เพื่อจัดการ overflow ของ AppShell
-  React.useEffect(() => {
-    // เมื่อ component นี้ mount (ถูกเปิดขึ้นมา)
-    // ให้เปลี่ยน overflow ของ <main> เป็น 'visible'
-    // เพื่อให้ scrollbar ของ AppShell หายไป และให้หน้านี้ควบคุม scroll เอง
-    setMainOverflow('visible');
+  const [aiOpen, setAiOpen] = React.useState(false);
 
-    // *** สำคัญที่สุด ***
-    // เมื่อ component นี้ unmount (ผู้ใช้เปลี่ยนไปหน้าอื่น)
-    // ให้คืนค่า overflow กลับเป็น 'auto' เหมือนเดิม
+  React.useEffect(() => {
+    setMainOverflow('visible');
     return () => {
       setMainOverflow('auto');
     };
   }, [setMainOverflow]);
-  const [aiOpen, setAiOpen] = React.useState(false);
 
   return (
     <div className={s.outer}>
@@ -188,70 +134,48 @@ export default function StoryDetailPage() {
         <Button
           className={s.askAiButton}
           icon={<Sparkle24Regular />}
-          onClick={() => setAiOpen((v) => !v)}
+          size="large"
+          onClick={() => setAiOpen(true)}
         >
           Ask AI
         </Button>
       )}
 
       <div className={aiOpen ? s.splitGrid : s.singleGrid}>
-        {/* LEFT (content) */}
+        {/* LEFT (content) - ส่วนนี้เหมือนเดิม */}
         <section className={s.leftPane}>
           <div className={s.page}>
-            {/* Hero / Alert */}
-            {/* Toolbar ด้านบนหัวเรื่อง: ปุ่ม Ask AI */}
-
             <div className={s.heroTitleRow}>
               <Title1 as="h1">Conversions ร่วงแรงที่ขั้นชำระเงิน</Title1>
               <div className={s.detailRow}>
                 <span className={s.deltaPill}>▼ −88% vs prior 7 days</span>
-                {/* Context chips */}
                 <div className={s.chips} role="toolbar" aria-label="page context">
                   <Badge appearance="outline">
                     <strong>Facebook</strong>
                   </Badge>
                   <Badge appearance="outline">ช่วง: 3–9 ส.ค. 2025</Badge>
                   <Badge appearance="outline">เทียบกับ: 27 ก.ค.–2 ส.ค. 2025</Badge>
-                  <Badge appearance="outline">Metric: Conversions</Badge>
-                  <Badge appearance="outline">ประเทศ: TH</Badge>
                 </div>
               </div>
             </div>
-
-            {/* Narrative + Recommended Actions */}
             <section className={s.mainGrid}>
               <NarrativeCard />
               <ActionsCard />
             </section>
-
-            {/* Evidence (Trend + Funnel + Breakdown) */}
             <EvidenceSection
               trend={{ current: trendCurrent, prior: trendPrior }}
               funnel={funnelRows}
               deviceRows={breakdownDevice}
               regionRows={breakdownRegion}
             />
-
-            {/* Wrap-up KPIs (4 ใบ) */}
             <WrapupKpis />
           </div>
         </section>
 
-        {/* RIGHT (Chat AI) — พื้นที่เปล่า ๆ ตามสเปค */}
+        {/* ✨ 3. RIGHT (Chat AI) - แทนที่ส่วนเดิมทั้งหมดด้วย AskAiPanel */}
         {aiOpen && (
           <aside className={s.rightPane} aria-label="AI Chat Panel">
-            <div className={s.rightInner}>
-              <div className={s.rightHeader}>
-                <Text weight="semibold">Chat AI</Text>
-                <Button size="small" onClick={() => setAiOpen(false)}>
-                  Close
-                </Button>
-              </div>
-              {/* เว้นว่างไว้ก่อนตามที่ระบุ */}
-              <Card appearance="filled-alternative">
-                <Text>พื้นที่สำหรับ Chat AI (จงใจเว้นเปล่า/placeholder)</Text>
-              </Card>
-            </div>
+            <AskAiPanel onClose={() => setAiOpen(false)} />
           </aside>
         )}
       </div>
