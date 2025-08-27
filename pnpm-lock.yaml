@@ -407,6 +407,9 @@ importers:
 
   remotes/stories:
     dependencies:
+      '@arcfusion/store':
+        specifier: workspace:^
+        version: link:../../packages/store
       '@arcfusion/ui':
         specifier: workspace:^
         version: link:../../packages/ui

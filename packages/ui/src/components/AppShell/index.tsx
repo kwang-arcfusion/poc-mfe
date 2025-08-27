@@ -1,14 +1,10 @@
-// packages/ui/src/AppShell.tsx
+// packages/ui/src/components/AppShell/index.tsx
 import React from 'react';
-import {
-  makeStyles,
-  tokens,
-  mergeClasses, // <-- 1. Import mergeClasses
-} from '@fluentui/react-components';
+import { makeStyles, tokens, mergeClasses } from '@fluentui/react-components';
+// 1. Import hook จาก store ที่เราสร้าง
+import { useLayoutStore } from '@arcfusion/store';
 
-// (The imported Sidebar, Topbar, ThemeToggle parts were removed because AppShell should not know them)
-
-// Default styles for AppShell
+// ... (โค้ด type และ styles เดิม) ...
 const useAppShellStyles = makeStyles({
   root: {
     display: 'flex',
@@ -24,12 +20,11 @@ const useAppShellStyles = makeStyles({
     boxShadow: tokens.shadow16,
   },
   mainContent: {
-    overflowY: 'auto',
+    overflowY: 'auto', // <-- ค่า overflow เดิมจะมาจาก class นี้
     flexGrow: 1,
   },
 });
 
-// 2. Define type for the classNames prop
 export type AppShellClassNames = {
   root?: string;
   contentContainer?: string;
@@ -40,19 +35,24 @@ export interface AppShellProps {
   sidebar: React.ReactNode;
   topbar: React.ReactNode;
   children: React.ReactNode;
-  classNames?: AppShellClassNames; // <-- Add new prop
+  classNames?: AppShellClassNames;
 }
 
 export function AppShell({ sidebar, topbar, children, classNames }: AppShellProps) {
   const styles = useAppShellStyles();
+  // 2. ดึงค่า overflow และ action มาจาก store
+  const { mainOverflow } = useLayoutStore();
 
   return (
-    // 3. Use mergeClasses to combine default classes with provided classes
     <div className={mergeClasses(styles.root, classNames?.root)}>
       {sidebar}
       <div className={mergeClasses(styles.contentContainer, classNames?.contentContainer)}>
         {topbar}
-        <main className={mergeClasses(styles.mainContent, classNames?.mainContent)}>
+        {/* 3. ใช้ inline style เพื่อ override ค่า overflowY */}
+        <main
+          className={mergeClasses(styles.mainContent, classNames?.mainContent)}
+          style={{ overflowY: mainOverflow }} // <-- ✨ จุดสำคัญ ✨
+        >
           {children}
         </main>
       </div>
