@@ -44,11 +44,22 @@ export function AppLayout() {
   const { user, logout } = useAuth0();
   const { actions } = useTopbarStore();
 
-  // Find page title from menuGroups
-  const currentPage = menuGroups.flatMap((g) => g.items).find((i) => i.value === location.pathname);
-  const pageTitle = currentPage ? currentPage.label : 'Page Not Found';
+  // ✨ ================== START: CODE ที่แก้ไข ================== ✨
+  // Logic การหา pageTitle ที่รองรับ Dynamic Routes
+  // 1. รวมรายการเมนูทั้งหมดไว้ในที่เดียว
+  const allMenuItems = menuGroups.flatMap((g) => g.items);
 
-  // Sidebar logic
+  // 2. ค้นหารายการที่ตรงกับ URL ปัจจุบันโดยใช้ startsWith
+  //    แล้วเรียงลำดับจาก URL ที่ยาวที่สุดไปสั้นที่สุด เพื่อให้ได้ค่าที่เจาะจงที่สุด (e.g., /stories/detail ตรงกับ /stories แต่เราจะเอาอันที่ยาวกว่า)
+  const matchingPage = allMenuItems
+    .filter((item) => location.pathname.startsWith(item.value))
+    .sort((a, b) => b.value.length - a.value.length)[0];
+
+  // 3. กำหนด pageTitle จาก label ของรายการที่เจอ หรือถ้าไม่เจอก็เป็น 'Page Not Found'
+  const pageTitle = matchingPage ? matchingPage.label : 'Page Not Found';
+  // ✨ =================== END: CODE ที่แก้ไข =================== ✨
+
+  // Sidebar logic (ส่วนนี้ทำงานถูกต้องอยู่แล้ว)
   const selectedValue =
     menuGroups
       .flatMap((g) => g.items)
