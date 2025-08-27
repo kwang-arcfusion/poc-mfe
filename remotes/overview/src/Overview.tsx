@@ -10,6 +10,7 @@ import { DailyPerformanceChart } from './components/DailyPerformanceChart';
 import { ByChannelTable } from './components/ByChannelTable';
 import { FilterGroupSelect } from './components/FilterGroupSelect';
 import { Filter28Filled } from '@fluentui/react-icons';
+import { DateRangePicker, type DateRange } from '@arcfusion/ui';
 
 const useStyles = makeStyles({
   root: {
@@ -66,6 +67,7 @@ export default function Overview({ navigate }: OverviewProps) {
   const [data, setData] = useState<OverviewData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<FilterValues>(initialFilters);
+  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
 
   useEffect(() => {
     setIsLoading(true);
@@ -98,6 +100,7 @@ export default function Overview({ navigate }: OverviewProps) {
     <div className={styles.root}>
       <header className={styles.header}>
         <Filter28Filled />
+        <DateRangePicker value={dateRange} onChange={setDateRange} />
         <FilterGroupSelect
           label="Channels"
           options={allFilterOptions.channels}

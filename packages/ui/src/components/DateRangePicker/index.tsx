@@ -41,6 +41,7 @@ const useStyles = makeStyles({
     width: 'fit-content',
   },
   group: {
+    height: '26px',
     display: 'flex',
     alignItems: 'center',
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
