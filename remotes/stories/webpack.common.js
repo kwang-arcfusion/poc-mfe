@@ -7,6 +7,7 @@ module.exports = (env = {}) =>
     name: 'stories',
     exposes: {
       './Stories': './src/Stories.tsx',
+      './StoryDetailPage': './src/StoryDetailPage.tsx',
     },
     // Pass the path to its own package.json
     packageJsonPath: path.resolve(__dirname, './package.json'),

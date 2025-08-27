@@ -1,3 +1,4 @@
+// hosts/knowesis/src/pages/StoriesPage.tsx
 import React, { Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,7 +10,7 @@ export function StoriesPage() {
   return (
     <div>
       <Suspense>
-        <Stories navigate={navigate} />
+        <Stories navigate={navigate} /> 
       </Suspense>
     </div>
   );

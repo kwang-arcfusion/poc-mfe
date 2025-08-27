@@ -1,3 +1,4 @@
+// hosts/knowesis/src/decls.d.ts
 declare module 'ask_ai/AskAi' {
   import { ComponentType } from 'react';
   const Cmp: ComponentType<any>;
@@ -16,6 +17,12 @@ declare module 'overview/Overview' {
 }
 
 declare module 'stories/Stories' {
+  import { ComponentType } from 'react';
+  const Cmp: ComponentType<any>;
+  export default Cmp;
+}
+
+declare module 'stories/StoryDetailPage' {
   import { ComponentType } from 'react';
   const Cmp: ComponentType<any>;
   export default Cmp;

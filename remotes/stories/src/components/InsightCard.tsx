@@ -18,12 +18,12 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     ...shorthands.gap('16px'),
+    cursor: 'pointer', // Make it obvious it's clickable
     ':hover': {
       boxShadow: tokens.shadow16,
       transform: 'translateY(-2px)',
     },
   },
-  // ... The rest of the styles are unchanged
   cardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -108,14 +108,14 @@ const useStyles = makeStyles({
   },
 });
 
-// ... The rest of the component is unchanged
 interface InsightCardProps {
   story: Story;
+  onClick: () => void;
 }
-export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
+export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   const styles = useStyles();
   return (
-    <div className={styles.insightCard}>
+    <div className={styles.insightCard} onClick={onClick}>
       <div className={styles.cardHeader}>
         <div className={styles.platformIcon}>{story.platform.icon}</div>
         <span className={styles.timeAgo}>{story.timeAgo}</span>
@@ -132,11 +132,12 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
         </div>
         <div className={styles.kpiValue}>{story.kpi.value}</div>
       </div>
+
       <div className={styles.chartContainer}>
         <div className={styles.yAxis}>
-          <span>1.5%</span>
-          <span>0%</span>
+          <span>1.5%</span> <span>0%</span>
         </div>
+
         <div className={styles.graphArea}>
           <svg width="100%" height="100%" viewBox="0 0 100 40" preserveAspectRatio="none">
             <path
@@ -147,6 +148,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+
             <path
               d="M 40,20 L 60,35"
               stroke={tokens.colorPaletteRedBorderActive}
@@ -156,6 +158,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
             />
             <circle cx="40" cy="20" r="1.5" fill={tokens.colorBrandStroke1} />
             <circle cx="60" cy="35" r="1.5" fill={tokens.colorPaletteRedBorderActive} />
+
             <text
               x="38"
               y="40"
@@ -165,6 +168,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
             >
               Aug 7
             </text>
+
             <text
               x="60"
               y="40"
@@ -177,6 +181,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story }) => {
           </svg>
         </div>
       </div>
+
       <div className={styles.summaryContainer}>
         <Sparkle24Regular className={styles.sparkleIcon} />
         <div className={styles.summaryText}>

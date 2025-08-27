@@ -1,22 +1,12 @@
 // remotes/stories/src/Stories.tsx
 import React, { useState } from 'react';
-import {
-  makeStyles,
-  shorthands,
-  Button,
-  tokens, // Import 'tokens' for styling
-} from '@fluentui/react-components';
-
-// --- [ADDED] Imports for filters ---
+import { makeStyles, shorthands, Button, tokens } from '@fluentui/react-components';
 import { Filter28Filled } from '@fluentui/react-icons';
 import { DateRangePicker, type DateRange, MultiSelect } from '@arcfusion/ui';
-// -----------------------------------
-
 import { mockStories } from './data/mockData';
 import { useGroupedStories } from './hooks/useGroupedStories';
 import { StoryGroup } from './components/StoryGroup';
 
-// --- [ADDED] Types and constants for filters (copied from Overview.tsx) ---
 interface FilterValues {
   channels?: string[];
   campaigns?: string[];
@@ -40,7 +30,6 @@ const initialFilters: FilterValues = {
   ads: [],
   metrics: [],
 };
-// --------------------------------------------------------------------------
 
 const useStyles = makeStyles({
   root: {
@@ -50,7 +39,7 @@ const useStyles = makeStyles({
     paddingRight: '24px',
     paddingBottom: '48px',
     boxSizing: 'border-box',
-  }, // --- [ADDED] Header style for filters (copied from Overview.tsx) ---
+  },
   storiesGroup: {
     display: 'flex',
     flexDirection: 'column',
@@ -66,8 +55,8 @@ const useStyles = makeStyles({
     zIndex: 10,
     paddingTop: '12px',
     paddingBottom: '24px',
-    backgroundColor: tokens.colorNeutralBackground2, // Add some padding to lift it off the content
-  }, // -------------------------------------------------------------------
+    backgroundColor: tokens.colorNeutralBackground2,
+  },
   footer: {
     display: 'flex',
     justifyContent: 'center',
@@ -76,11 +65,14 @@ const useStyles = makeStyles({
   },
 });
 
-export default function Stories() {
+interface StoriesProps {
+  navigate: (path: string) => void;
+}
+
+export default function Stories({ navigate }: StoriesProps) {
   const styles = useStyles();
   const allGroupedStories = useGroupedStories(mockStories);
-  const [visibleGroupCount, setVisibleGroupCount] = useState(1); // --- [ADDED] State and handler for filters ---
-
+  const [visibleGroupCount, setVisibleGroupCount] = useState(1);
   const [filters, setFilters] = useState<FilterValues>(initialFilters);
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
 
@@ -89,7 +81,7 @@ export default function Stories() {
       ...prevFilters,
       [category]: selection,
     }));
-  }; // -------------------------------------------
+  };
   const visibleGroups = allGroupedStories.slice(0, visibleGroupCount);
   const hasMoreGroups = visibleGroupCount < allGroupedStories.length;
 
@@ -104,30 +96,35 @@ export default function Stories() {
       <header className={styles.header}>
         <Filter28Filled />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
+
         <MultiSelect
           label="Channels"
           options={allFilterOptions.channels}
           selectedOptions={filters.channels || []}
           onSelectionChange={(selection) => handleFilterChange('channels', selection)}
         />
+
         <MultiSelect
           label="Campaigns"
           options={allFilterOptions.campaigns}
           selectedOptions={filters.campaigns || []}
           onSelectionChange={(selection) => handleFilterChange('campaigns', selection)}
         />
+
         <MultiSelect
           label="Group By"
           options={allFilterOptions.groupBy}
           selectedOptions={filters.groupBy || []}
           onSelectionChange={(selection) => handleFilterChange('groupBy', selection)}
         />
+
         <MultiSelect
           label="Ads"
           options={allFilterOptions.ads}
           selectedOptions={filters.ads || []}
           onSelectionChange={(selection) => handleFilterChange('ads', selection)}
         />
+
         <MultiSelect
           label="Metrics"
           options={allFilterOptions.metrics}
@@ -135,9 +132,15 @@ export default function Stories() {
           onSelectionChange={(selection) => handleFilterChange('metrics', selection)}
         />
       </header>
+
       <div className={styles.storiesGroup}>
         {visibleGroups.map((group) => (
-          <StoryGroup key={group.title} title={group.title} stories={group.stories} />
+          <StoryGroup
+            key={group.title}
+            title={group.title}
+            stories={group.stories}
+            navigate={navigate}
+          />
         ))}
       </div>
 

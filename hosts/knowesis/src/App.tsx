@@ -3,10 +3,8 @@ import React, { Suspense } from 'react';
 import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
 import { withAuthenticationRequired } from '@auth0/auth0-react';
 import { FluentProvider, Spinner } from '@fluentui/react-components';
-
 import { useThemeStore } from '@arcfusion/store';
 import { useGlobalStyles, arcusionLightTheme, arcusionDarkTheme, ASSETS } from '@arcfusion/ui';
-
 import { AppLayout } from './layouts/AppLayout';
 
 // Import all Pages
@@ -14,6 +12,7 @@ import { HomePage } from './pages/HomePage';
 import { AskAiPage } from './pages/AskAiPage';
 import { StoriesPage } from './pages/StoriesPage';
 import { OverviewPage } from './pages/OverviewPage';
+import { StoryDetailPage } from './pages/StoryDetailPage'; // <-- Import the new page wrapper
 
 // "Guard" component for the app
 const ProtectedApp = withAuthenticationRequired(AppLayout, {
@@ -48,6 +47,7 @@ function ThemedApp() {
             <Route path="/" element={<HomePage />} />
             <Route path="/ask_ai" element={<AskAiPage />} />
             <Route path="/stories" element={<StoriesPage />} />
+            <Route path="/stories/:storyId" element={<StoryDetailPage />} />
             <Route path="/overview" element={<OverviewPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Route>
