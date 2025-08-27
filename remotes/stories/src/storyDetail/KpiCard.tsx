@@ -11,7 +11,7 @@ const useStyles = makeStyles({
     rowGap: '8px',
     ...shorthands.padding('16px'),
     backgroundColor: tokens.colorNeutralBackground1,
-    borderColor: tokens.colorNeutralStroke2,
+    ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
   },
   head: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   label: {
@@ -104,7 +104,11 @@ export const KpiCard: React.FC<KpiCardProps> = ({
       <div className={s.head}>
         <Text className={s.label}>{label}</Text>
         {definition && (
-          <Tooltip withArrow content={definition} relationship="label">
+          <Tooltip
+            withArrow
+            content={{ children: definition as React.ReactNode }}
+            relationship="label"
+          >
             <span aria-label="definition">
               <Info16Regular />
             </span>

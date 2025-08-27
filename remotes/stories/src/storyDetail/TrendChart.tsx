@@ -60,7 +60,7 @@ export const TrendChart: React.FC<Props> = ({ current, prior, eventLines = [] })
               <ReferenceLine
                 key={e.x}
                 x={e.x}
-                stroke={e.color ?? tokens.colorPaletteBlueBorder2}
+                stroke={e.color ?? tokens.colorNeutralStroke2}
                 strokeDasharray={e.dash ?? '3 3'}
               />
             ))}

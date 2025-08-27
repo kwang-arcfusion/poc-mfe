@@ -7,7 +7,7 @@ const useStyles = makeStyles({
     ...shorthands.padding('18px'),
     ...shorthands.borderRadius('18px'),
     backgroundImage: `linear-gradient(180deg, ${tokens.colorNeutralBackground1}, ${tokens.colorNeutralBackground2})`,
-    borderColor: tokens.colorNeutralStroke2,
+    ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     display: 'flex',
     flexDirection: 'column',
     rowGap: '8px',
