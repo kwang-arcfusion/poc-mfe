@@ -1,19 +1,14 @@
+// hosts/knowesis/webpack.common.js
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
-const DotenvPlugin = require('dotenv-webpack'); // Rename variable to avoid confusion with `dotenv` library
+const DotenvPlugin = require('dotenv-webpack');
 
-// ===================================================================
-// 1. Load .env manually as soon as this file is read.
-// This line makes process.env available for all code in this file.
-// ===================================================================
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
-// 2. Now we can require this at the top, because process.env is populated.
 const remotesConfig = require('./remotes.config');
-
 const packageJson = require('./package.json');
 const deps = packageJson.dependencies;
 
@@ -26,7 +21,7 @@ module.exports = (env = {}) => {
       path: path.resolve(__dirname, 'dist'),
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
       clean: true,
-      publicPath: 'auto',
+      publicPath: '/', // ✨ แก้ไขค่าตรงนี้เพื่อให้โหลดไฟล์จาก root domain เสมอ
       uniqueName: 'knowesis',
     },
     resolve: {
@@ -60,8 +55,6 @@ module.exports = (env = {}) => {
       ],
     },
     plugins: [
-      // 3. We still need to use DotenvPlugin
-      // to inject process.env values into our browser-side code (e.g., in bootstrap.tsx).
       new DotenvPlugin({
         path: path.resolve(__dirname, './.env'),
       }),
