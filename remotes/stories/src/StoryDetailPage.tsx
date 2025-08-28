@@ -9,7 +9,11 @@ import {
   shorthands,
   tokens,
 } from '@fluentui/react-components';
-import { Sparkle24Regular } from '@fluentui/react-icons';
+import {
+  Sparkle24Regular,
+  TriangleDown16Filled,
+  TriangleDown32Filled,
+} from '@fluentui/react-icons';
 import { useLayoutStore } from '@arcfusion/store';
 import { WrapupKpis } from './storyDetail/WrapupKpis';
 import { NarrativeCard } from './storyDetail/NarrativeCard';
@@ -48,7 +52,6 @@ const useStyles = makeStyles({
     columnGap: '12px',
     height: '100%',
     paddingLeft: '12px',
-    paddingRight: '12px',
     boxSizing: 'border-box',
   },
   leftPane: {
@@ -79,7 +82,7 @@ const useStyles = makeStyles({
     alignItems: 'baseline',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
-    rowGap: '6px',
+    gap: '12px',
   },
   detailRow: {
     display: 'flex',
@@ -111,8 +114,7 @@ const useStyles = makeStyles({
       gridTemplateColumns: '1fr 1fr',
       columnGap: '20px',
     },
-    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
-    paddingBottom: '24px',
+    paddingBottom: '16px',
   },
 });
 
@@ -146,15 +148,24 @@ export default function StoryDetailPage() {
         <section className={s.leftPane}>
           <div className={s.page}>
             <div className={s.heroTitleRow}>
-              <Title1 as="h1">Conversions ร่วงแรงที่ขั้นชำระเงิน</Title1>
+              <Title1>Conversions ร่วงแรงที่ขั้นชำระเงิน</Title1>
               <div className={s.detailRow}>
-                <span className={s.deltaPill}>▼ −88% vs prior 7 days</span>
+                <Badge
+                  icon={<TriangleDown16Filled />}
+                  appearance="tint"
+                  color="danger"
+                  size="extra-large"
+                >
+                  <Text size={400} weight="semibold">
+                    −88% vs prior 7 days
+                  </Text>
+                </Badge>
                 <div className={s.chips} role="toolbar" aria-label="page context">
-                  <Badge appearance="outline">
+                  <Badge appearance="tint">
                     <strong>Facebook</strong>
                   </Badge>
-                  <Badge appearance="outline">ช่วง: 3–9 ส.ค. 2025</Badge>
-                  <Badge appearance="outline">เทียบกับ: 27 ก.ค.–2 ส.ค. 2025</Badge>
+                  <Badge appearance="tint">ช่วง: 3–9 ส.ค. 2025</Badge>
+                  <Badge appearance="tint">เทียบกับ: 27 ก.ค.–2 ส.ค. 2025</Badge>
                 </div>
               </div>
             </div>
