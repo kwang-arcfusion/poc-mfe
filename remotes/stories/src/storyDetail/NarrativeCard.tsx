@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Card, Text, Body1, makeStyles, shorthands, tokens } from '@fluentui/react-components';
 import {
   Document20Color,
+  Document24Color,
   Document28Color,
   TextBulletListSquareSparkle24Color,
 } from '@fluentui/react-icons';
@@ -56,7 +57,7 @@ export const NarrativeCard: React.FC = () => {
   return (
     <div className={s.card}>
       <div className={s.narrativeTitle}>
-        <Document20Color />
+        <Document24Color />
         <Text className={s.title}>Narrative</Text>
       </div>
 
