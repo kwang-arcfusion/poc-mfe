@@ -4,5 +4,6 @@ declare const process: {
     NODE_ENV: 'development' | 'production' | 'test';
     AUTH0_DOMAIN: string;
     AUTH0_CLIENT_ID: string;
+    REACT_APP_API_BASE_URL: string;
   };
 };
