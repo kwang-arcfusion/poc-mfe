@@ -19,9 +19,11 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     ...shorthands.gap('16px'),
     cursor: 'pointer', // Make it obvious it's clickable
+    transition: '0.25s ease',
     ':hover': {
-      boxShadow: tokens.shadow16,
-      transform: 'translateY(-2px)',
+      boxShadow: tokens.shadow28,
+      border: `1px solid ${tokens.colorBrandStroke1}`,
+      scale: '1.02',
     },
   },
   cardHeader: {
