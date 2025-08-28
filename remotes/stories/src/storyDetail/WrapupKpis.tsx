@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { makeStyles, Text, tokens } from '@fluentui/react-components';
 import { KpiCard } from './KpiCard';
+import { DataLine24Color } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({
   grid: {
@@ -10,13 +11,23 @@ const useStyles = makeStyles({
     gap: '14px',
     '@media (min-width: 760px)': { gridTemplateColumns: 'repeat(4, 1fr)' },
   },
+  titleWrap: { display: 'flex', alignItems: 'center', gap: '6px' },
+
+  title: {
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground3,
+    fontSize: '18px',
+  },
 });
 
 export const WrapupKpis: React.FC = () => {
   const s = useStyles();
   return (
     <>
-      <Text weight="semibold">Wrapup KPIs</Text>
+      <div className={s.titleWrap}>
+        <DataLine24Color />
+        <Text className={s.title}>Wrapup KPIs</Text>
+      </div>
       <section className={s.grid} aria-label="ภาพรวมตัวเลข (Wrap-up KPIs)">
         <KpiCard
           label="7-Day Average"

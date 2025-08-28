@@ -1,10 +1,11 @@
 // remotes/stories/src/storyDetail/EvidenceSection.tsx
 import * as React from 'react';
-import { Card, Text, makeStyles, shorthands } from '@fluentui/react-components';
+import { Card, Text, makeStyles, shorthands, tokens } from '@fluentui/react-components';
 import { TrendChart, TrendPoint } from './TrendChart';
 import { FunnelTable } from './FunnelTable';
 import { BreakdownTable } from './BreakdownTable';
 import { BreakdownRow, FunnelRow } from './types';
+import { DataPie24Color, DataTrending24Color } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({
   card: { ...shorthands.padding('20px'), rowGap: '12px' },
@@ -13,6 +14,13 @@ const useStyles = makeStyles({
     gridTemplateColumns: '1fr',
     gap: '16px',
     '@media (min-width: 900px)': { gridTemplateColumns: '1fr 1fr' },
+  },
+  titleWrap: { display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' },
+
+  title: {
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground3,
+    fontSize: '18px',
   },
 });
 
@@ -27,7 +35,11 @@ export const EvidenceSection: React.FC<Props> = ({ trend, funnel, deviceRows, re
   const s = useStyles();
   return (
     <section>
-      <Text weight="semibold">หลักฐาน (Evidence)</Text>
+      <div className={s.titleWrap}>
+        <DataPie24Color />
+        <Text className={s.title}>Evidence</Text>
+      </div>
+
       <div className={s.grid}>
         <TrendChart
           current={trend.current}
