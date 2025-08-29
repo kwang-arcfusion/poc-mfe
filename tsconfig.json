@@ -7,6 +7,7 @@
     { "path": "./remotes/ask_ai" },
     { "path": "./remotes/home" },
     { "path": "./remotes/overview" },
-    { "path": "./remotes/stories" }
+    { "path": "./remotes/stories" },
+    { "path": "./packages/client" }
   ]
 }

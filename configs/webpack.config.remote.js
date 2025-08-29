@@ -87,6 +87,7 @@ module.exports = function createRemoteConfig({
             singleton: true,
             requiredVersion: deps['@fluentui/react-icons'],
           },
+          '@arcfusion/client': { singleton: true, requiredVersion: false, strictVersion: false },
         },
       }),
     ],

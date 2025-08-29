@@ -90,6 +90,7 @@ module.exports = (env = {}) => {
             singleton: true,
             requiredVersion: deps['@fluentui/react-icons'],
           },
+          '@arcfusion/client': { singleton: true, requiredVersion: false, strictVersion: false },
         },
       }),
     ],

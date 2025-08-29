@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@arcfusion/store": "workspace:*",
+    "@arcfusion/client": "workspace:*",
     "@arcfusion/ui": "workspace:^",
     "@auth0/auth0-react": "^2.4.0",
     "@fluentui/react-components": "^9.69.0",

@@ -1,5 +1,5 @@
 {
-  "name": "@arcfusion/store",
+  "name": "@arcfusion/client",
   "version": "0.0.0",
   "private": true,
   "sideEffects": false,
@@ -29,6 +29,10 @@
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
+    "@arcfusion/store": "workspace:^",
+    "@fluentui/react-components": "^9.69.0",
+    "@fluentui/react-datepicker-compat": "^0.6.13",
+    "@fluentui/react-icons": "^2.0.308",
     "zustand": "^5.0.8"
   }
 }
