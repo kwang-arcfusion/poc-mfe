@@ -10,16 +10,15 @@ import {
   PopoverSurface,
   Spinner,
   Text,
-  Body1,
-  Caption1,
 } from '@fluentui/react-components';
 import { Chat24Regular, Chat24Filled } from '@fluentui/react-icons';
 import { useChatHistoryStore } from '@arcfusion/store';
+import { useNavigate } from 'react-router-dom'; // ✨ 1. Import useNavigate
 
 const useStyles = makeStyles({
   popoverSurface: {
     width: '380px',
-    height: 'calc(100vh - 47px)',
+    maxHeight: 'calc(100vh - 47px)',
     padding: 0,
     display: 'flex',
     flexDirection: 'column',
@@ -49,14 +48,13 @@ const useStyles = makeStyles({
       backgroundColor: tokens.colorNeutralBackground1Hover,
     },
   },
-  // ✨ 1. เพิ่ม Style สำหรับ Icon Wrapper
   iconWrapper: {
-    flexShrink: 0, // ป้องกันไม่ให้ Icon หดตัว
+    flexShrink: 0,
   },
   itemText: {
     display: 'flex',
     flexDirection: 'column',
-    flexGrow: 1, // ✨ 2. กำหนดให้กล่องข้อความยืดเต็มพื้นที่ที่เหลือ
+    flexGrow: 1,
     minWidth: 0,
   },
   itemTitle: {
@@ -73,6 +71,7 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
+    padding: tokens.spacingVerticalL,
   },
 });
 
@@ -89,6 +88,7 @@ const formatDate = (dateString: string) => {
 
 export const ChatHistoryPopover = () => {
   const styles = useStyles();
+  const navigate = useNavigate(); // ✨ 2. Initialize navigate
   const {
     conversations,
     isLoading,
@@ -99,15 +99,16 @@ export const ChatHistoryPopover = () => {
   } = useChatHistoryStore();
 
   useEffect(() => {
+    // Fetch conversations only when popover opens and the list is empty
     if (isPopoverOpen && conversations.length === 0) {
       fetchConversations();
     }
   }, [isPopoverOpen, conversations.length, fetchConversations]);
 
+  // ✨ 3. Implement the navigation logic
   const handleSelectConversation = (thread_id: string) => {
-    console.log('Selected thread_id:', thread_id);
-    // TODO: Implement logic to load this conversation
-    closePopover();
+    navigate(`/ask_ai/${thread_id}`);
+    closePopover(); // Close the popover after selection
   };
 
   return (
@@ -138,7 +139,6 @@ export const ChatHistoryPopover = () => {
                 className={styles.listItem}
                 onClick={() => handleSelectConversation(convo.thread_id)}
               >
-                {/* ✨ 3. ครอบ Icon ด้วย div ที่มี Style ใหม่ */}
                 <div className={styles.iconWrapper}>
                   <Chat24Regular />
                 </div>

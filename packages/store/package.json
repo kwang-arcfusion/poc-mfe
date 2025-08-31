@@ -31,6 +31,8 @@
   "dependencies": {
     "@arcfusion/client": "workspace:^",
     "@arcfusion/types": "workspace:^",
+    "@types/uuid": "^10.0.0",
+    "uuid": "^11.1.0",
     "zustand": "^5.0.8"
   }
 }

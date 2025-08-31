@@ -14,22 +14,23 @@
     }
   },
   "scripts": {
-    "build": "tsc --emitDeclarationOnly --declaration --declarationMap"
+    "build": "tsup && tsc --emitDeclarationOnly --declaration --declarationMap"
   },
   "peerDependencies": {
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.8.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "react": "^19.1.1",
-    "tsup": "^8.2.3",
-    "webpack-dev-server": "^5",
-    "webpack-merge": "^6.0.1"
+    "react-router-dom": "^7.8.1",
+    "tsup": "^8.2.3"
   },
   "dependencies": {
     "@arcfusion/store": "workspace:^",
+    "@arcfusion/types": "workspace:^",
     "@fluentui/react-components": "^9.69.0",
     "@fluentui/react-datepicker-compat": "^0.6.13",
     "@fluentui/react-icons": "^2.0.308",

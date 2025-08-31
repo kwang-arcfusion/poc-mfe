@@ -3,7 +3,9 @@ import type {
   PaginatedConversationsResponse,
   PaginatedStoriesResponse,
   Story,
+  ConversationResponse, // <-- Import the new type
 } from '@arcfusion/types';
+
 console.log('%c[client] Module Loaded', 'color: purple; font-weight: bold;');
 
 let API_BASE_URL: string = '';
@@ -74,6 +76,8 @@ export const getConversations = (
   return apiFetch(`/v1/chat/conversations?page=${page}&page_size=${pageSize}`);
 };
 
-export const getConversationByThreadId = (threadId: string) => {
+// ✨ START: EDIT THIS FUNCTION ✨
+export const getConversationByThreadId = (threadId: string): Promise<ConversationResponse> => {
   return apiFetch(`/v1/chat/conversations/${threadId}`);
 };
+// ✨ END: EDIT THIS FUNCTION ✨

@@ -5,5 +5,10 @@
     "types": ["node"]
   },
   "include": ["src", "webpack.*.js"],
-  "references": [{ "path": "../../packages/ui" }, { "path": "../../packages/client" }]
+  "references": [
+    { "path": "../../packages/ui" },
+    { "path": "../../packages/client" },
+    { "path": "../../packages/store" },
+    { "path": "../../packages/types" }
+  ]
 }

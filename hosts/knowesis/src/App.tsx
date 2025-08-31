@@ -45,7 +45,9 @@ function ThemedApp() {
         <Routes>
           <Route element={<ProtectedApp />}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/ask_ai" element={<AskAiPage />} />
+            {/* ✨ START: EDIT THIS LINE ✨ */}
+            <Route path="/ask_ai/:chatId?" element={<AskAiPage />} />
+            {/* ✨ END: EDIT THIS LINE ✨ */}
             <Route path="/stories" element={<StoriesPage />} />
             <Route path="/stories/:storyId" element={<StoryDetailPage />} />
             <Route path="/overview" element={<OverviewPage />} />
