@@ -1,6 +1,9 @@
 // remotes/ask_ai/src/components/ChatMessage.tsx
 import React from 'react';
-import { makeStyles, shorthands, tokens, Body1, Spinner, Avatar } from '@fluentui/react-components';
+import { makeStyles, shorthands, tokens, Body1, Spinner } from '@fluentui/react-components';
+// ✨ 1. Import Library ที่ติดตั้งใหม่
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const useStyles = makeStyles({
   root: {
@@ -10,7 +13,7 @@ const useStyles = makeStyles({
     width: 'fit-content',
     '&[data-sender="user"]': {
       alignSelf: 'flex-end',
-      flexDirection: 'row-reverse', // Swap Avatar to the right
+      flexDirection: 'row-reverse',
     },
     '&[data-sender="ai"]': {
       alignSelf: 'flex-start',
@@ -37,6 +40,22 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
     marginBottom: tokens.spacingVerticalM,
   },
+  // ✨ 2. เพิ่ม Style สำหรับ Markdown
+  markdown: {
+    // ทำให้ Paragraph มีระยะห่างที่เหมาะสม
+    '& p': {
+      marginTop: 0,
+      marginBottom: tokens.spacingVerticalS,
+    },
+    // จัดรูปแบบลิสต์ให้สวยงาม
+    '& ul': {
+      ...shorthands.padding(0, 0, 0, tokens.spacingHorizontalL),
+      ...shorthands.margin(0),
+    },
+    '& li': {
+      marginBottom: tokens.spacingVerticalXS,
+    },
+  },
 });
 
 interface ChatMessageProps {
@@ -57,7 +76,11 @@ export function ChatMessage({ sender, content, isStreaming }: ChatMessageProps) 
             <span>Answering...</span>
           </div>
         )}
-        <Body1>{content}</Body1>
+
+        {/* ✨ 3. เปลี่ยนจากการใช้ Body1 มาเป็น ReactMarkdown */}
+        <div className={styles.markdown}>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        </div>
       </div>
     </div>
   );

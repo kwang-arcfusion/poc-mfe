@@ -1,3 +1,4 @@
+// remotes/ask_ai/src/components/AssetTabs.tsx
 import * as React from 'react';
 import {
   makeStyles,
@@ -60,7 +61,7 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
   group.sqls.forEach((s) => {
     tabs.push({
       key: `sql:${s.id}`,
-      label: `SQL · ${s.title}`,
+      label: `SQL`, // <-- แก้ไขตรงนี้
       render: () => (
         <div className={styles.tabPanelPad}>
           <pre className={styles.codeBox}>{s.sql}</pre>
@@ -73,7 +74,7 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
   group.dataframes.forEach((df) => {
     tabs.push({
       key: `df:${df.id}`,
-      label: `Table · ${df.title}`,
+      label: `Table`, // <-- แก้ไขตรงนี้
       render: () => (
         <div className={styles.tabPanelPad}>
           <div className={styles.tableWrap}>
@@ -117,7 +118,7 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
       const max = Math.max(1, ...ch.values);
       tabs.push({
         key: `chart:${ch.id}`,
-        label: `Chart · ${ch.title}`,
+        label: `Chart`, // <-- แก้ไขตรงนี้เผื่ออนาคต
         render: () => (
           <div className={styles.tabPanelPad}>
             <div className={styles.chartBarWrap}>
@@ -151,7 +152,6 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
         ))}
       </TabList>
 
-      {/* render only that choose */}
       <div>{activeTab.render()}</div>
     </div>
   );
