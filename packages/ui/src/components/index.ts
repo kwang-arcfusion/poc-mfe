@@ -17,3 +17,5 @@ export type { DateRange } from './DateRangePicker';
 
 export * from './MultiSelect';
 export type { MultiSelectProps } from './MultiSelect';
+
+export * from './ChatHistoryPopover';

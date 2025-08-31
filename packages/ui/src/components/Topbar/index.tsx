@@ -1,8 +1,9 @@
-// packages/ui/src/Topbar.tsx
+// packages/ui/src/components/Topbar/index.tsx
 import React from 'react';
 import { makeStyles, tokens, Avatar, SearchBox } from '@fluentui/react-components';
-import { Chat24Regular, Alert24Regular } from '@fluentui/react-icons';
+import { Alert24Regular } from '@fluentui/react-icons';
 import { UserMenu, type UserMenuProps } from '../UserMenu';
+import { ChatHistoryPopover } from '../ChatHistoryPopover';
 
 const useStyles = makeStyles({
   root: {
@@ -56,8 +57,8 @@ export function Topbar({
   pageTitle,
   methodsLeft,
   methodsRight,
-  user, // <-- Accept user object
-  onLogout, // <-- Accept onLogout function
+  user,
+  onLogout,
 }: TopbarProps) {
   const styles = useStyles();
 
@@ -70,8 +71,7 @@ export function Topbar({
       </div>
       <div className={styles.rightContainer}>
         <SearchBox placeholder="Search" />
-        {/* Call UserMenu and pass down necessary props */}
-        <Chat24Regular color={tokens.colorBrandForeground1}></Chat24Regular>
+        <ChatHistoryPopover />
         <Alert24Regular color={tokens.colorBrandForeground1}></Alert24Regular>
         <UserMenu user={user} onLogout={onLogout} />
       </div>
