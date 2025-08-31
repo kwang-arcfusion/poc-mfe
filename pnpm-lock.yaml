@@ -120,9 +120,9 @@ importers:
 
   packages/client:
     dependencies:
-      '@arcfusion/store':
+      '@arcfusion/types':
         specifier: workspace:^
-        version: link:../store
+        version: link:../types
       '@fluentui/react-components':
         specifier: ^9.69.0
         version: 9.69.0(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(scheduler@0.26.0)
@@ -160,6 +160,12 @@ importers:
 
   packages/store:
     dependencies:
+      '@arcfusion/client':
+        specifier: workspace:^
+        version: link:../client
+      '@arcfusion/types':
+        specifier: workspace:^
+        version: link:../types
       react-dom:
         specifier: ^19.1.1
         version: 19.1.1(react@19.1.1)
@@ -185,6 +191,12 @@ importers:
       webpack-merge:
         specifier: ^6.0.1
         version: 6.0.1
+
+  packages/types:
+    devDependencies:
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
 
   packages/ui:
     dependencies:

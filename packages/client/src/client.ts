@@ -1,5 +1,9 @@
 // packages/client/src/client.ts
-import type { PaginatedConversationsResponse, PaginatedStoriesResponse, Story } from './types';
+import type {
+  PaginatedConversationsResponse,
+  PaginatedStoriesResponse,
+  Story,
+} from '@arcfusion/types';
 console.log('%c[client] Module Loaded', 'color: purple; font-weight: bold;');
 
 let API_BASE_URL: string = '';

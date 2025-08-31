@@ -29,7 +29,7 @@
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
-    "@arcfusion/store": "workspace:^",
+    "@arcfusion/types": "workspace:^",
     "@fluentui/react-components": "^9.69.0",
     "@fluentui/react-datepicker-compat": "^0.6.13",
     "@fluentui/react-icons": "^2.0.308",

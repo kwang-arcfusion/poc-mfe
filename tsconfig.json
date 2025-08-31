@@ -8,6 +8,7 @@
     { "path": "./remotes/home" },
     { "path": "./remotes/overview" },
     { "path": "./remotes/stories" },
-    { "path": "./packages/client" }
+    { "path": "./packages/client" },
+    { "path": "./packages/types" }
   ]
 }

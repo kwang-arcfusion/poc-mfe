@@ -4,11 +4,6 @@
     "composite": true,
     "types": ["node"]
   },
-  "include": [
-    "src",
-    "webpack.*.js",
-    "../../packages/client/src/types.ts",
-    "../../packages/client/src/index.ts"
-  ],
+  "include": ["src", "webpack.*.js", "../../packages/client/src/index.ts"],
   "references": [{ "path": "../../packages/ui" }, { "path": "../../packages/store" }]
 }

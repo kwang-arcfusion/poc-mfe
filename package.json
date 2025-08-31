@@ -5,6 +5,7 @@
     "build": "turbo run build",
     "b:ui": "pnpm build --filter=@arcfusion/ui",
     "b:store": "pnpm build --filter=@arcfusion/store",
+    "b:types": "pnpm build --filter=@arcfusion/types",
     "b:client": "pnpm build --filter=@arcfusion/client",
     "d:knowesis": "turbo run dev --filter={hosts/knowesis}...",
     "dev:all": "turbo run dev --parallel",

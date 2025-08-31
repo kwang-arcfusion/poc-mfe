@@ -1,6 +1,7 @@
 // packages/store/src/chatHistoryStore.ts
 import { create } from 'zustand';
-import { getConversations, type ConversationSummary } from '@arcfusion/client';
+import { getConversations } from '@arcfusion/client';
+import type { ConversationSummary } from '@arcfusion/types'; // <-- แก้ไขให้ import type จากที่ใหม่
 
 export interface ChatHistoryState {
   conversations: ConversationSummary[];

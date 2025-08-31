@@ -29,6 +29,8 @@
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
+    "@arcfusion/client": "workspace:^",
+    "@arcfusion/types": "workspace:^",
     "zustand": "^5.0.8"
   }
 }
