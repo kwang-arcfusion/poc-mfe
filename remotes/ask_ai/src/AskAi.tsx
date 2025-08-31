@@ -123,14 +123,6 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
     }
   };
 
-  if (isLoadingHistory) {
-    return (
-      <div className={styles.loadingContainer}>
-        <Spinner size="huge" label="Loading conversation..." />
-      </div>
-    );
-  }
-
   return (
     <div className={styles.root}>
       <div className={styles.contentArea} ref={contentAreaRef}>
