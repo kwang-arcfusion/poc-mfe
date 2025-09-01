@@ -11,7 +11,6 @@ import {
 } from '@fluentui/react-components';
 import { Send24Regular } from '@fluentui/react-icons';
 import { useChatHistoryStore, useChatSessionStore } from '@arcfusion/store';
-import { ChatTitleBar } from './components/ChatTitleBar';
 import { ChatMessage } from './components/ChatMessage';
 import { InitialView } from './components/InitialView';
 import { AssetTabs } from './components/AssetTabs';
