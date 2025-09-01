@@ -1,6 +1,7 @@
 // remotes/ask_ai/src/components/SqlTableTabs.tsx
 
 import * as React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   makeStyles,
   tokens,
@@ -8,16 +9,23 @@ import {
   TabList,
   Tab,
   TabValue,
+  Button,
 } from '@fluentui/react-components';
+import { ArrowDownload24Regular, Copy24Regular, Checkmark24Regular } from '@fluentui/react-icons';
+import { getExportCsvUrl } from '@arcfusion/client';
 import type { SqlAsset, DataframeAsset } from '../types';
 
-// ใช้ Styles จาก AssetTabs.tsx เดิมมาปรับใช้
 const useStyles = makeStyles({
   assetGroup: {
     ...shorthands.border('2px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
     backgroundColor: tokens.colorNeutralBackground3,
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
+  },
+  tabHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   tabPanelPad: { ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS) },
   codeBox: {
@@ -37,18 +45,76 @@ const useStyles = makeStyles({
 interface SqlTableTabsProps {
   sql: SqlAsset;
   dataframe: DataframeAsset;
+  messageId?: string;
 }
 
-export function SqlTableTabs({ sql, dataframe }: SqlTableTabsProps) {
+export function SqlTableTabs({ sql, dataframe, messageId }: SqlTableTabsProps) {
   const styles = useStyles();
-  const [activeTab, setActiveTab] = React.useState<TabValue>('sql');
+  const [activeTab, setActiveTab] = React.useState<TabValue>('table');
+  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
+  const timeoutRef = useRef<number | null>(null);
+
+  const handleExport = () => {
+    if (!messageId) {
+      console.error('Cannot export: messageId is missing.');
+      return;
+    }
+    const url = getExportCsvUrl(messageId);
+    if (url) {
+      window.open(url, '_blank');
+    }
+  };
+
+  const handleCopy = async () => {
+    if (copyState === 'copied') return;
+    try {
+      await navigator.clipboard.writeText(sql.sql);
+      setCopyState('copied');
+      timeoutRef.current = window.setTimeout(() => {
+        setCopyState('idle');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className={styles.assetGroup}>
-      <TabList selectedValue={activeTab} onTabSelect={(_, data) => setActiveTab(data.value)}>
-        <Tab value="sql">SQL</Tab>
-        <Tab value="table">Table</Tab>
-      </TabList>
+      <div className={styles.tabHeader}>
+        <TabList selectedValue={activeTab} onTabSelect={(_, data) => setActiveTab(data.value)}>
+          <Tab value="table">Table</Tab> <Tab value="sql">SQL</Tab>
+        </TabList>
+
+        {activeTab === 'table' && messageId && (
+          <Button
+            size="small"
+            icon={<ArrowDownload24Regular />}
+            appearance="subtle"
+            onClick={handleExport}
+          >
+            Export CSV
+          </Button>
+        )}
+
+        {activeTab === 'sql' && messageId && (
+          <Button
+            size="small"
+            icon={copyState === 'idle' ? <Copy24Regular /> : <Checkmark24Regular />}
+            appearance="subtle"
+            onClick={handleCopy}
+          >
+            {copyState === 'idle' ? 'Copy SQL' : 'Copied!'}
+          </Button>
+        )}
+      </div>
 
       {activeTab === 'sql' && (
         <div className={styles.tabPanelPad}>
@@ -69,6 +135,7 @@ export function SqlTableTabs({ sql, dataframe }: SqlTableTabsProps) {
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {dataframe.rows.map((r, idx) => (
                   <tr key={idx}>

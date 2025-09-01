@@ -206,7 +206,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
                       />
                     ) : (
                       // ✨ END: ส่ง messageId ✨
-                      <AssetTabs key={block.id} group={block.group} />
+                      <AssetTabs key={block.id} group={block.group} messageId={block.messageId} />
                     )
                   )}
                 </div>

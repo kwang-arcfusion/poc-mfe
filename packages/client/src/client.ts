@@ -4,9 +4,11 @@ import type {
   PaginatedStoriesResponse,
   Story,
   ConversationResponse,
-  FeedbackRequest, // ✨ Import เพิ่ม
-  FeedbackResponse, // ✨ Import เพิ่ม
+  FeedbackRequest,
+  FeedbackResponse,
 } from '@arcfusion/types';
+
+console.log('%c[client] Module Loaded', 'color: purple; font-weight: bold;');
 
 let API_BASE_URL: string = '';
 
@@ -76,12 +78,7 @@ export const getConversationByThreadId = (threadId: string): Promise<Conversatio
   return apiFetch(`/v1/chat/conversations/${threadId}`);
 };
 
-// ✨ START: ADD NEW FEEDBACK FUNCTIONS ✨
-/**
- * Submits or updates feedback for a specific message.
- * @param feedbackData - The feedback data to submit.
- * @returns The created or updated feedback record.
- */
+// --- Feedback API ---
 export const submitFeedback = (feedbackData: FeedbackRequest): Promise<FeedbackResponse> => {
   return apiFetch(`/v1/feedback/`, {
     method: 'POST',
@@ -89,13 +86,23 @@ export const submitFeedback = (feedbackData: FeedbackRequest): Promise<FeedbackR
   });
 };
 
-/**
- * Deletes feedback for a specific message.
- * @param messageId - The ID of the message whose feedback should be deleted.
- */
 export const deleteFeedback = (messageId: string): Promise<null> => {
   return apiFetch(`/v1/feedback/${messageId}`, {
     method: 'DELETE',
   });
 };
-// ✨ END: ADD NEW FEEDBACK FUNCTIONS ✨
+
+// --- Export API ---
+/**
+ * Constructs the URL to download the SQL result of a message as a CSV file.
+ * @param messageId - The ID of the message.
+ * @returns The full URL for the CSV export endpoint.
+ */
+export const getExportCsvUrl = (messageId: string): string => {
+  const baseUrl = getApiBaseUrl();
+  if (!baseUrl) {
+    console.error('API Client has not been initialized. Cannot create export URL.');
+    return '';
+  }
+  return `${baseUrl}/v1/chat/messages/${messageId}/export/csv`;
+};

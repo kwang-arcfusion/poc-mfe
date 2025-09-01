@@ -10,7 +10,6 @@ import {
   TabValue,
 } from '@fluentui/react-components';
 import type { AssetGroup } from '../types';
-// ✨ 1. Import คอมโพเนนต์ใหม่ที่เราสร้าง
 import { SqlTableTabs } from './SqlTableTabs';
 
 const useStyles = makeStyles({
@@ -48,19 +47,18 @@ const useStyles = makeStyles({
 
 type TabItem = { key: string; label: string; render: () => React.ReactNode };
 
-export function AssetTabs({ group }: { group: AssetGroup }) {
+export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?: string }) {
   const styles = useStyles();
 
-  // ✨ START: เพิ่ม Logic ใหม่เพื่อตรวจสอบและเรียกใช้ SqlTableTabs ✨
   const isSimpleSqlTablePair =
     group.sqls.length === 1 && group.dataframes.length === 1 && group.charts.length === 0;
 
   if (isSimpleSqlTablePair) {
-    return <SqlTableTabs sql={group.sqls[0]} dataframe={group.dataframes[0]} />;
+    return (
+      <SqlTableTabs sql={group.sqls[0]} dataframe={group.dataframes[0]} messageId={messageId} />
+    );
   }
-  // ✨ END: สิ้นสุด Logic ใหม่ ✨
 
-  // Logic เดิมจะทำงานในกรณีอื่นๆ ที่ไม่ใช่ SQL + Table
   const [active, setActive] = React.useState<TabValue>(() => {
     if (group.sqls[0]) return `sql:${group.sqls[0].id}`;
     if (group.dataframes[0]) return `df:${group.dataframes[0].id}`;
@@ -70,7 +68,6 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
 
   const tabs: TabItem[] = [];
 
-  // SQL
   group.sqls.forEach((s) => {
     tabs.push({
       key: `sql:${s.id}`,
@@ -83,7 +80,6 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
     });
   });
 
-  // Tables
   group.dataframes.forEach((df) => {
     tabs.push({
       key: `df:${df.id}`,
@@ -101,6 +97,7 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {df.rows.map((r, idx) => (
                   <tr key={idx}>
@@ -125,7 +122,6 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
     });
   });
 
-  // Charts (bar)
   group.charts.forEach((ch) => {
     if (ch.type === 'bar') {
       const max = Math.max(1, ...ch.values);
@@ -164,7 +160,6 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
           </Tab>
         ))}
       </TabList>
-
       <div>{activeTab.render()}</div>
     </div>
   );
