@@ -18,8 +18,9 @@ import { useNavigate } from 'react-router-dom'; // ✨ 1. Import useNavigate
 const useStyles = makeStyles({
   popoverSurface: {
     width: '380px',
-    maxHeight: 'calc(100vh - 47px)',
+    maxHeight: 'calc(100vh - 48px)',
     padding: 0,
+    left: '80px !important',
     display: 'flex',
     flexDirection: 'column',
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
@@ -29,7 +30,6 @@ const useStyles = makeStyles({
   header: {
     ...shorthands.padding(tokens.spacingVerticalL, tokens.spacingHorizontalL),
     ...shorthands.borderBottom('1px', 'solid', tokens.colorNeutralStroke2),
-    position: 'sticky',
     top: 0,
     backgroundColor: tokens.colorNeutralBackground1,
     zIndex: 1,
@@ -112,7 +112,7 @@ export const ChatHistoryPopover = () => {
   };
 
   return (
-    <Popover open={isPopoverOpen} onOpenChange={togglePopover}>
+    <Popover open={isPopoverOpen} onOpenChange={togglePopover} positioning="below-end">
       <PopoverTrigger>
         <Button
           appearance="transparent"
