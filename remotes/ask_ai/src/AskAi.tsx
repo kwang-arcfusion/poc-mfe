@@ -14,7 +14,7 @@ import { useChatHistoryStore, useChatSessionStore } from '@arcfusion/store';
 import { ChatMessage } from './components/ChatMessage';
 import { InitialView } from './components/InitialView';
 import { AssetTabs } from './components/AssetTabs';
-import type { Block, TextBlock } from './types'; // ✨ ใช้ type ที่อัปเดตแล้ว
+import type { Block, TextBlock } from './types';
 
 const useStatusStyles = makeStyles({
   statusContainer: {
@@ -93,7 +93,6 @@ const useStyles = makeStyles({
 
 export default function AskAi({ navigate, chatId }: AskAiProps) {
   const styles = useStyles();
-
   const {
     blocks,
     status,
@@ -101,19 +100,15 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
     loadConversation,
     sendMessage: sendMessageFromStore,
     clearChat,
+    updateLastMessageWithData,
   } = useChatSessionStore();
-
   const { fetchConversations: refreshHistory } = useChatHistoryStore();
   const [inputValue, setInputValue] = React.useState('');
   const isStreaming = status === 'streaming';
   const [isStopAutoScrollDown, setIsStopAutoScrollDown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (blocks.length > 0) {
-      console.log('Current blocks in state:', blocks);
-    }
-  }, [blocks]);
+
   useEffect(() => {
     if (isStopAutoScrollDown) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -153,12 +148,15 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
       navigate(`/ask_ai/${newThreadId}`, { replace: true });
       refreshHistory();
     }
+
+    if (newThreadId) {
+      await updateLastMessageWithData(newThreadId);
+    }
   };
 
   const groupedTurns = React.useMemo(() => {
     if (!blocks.length) return [];
     const turns: { sender: 'user' | 'ai'; blocks: Block[] }[] = [];
-
     blocks.forEach((block) => {
       const lastTurn = turns[turns.length - 1];
       const currentSender = block.kind === 'text' ? block.sender : 'ai';
@@ -189,7 +187,6 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
                   />
                 );
               }
-
               return (
                 <div key={turnIndex} className={styles.aiTurnWrapper}>
                   {isStreaming && turnIndex === groupedTurns.length - 1 && (
@@ -197,7 +194,6 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
                   )}
                   {turn.blocks.map((block) =>
                     block.kind === 'text' ? (
-                      // ✨ START: ส่ง messageId ไปยัง ChatMessage ของ AI ✨
                       <ChatMessage
                         key={block.id}
                         sender="ai"
@@ -205,14 +201,12 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
                         messageId={block.messageId}
                       />
                     ) : (
-                      // ✨ END: ส่ง messageId ✨
                       <AssetTabs key={block.id} group={block.group} messageId={block.messageId} />
                     )
                   )}
                 </div>
               );
             })}
-
             {isStreaming &&
               (groupedTurns[groupedTurns.length - 1]?.sender === 'user' ||
                 groupedTurns.length === 0) && (

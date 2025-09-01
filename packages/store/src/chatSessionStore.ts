@@ -5,7 +5,7 @@ import { getApiBaseUrl, getConversationByThreadId } from '@arcfusion/client';
 import type {
   ConversationResponse,
   StreamedEvent,
-  ChatMessage as ApiChatMessage, // ✨ เปลี่ยนชื่อ import เพื่อไม่ให้ซ้ำ
+  ChatMessage as ApiChatMessage,
   AssetGroup,
   Block,
   TextBlock,
@@ -14,7 +14,6 @@ import type {
 type StreamStatus = 'idle' | 'streaming' | 'completed' | 'error';
 type AiTask = 'thinking' | 'creating sql' | 'creating table' | 'answering' | null;
 
-// ✨ START: แก้ไขฟังก์ชันนี้โดยตรง ✨
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
   if (!response || !response.messages) {
     return [];
@@ -23,8 +22,6 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
   let idCounter = Date.now();
   for (const message of response.messages) {
     if (message.role === 'system') continue;
-
-    // --- ส่วน Asset ไม่ต้องแก้ไข ---
     if (message.role === 'bot') {
       const assetGroup: AssetGroup = { id: uuidv4(), sqls: [], dataframes: [], charts: [] };
       let hasAssets = false;
@@ -49,21 +46,17 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
         blocks.push({
           kind: 'assets',
           id: idCounter++,
-
-          messageId: (message as any).id, // เพิ่ม messageId ให้ Asset ด้วย
+          messageId: (message as any).id,
           group: assetGroup,
         });
       }
     }
-
-    // --- ส่วน Text ที่ต้องแก้ไข ---
     const textContent = typeof message.content === 'string' ? message.content : '';
     if (textContent) {
       blocks.push({
         kind: 'text',
-        id: idCounter++, // ID สำหรับ React key
-
-        messageId: (message as any).id, // ⬅️ **จุดสำคัญที่แก้ไข**
+        id: idCounter++,
+        messageId: (message as any).id,
         sender: message.role === 'bot' ? 'ai' : 'user',
         content: textContent,
       });
@@ -71,9 +64,7 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
   }
   return blocks;
 }
-// ✨ END: สิ้นสุดการแก้ไขฟังก์ชัน ✨
 
-// Store State and Actions (ส่วนที่เหลือของไฟล์เหมือนเดิม ไม่ต้องแก้ไข)
 export interface ChatSessionState {
   threadId?: string;
   blocks: Block[];
@@ -82,11 +73,11 @@ export interface ChatSessionState {
   activePrompt: string | null;
   isLoadingHistory: boolean;
   currentAiTask: AiTask;
-  processedEventsCount: number;
   pendingAssets: AssetGroup;
   loadConversation: (threadId: string) => Promise<void>;
   sendMessage: (text: string, currentThreadId?: string) => Promise<string>;
   clearChat: () => void;
+  updateLastMessageWithData: (threadId: string) => Promise<void>;
 }
 
 const initialPendingAssets = (): AssetGroup => ({
@@ -104,9 +95,7 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
   activePrompt: null,
   isLoadingHistory: false,
   currentAiTask: null,
-  processedEventsCount: 0,
   pendingAssets: initialPendingAssets(),
-
   clearChat: () => {
     set({
       threadId: undefined,
@@ -115,11 +104,9 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       status: 'idle',
       error: null,
       currentAiTask: null,
-      processedEventsCount: 0,
       pendingAssets: initialPendingAssets(),
     });
   },
-
   loadConversation: async (threadId) => {
     if (get().isLoadingHistory) return;
     set({
@@ -127,7 +114,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       status: 'idle',
       error: null,
       currentAiTask: null,
-      processedEventsCount: 0,
       pendingAssets: initialPendingAssets(),
     });
     try {
@@ -144,11 +130,40 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       set({ error: err.message, isLoadingHistory: false });
     }
   },
+  updateLastMessageWithData: async (threadId) => {
+    try {
+      const fullConversation = await getConversationByThreadId(threadId);
+      const lastBotMessageFromApi = fullConversation.messages.filter((m) => m.role === 'bot').pop();
 
+      if (!lastBotMessageFromApi || !(lastBotMessageFromApi as any).id) return;
+
+      const newMessageId = (lastBotMessageFromApi as any).id;
+
+      set((state) => {
+        const newBlocks = [...state.blocks];
+        let lastUserIndex = -1;
+        for (let i = newBlocks.length - 1; i >= 0; i--) {
+          const block = newBlocks[i];
+          if (block.kind === 'text' && block.sender === 'user') {
+            lastUserIndex = i;
+            break;
+          }
+        }
+
+        if (lastUserIndex !== -1) {
+          for (let i = lastUserIndex + 1; i < newBlocks.length; i++) {
+            newBlocks[i] = { ...newBlocks[i], messageId: newMessageId };
+          }
+        }
+        return { blocks: newBlocks };
+      });
+    } catch (error) {
+      console.error('Failed to update last message with data:', error);
+    }
+  },
   sendMessage: async (text, currentThreadId) => {
     if (get().status === 'streaming') return currentThreadId || '';
     const newThreadId = currentThreadId || uuidv4();
-
     set((state) => ({
       threadId: newThreadId,
       status: 'streaming',
@@ -156,7 +171,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       error: null,
       activePrompt: state.activePrompt || text,
       blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }],
-      processedEventsCount: 0,
       pendingAssets: initialPendingAssets(),
     }));
 
@@ -174,21 +188,16 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const parts = buffer.split('data:');
         buffer = parts.pop() || '';
-
         for (const part of parts) {
           if (part.trim() === '' || part.trim() === '[DONE]') continue;
-
           try {
             const eventData: StreamedEvent = JSON.parse(part.trim());
-
             if ('answer_chunk' in eventData || 'answer' in eventData) {
               const { pendingAssets } = get();
               if (
@@ -205,11 +214,9 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 }));
               }
             }
-
             set((state) => {
               let newPendingAssets = { ...state.pendingAssets };
               let updatedBlocks = [...state.blocks];
-
               if ('sql_query' in eventData) {
                 newPendingAssets.sqls.push({
                   id: `sql-${Date.now()}`,
@@ -218,7 +225,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 });
                 return { pendingAssets: newPendingAssets, currentAiTask: 'creating sql' };
               }
-
               if ('sql_query_result' in eventData) {
                 const df = eventData.sql_query_result;
                 if (df && df.length > 0) {
@@ -231,7 +237,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 }
                 return { pendingAssets: newPendingAssets, currentAiTask: 'creating table' };
               }
-
               if ('answer_chunk' in eventData || 'answer' in eventData) {
                 const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
                 const lastBlock = updatedBlocks[updatedBlocks.length - 1];
@@ -247,7 +252,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 }
                 return { blocks: updatedBlocks, currentAiTask: 'answering' };
               }
-
               return {};
             });
           } catch (e) {
@@ -259,17 +263,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       console.error('Streaming failed:', err);
       set({ error: err.message, status: 'error' });
     } finally {
-      const { pendingAssets } = get();
-      if (
-        pendingAssets.sqls.length > 0 ||
-        pendingAssets.dataframes.length > 0 ||
-        pendingAssets.charts.length > 0
-      ) {
-        set((state) => ({
-          blocks: [...state.blocks, { kind: 'assets', id: Date.now(), group: pendingAssets }],
-          pendingAssets: initialPendingAssets(),
-        }));
-      }
       set({ status: 'completed', currentAiTask: null });
     }
     return newThreadId;
