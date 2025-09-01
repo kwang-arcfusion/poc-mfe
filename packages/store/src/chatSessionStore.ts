@@ -6,33 +6,15 @@ import type {
   ConversationResponse,
   StreamedEvent,
   ChatMessage as ApiChatMessage,
+  AssetGroup,
+  Block,
+  TextBlock,
 } from '@arcfusion/types';
 
-// Helper types (ไม่เปลี่ยนแปลง)
-type Asset = { id: string; title: string; [key: string]: any };
-type AssetGroup = {
-  id: string;
-  sqls: Asset[];
-  dataframes: Asset[];
-  charts: Asset[];
-};
-type TextBlock = {
-  kind: 'text';
-  id: number;
-  sender: 'user' | 'ai';
-  content: string;
-};
-type AssetsBlock = {
-  kind: 'assets';
-  id: number;
-  group: AssetGroup;
-};
-type Block = TextBlock | AssetsBlock;
 type StreamStatus = 'idle' | 'streaming' | 'completed' | 'error';
-// ✨ เพิ่ม Type สำหรับสถานะของ AI Task ✨
 type AiTask = 'thinking' | 'creating sql' | 'creating table' | 'answering' | null;
 
-// function transformConversationResponseToBlocks (ไม่เปลี่ยนแปลง)
+// function transformConversationResponseToBlocks
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
   if (!response || !response.messages) {
     return [];
@@ -86,7 +68,6 @@ export interface ChatSessionState {
   error: string | null;
   activePrompt: string | null;
   isLoadingHistory: boolean;
-  // ✨ เพิ่ม State ใหม่ ✨
   currentAiTask: AiTask;
   processedEventsCount: number;
   pendingAssets: AssetGroup;
@@ -205,7 +186,10 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 pendingAssets.charts.length > 0
               ) {
                 set((state) => ({
-                  blocks: [...state.blocks, { kind: 'assets', id: Date.now(), group: pendingAssets }],
+                  blocks: [
+                    ...state.blocks,
+                    { kind: 'assets', id: Date.now(), group: pendingAssets },
+                  ],
                   pendingAssets: initialPendingAssets(),
                 }));
               }

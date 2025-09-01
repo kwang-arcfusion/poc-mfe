@@ -1,5 +1,4 @@
 // remotes/ask_ai/src/AskAi.tsx
-// ✨ 1. เพิ่มการ import 'useRef' (มีอยู่แล้ว) และ 'useCallback'
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   makeStyles,
@@ -12,16 +11,15 @@ import {
 } from '@fluentui/react-components';
 import { Send24Regular } from '@fluentui/react-icons';
 import { useChatHistoryStore, useChatSessionStore } from '@arcfusion/store';
-
 import { ChatTitleBar } from './components/ChatTitleBar';
 import { ChatMessage } from './components/ChatMessage';
 import { InitialView } from './components/InitialView';
 import { AssetTabs } from './components/AssetTabs';
+import type { Block } from './types';
 
 const useStatusStyles = makeStyles({
   statusContainer: {
     display: 'flex',
-    paddingTop: '12px',
     alignItems: 'center',
     ...shorthands.gap(tokens.spacingHorizontalS),
     color: tokens.colorNeutralForeground3,
@@ -110,8 +108,6 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const { fetchConversations: refreshHistory } = useChatHistoryStore();
   const [inputValue, setInputValue] = React.useState('');
   const isStreaming = status === 'streaming';
-
-  // ✨ 2. แก้ไขการประกาศ useState และเพิ่ม ref สำหรับ contentArea
   const [isStopAutoScrollDown, setIsStopAutoScrollDown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -119,7 +115,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   useEffect(() => {
     if (isStopAutoScrollDown) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [blocks, isStopAutoScrollDown]); // ✨ 3. เพิ่ม isStopAutoScrollDown ใน dependency array
+  }, [blocks, isStopAutoScrollDown]);
 
   useEffect(() => {
     if (chatId) {
@@ -171,13 +167,18 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
 
   const groupedTurns = React.useMemo(() => {
     if (!blocks.length) return [];
-    const turns: { sender: 'user' | 'ai'; blocks: typeof blocks }[] = [];
+
+    const turns: { sender: 'user' | 'ai'; blocks: Block[] }[] = [];
+
     blocks.forEach((block) => {
       const lastTurn = turns[turns.length - 1];
-      if (lastTurn && lastTurn.sender === block.sender) {
+      // ตรวจสอบ sender ของ block ปัจจุบันอย่างปลอดภัย
+      const currentSender = block.kind === 'text' ? block.sender : 'ai';
+
+      if (lastTurn && lastTurn.sender === currentSender) {
         lastTurn.blocks.push(block);
       } else {
-        turns.push({ sender: block.sender, blocks: [block] });
+        turns.push({ sender: currentSender, blocks: [block] });
       }
     });
     return turns;
@@ -190,12 +191,22 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
           <InitialView onSuggestionClick={handleSendMessage} />
         ) : (
           <>
-            <ChatTitleBar title={activePrompt || 'New Chat'} />
             <div className={styles.chatContainer}>
-              {groupedTurns.map((turn, turnIndex) =>
-                turn.sender === 'user' ? (
-                  <ChatMessage key={turnIndex} sender="user" content={turn.blocks[0].content} />
-                ) : (
+              {groupedTurns.map((turn, turnIndex) => {
+                // สำหรับ User Turn: จะมีแค่ TextBlock เท่านั้น
+                if (turn.sender === 'user') {
+                  const userBlock = turn.blocks[0];
+                  // ตรวจสอบให้แน่ใจว่าเป็น TextBlock ก่อน Render
+                  if (userBlock.kind === 'text') {
+                    return (
+                      <ChatMessage key={turnIndex} sender="user" content={userBlock.content} />
+                    );
+                  }
+                  return null;
+                }
+
+                // สำหรับ AI Turn: อาจจะมีทั้ง TextBlock และ AssetsBlock
+                return (
                   <div key={turnIndex} className={styles.aiTurnWrapper}>
                     {isStreaming && turnIndex === groupedTurns.length - 1 && (
                       <AiStatusIndicator task={currentAiTask} />
@@ -208,8 +219,9 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
                       )
                     )}
                   </div>
-                )
-              )}
+                );
+              })}
+
               {isStreaming &&
                 (groupedTurns[groupedTurns.length - 1]?.sender === 'user' ||
                   groupedTurns.length === 0) && (

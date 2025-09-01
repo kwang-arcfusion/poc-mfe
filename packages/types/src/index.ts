@@ -93,3 +93,4 @@ export interface ConversationResponse {
   messages: ChatMessage[];
 }
 // ✨ END: ADD NEW TYPES FOR CONVERSATION DETAIL ✨
+export * from './chat';
