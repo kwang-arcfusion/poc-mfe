@@ -97,7 +97,6 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const {
     blocks,
     status,
-    activePrompt,
     currentAiTask,
     loadConversation,
     sendMessage: sendMessageFromStore,
