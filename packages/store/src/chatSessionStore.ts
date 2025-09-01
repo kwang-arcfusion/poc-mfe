@@ -154,6 +154,8 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
   sendMessage: async (text, currentThreadId) => {
     if (get().status === 'streaming') return currentThreadId || '';
     const newThreadId = currentThreadId || uuidv4();
+
+    // Setup initial state for a new message
     set((state) => ({
       threadId: newThreadId,
       status: 'streaming',
@@ -162,7 +164,7 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       activePrompt: state.activePrompt || text,
       blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }],
       processedEventsCount: 0,
-      pendingAssets: initialPendingAssets(),
+      pendingAssets: initialPendingAssets(), // Ensure pending is clean before starting
     }));
 
     try {
@@ -179,105 +181,102 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let allEvents: StreamedEvent[] = [];
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+
         buffer += decoder.decode(value, { stream: true });
         const parts = buffer.split('data:');
-        buffer = parts.pop() || '';
+        buffer = parts.pop() || ''; // Keep the last, possibly incomplete, part
 
         for (const part of parts) {
           if (part.trim() === '' || part.trim() === '[DONE]') continue;
+
           try {
             const eventData: StreamedEvent = JSON.parse(part.trim());
-            allEvents.push(eventData);
 
-            // ✨ อัปเดตสถานะ AI Task ตาม Event ที่ได้รับ ✨
-            if ('sql_query' in eventData) set({ currentAiTask: 'creating sql' });
-            else if ('sql_query_result' in eventData) set({ currentAiTask: 'creating table' });
-            else if ('answer_chunk' in eventData || 'answer' in eventData)
-              set({ currentAiTask: 'answering' });
+            // Logic to flush pending assets BEFORE processing a text chunk
+            if ('answer_chunk' in eventData || 'answer' in eventData) {
+              const { pendingAssets } = get();
+              if (
+                pendingAssets.sqls.length > 0 ||
+                pendingAssets.dataframes.length > 0 ||
+                pendingAssets.charts.length > 0
+              ) {
+                set((state) => ({
+                  blocks: [...state.blocks, { kind: 'assets', id: Date.now(), group: pendingAssets }],
+                  pendingAssets: initialPendingAssets(),
+                }));
+              }
+            }
+
+            // Process the current event
+            set((state) => {
+              let newPendingAssets = { ...state.pendingAssets };
+              let updatedBlocks = [...state.blocks];
+
+              if ('sql_query' in eventData) {
+                newPendingAssets.sqls.push({
+                  id: `sql-${Date.now()}`,
+                  title: 'Generated SQL',
+                  sql: eventData.sql_query,
+                });
+                return { pendingAssets: newPendingAssets, currentAiTask: 'creating sql' };
+              }
+
+              if ('sql_query_result' in eventData) {
+                const df = eventData.sql_query_result;
+                if (df && df.length > 0) {
+                  newPendingAssets.dataframes.push({
+                    id: `df-${Date.now()}`,
+                    title: 'Query Result',
+                    columns: Object.keys(df[0]),
+                    rows: df.map((row) => Object.values(row)),
+                  });
+                }
+                return { pendingAssets: newPendingAssets, currentAiTask: 'creating table' };
+              }
+
+              if ('answer_chunk' in eventData || 'answer' in eventData) {
+                const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
+                const lastBlock = updatedBlocks[updatedBlocks.length - 1];
+                if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
+                  (lastBlock as TextBlock).content += textContent;
+                } else {
+                  updatedBlocks.push({
+                    kind: 'text',
+                    id: Date.now(),
+                    sender: 'ai',
+                    content: textContent,
+                  });
+                }
+                return { blocks: updatedBlocks, currentAiTask: 'answering' };
+              }
+
+              return {}; // No change for other event types
+            });
           } catch (e) {
             console.warn('Could not parse SSE JSON part:', part);
           }
-        }
-
-        const { processedEventsCount } = get();
-        const newEvents = allEvents.slice(processedEventsCount);
-
-        if (newEvents.length > 0) {
-          let { pendingAssets } = get();
-          const blocksFromNewEvents: Block[] = [];
-          const processPendingAssets = () => {
-            if (
-              pendingAssets.sqls.length > 0 ||
-              pendingAssets.dataframes.length > 0 ||
-              pendingAssets.charts.length > 0
-            ) {
-              blocksFromNewEvents.push({
-                kind: 'assets',
-                id: Date.now(),
-                group: { ...pendingAssets },
-              });
-              pendingAssets = initialPendingAssets();
-            }
-          };
-          newEvents.forEach((event, index) => {
-            if ('sql_query' in event)
-              pendingAssets.sqls.push({
-                id: `sql-${index}`,
-                title: 'Generated SQL',
-                sql: event.sql_query,
-              });
-            else if ('sql_query_result' in event) {
-              const df = event.sql_query_result;
-              if (df && df.length > 0)
-                pendingAssets.dataframes.push({
-                  id: `df-${index}`,
-                  title: 'Query Result',
-                  columns: Object.keys(df[0]),
-                  rows: df.map((row) => Object.values(row)),
-                });
-            } else if ('answer_chunk' in event || 'answer' in event) {
-              processPendingAssets();
-              const textContent = (event as any).answer_chunk || (event as any).answer;
-              if (textContent)
-                blocksFromNewEvents.push({
-                  kind: 'text',
-                  id: Date.now() + index,
-                  sender: 'ai',
-                  content: textContent,
-                });
-            }
-          });
-          processPendingAssets();
-          set({ pendingAssets });
-
-          set((state) => {
-            let updatedBlocks = [...state.blocks];
-            for (const newBlock of blocksFromNewEvents) {
-              const lastBlock = updatedBlocks[updatedBlocks.length - 1];
-              if (
-                newBlock.kind === 'text' &&
-                lastBlock?.kind === 'text' &&
-                lastBlock.sender === 'ai'
-              ) {
-                (lastBlock as TextBlock).content += (newBlock as TextBlock).content;
-              } else {
-                updatedBlocks.push(newBlock);
-              }
-            }
-            return { blocks: updatedBlocks };
-          });
-          set({ processedEventsCount: allEvents.length });
         }
       }
     } catch (err: any) {
       console.error('Streaming failed:', err);
       set({ error: err.message, status: 'error' });
     } finally {
+      // Final flush for any remaining assets when the stream ends
+      const { pendingAssets } = get();
+      if (
+        pendingAssets.sqls.length > 0 ||
+        pendingAssets.dataframes.length > 0 ||
+        pendingAssets.charts.length > 0
+      ) {
+        set((state) => ({
+          blocks: [...state.blocks, { kind: 'assets', id: Date.now(), group: pendingAssets }],
+          pendingAssets: initialPendingAssets(),
+        }));
+      }
       set({ status: 'completed', currentAiTask: null });
     }
     return newThreadId;

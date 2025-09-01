@@ -10,6 +10,8 @@ import {
   TabValue,
 } from '@fluentui/react-components';
 import type { AssetGroup } from '../types';
+// ✨ 1. Import คอมโพเนนต์ใหม่ที่เราสร้าง
+import { SqlTableTabs } from './SqlTableTabs';
 
 const useStyles = makeStyles({
   assetGroup: {
@@ -48,6 +50,17 @@ type TabItem = { key: string; label: string; render: () => React.ReactNode };
 
 export function AssetTabs({ group }: { group: AssetGroup }) {
   const styles = useStyles();
+
+  // ✨ START: เพิ่ม Logic ใหม่เพื่อตรวจสอบและเรียกใช้ SqlTableTabs ✨
+  const isSimpleSqlTablePair =
+    group.sqls.length === 1 && group.dataframes.length === 1 && group.charts.length === 0;
+
+  if (isSimpleSqlTablePair) {
+    return <SqlTableTabs sql={group.sqls[0]} dataframe={group.dataframes[0]} />;
+  }
+  // ✨ END: สิ้นสุด Logic ใหม่ ✨
+
+  // Logic เดิมจะทำงานในกรณีอื่นๆ ที่ไม่ใช่ SQL + Table
   const [active, setActive] = React.useState<TabValue>(() => {
     if (group.sqls[0]) return `sql:${group.sqls[0].id}`;
     if (group.dataframes[0]) return `df:${group.dataframes[0].id}`;
@@ -61,7 +74,7 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
   group.sqls.forEach((s) => {
     tabs.push({
       key: `sql:${s.id}`,
-      label: `SQL`, // <-- แก้ไขตรงนี้
+      label: `SQL`,
       render: () => (
         <div className={styles.tabPanelPad}>
           <pre className={styles.codeBox}>{s.sql}</pre>
@@ -74,7 +87,7 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
   group.dataframes.forEach((df) => {
     tabs.push({
       key: `df:${df.id}`,
-      label: `Table`, // <-- แก้ไขตรงนี้
+      label: `Table`,
       render: () => (
         <div className={styles.tabPanelPad}>
           <div className={styles.tableWrap}>
@@ -118,7 +131,7 @@ export function AssetTabs({ group }: { group: AssetGroup }) {
       const max = Math.max(1, ...ch.values);
       tabs.push({
         key: `chart:${ch.id}`,
-        label: `Chart`, // <-- แก้ไขตรงนี้เผื่ออนาคต
+        label: `Chart`,
         render: () => (
           <div className={styles.tabPanelPad}>
             <div className={styles.chartBarWrap}>

@@ -21,6 +21,7 @@ import { AssetTabs } from './components/AssetTabs';
 const useStatusStyles = makeStyles({
   statusContainer: {
     display: 'flex',
+    paddingTop: '12px',
     alignItems: 'center',
     ...shorthands.gap(tokens.spacingHorizontalS),
     color: tokens.colorNeutralForeground3,
@@ -29,7 +30,7 @@ const useStatusStyles = makeStyles({
 const TASK_DISPLAY_TEXT: Record<string, string> = {
   thinking: 'Thinking',
   'creating sql': 'Creating SQL',
-  'creating table': 'Creating table',
+  'creating table': 'Creating Table',
   answering: 'Answering',
 };
 const AiStatusIndicator = ({ task }: { task: string | null }) => {
@@ -81,7 +82,7 @@ const useStyles = makeStyles({
     alignItems: 'center',
     ...shorthands.gap('12px'),
     width: '100%',
-    maxWidth: '800px',
+    maxWidth: '820px',
     position: 'relative',
   },
   textarea: { width: '100%', paddingRight: '50px' },
