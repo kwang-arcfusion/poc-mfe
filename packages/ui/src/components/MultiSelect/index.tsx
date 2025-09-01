@@ -131,7 +131,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         >
           {filteredOptions.map((option) => (
             <MenuItemCheckbox key={option} name={label} value={option}>
-              {option} 
+              {option}
             </MenuItemCheckbox>
           ))}
         </MenuList>

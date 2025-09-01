@@ -1,6 +1,5 @@
 // remotes/ask_ai/src/AskAi.tsx
-import React from 'react';
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   makeStyles,
   tokens,
@@ -8,6 +7,7 @@ import {
   Textarea,
   Button,
   Spinner,
+  Body1,
 } from '@fluentui/react-components';
 import { Send24Regular } from '@fluentui/react-icons';
 import { useChatHistoryStore, useChatSessionStore } from '@arcfusion/store';
@@ -16,7 +16,34 @@ import { ChatTitleBar } from './components/ChatTitleBar';
 import { ChatMessage } from './components/ChatMessage';
 import { InitialView } from './components/InitialView';
 import { AssetTabs } from './components/AssetTabs';
-import { findLastAiTextIndex } from './helpers/blocks';
+
+// Component สำหรับแสดงสถานะ AI (ไม่เปลี่ยนแปลง)
+const useStatusStyles = makeStyles({
+  statusContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    color: tokens.colorNeutralForeground3,
+    // marginBottom ถูกเอาออกไป เพราะจะใช้ gap จาก parent แทน
+  },
+});
+const TASK_DISPLAY_TEXT: Record<string, string> = {
+  thinking: 'Thinking',
+  'creating sql': 'Creating SQL',
+  'creating table': 'Creating table',
+  answering: 'Answering',
+};
+const AiStatusIndicator = ({ task }: { task: string | null }) => {
+  const styles = useStatusStyles();
+  if (!task) return null;
+  const displayText = TASK_DISPLAY_TEXT[task] || 'Processing';
+  return (
+    <div className={styles.statusContainer}>
+      <Spinner size="tiny" />
+      <Body1>{displayText}...</Body1>
+    </div>
+  );
+};
 
 interface AskAiProps {
   navigate: (path: string, options?: { replace?: boolean }) => void;
@@ -26,15 +53,10 @@ interface AskAiProps {
 const useStyles = makeStyles({
   root: { display: 'flex', flexDirection: 'column', width: '100%', height: '100%' },
   contentArea: { flexGrow: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' },
-  loadingContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-  },
   chatContainer: {
     display: 'flex',
     flexDirection: 'column',
+    // ✨ กลับไปใช้ gap เดิม ✨
     ...shorthands.gap(tokens.spacingVerticalL),
     ...shorthands.padding(tokens.spacingVerticalL, tokens.spacingHorizontalXXXL),
     width: '100%',
@@ -43,6 +65,14 @@ const useStyles = makeStyles({
     marginRight: 'auto',
     boxSizing: 'border-box',
   },
+  // ✨ START: แก้ไข Wrapper ของ AI ให้ไม่มี Style ที่มองเห็น ✨
+  aiTurnWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start', // จัด content ข้างในให้ชิดซ้าย
+    ...shorthands.gap(tokens.spacingVerticalL), // ระยะห่างระหว่าง status กับ content
+  },
+  // ✨ END: แก้ไข Wrapper ✨
   bottomBar: {
     flexShrink: 0,
     display: 'flex',
@@ -69,14 +99,12 @@ const useStyles = makeStyles({
 
 export default function AskAi({ navigate, chatId }: AskAiProps) {
   const styles = useStyles();
-  const contentAreaRef = useRef<HTMLDivElement>(null);
 
-  // State and actions are now from our global Zustand store
   const {
     blocks,
     status,
     activePrompt,
-    isLoadingHistory,
+    currentAiTask,
     loadConversation,
     sendMessage: sendMessageFromStore,
     clearChat,
@@ -86,73 +114,78 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const [inputValue, setInputValue] = React.useState('');
   const isStreaming = status === 'streaming';
 
-  // Effect to sync URL chatId with the store's threadId
   useEffect(() => {
-    // When the component mounts or chatId from URL changes...
     if (chatId) {
-      // If the store's ID is different, load the conversation.
-      if (useChatSessionStore.getState().threadId !== chatId) {
-        loadConversation(chatId);
-      }
+      if (useChatSessionStore.getState().threadId !== chatId) loadConversation(chatId);
     } else {
-      // If there's no chatId, it's a new chat session.
       clearChat();
     }
   }, [chatId, loadConversation, clearChat]);
 
-  // Effect to scroll to bottom on new blocks
-  useEffect(() => {
-    if (contentAreaRef.current) {
-      contentAreaRef.current.scrollTop = contentAreaRef.current.scrollHeight;
-    }
-  }, [blocks]);
-
   const handleSendMessage = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isStreaming) return;
-
     setInputValue('');
     const currentThreadId = useChatSessionStore.getState().threadId;
-
     const newThreadId = await sendMessageFromStore(trimmed, currentThreadId);
-
-    // If it was a new chat, navigate to the new URL and refresh history
     if (!currentThreadId && newThreadId) {
       navigate(`/ask_ai/${newThreadId}`, { replace: true });
       refreshHistory();
     }
   };
 
+  const groupedTurns = React.useMemo(() => {
+    if (!blocks.length) return [];
+    const turns: { sender: 'user' | 'ai'; blocks: typeof blocks }[] = [];
+    blocks.forEach((block) => {
+      const lastTurn = turns[turns.length - 1];
+      if (lastTurn && lastTurn.sender === block.sender) {
+        lastTurn.blocks.push(block);
+      } else {
+        turns.push({ sender: block.sender, blocks: [block] });
+      }
+    });
+    return turns;
+  }, [blocks]);
+
   return (
     <div className={styles.root}>
-      <div className={styles.contentArea} ref={contentAreaRef}>
-        {blocks.length > 0 ? (
+      <div className={styles.contentArea}>
+        {blocks.length === 0 && !isStreaming ? (
+          <InitialView onSuggestionClick={handleSendMessage} />
+        ) : (
           <>
-            <ChatTitleBar title={activePrompt || 'Conversation'} />
+            <ChatTitleBar title={activePrompt || 'New Chat'} />
             <div className={styles.chatContainer}>
-              {blocks.map((b, i) =>
-                b.kind === 'text' ? (
-                  <ChatMessage
-                    key={(b as any).id}
-                    sender={(b as any).sender}
-                    content={(b as any).content}
-                    isStreaming={
-                      isStreaming &&
-                      i === findLastAiTextIndex(blocks) &&
-                      (b as any).content.length === 0
-                    }
-                  />
+              {groupedTurns.map((turn, turnIndex) =>
+                turn.sender === 'user' ? (
+                  <ChatMessage key={turnIndex} sender="user" content={turn.blocks[0].content} />
                 ) : (
-                  <AssetTabs key={(b as any).id} group={(b as any).group} />
+                  <div key={turnIndex} className={styles.aiTurnWrapper}>
+                    {isStreaming && turnIndex === groupedTurns.length - 1 && (
+                      <AiStatusIndicator task={currentAiTask} />
+                    )}
+                    {turn.blocks.map((block) =>
+                      block.kind === 'text' ? (
+                        <ChatMessage key={block.id} sender="ai" content={block.content} />
+                      ) : (
+                        <AssetTabs key={block.id} group={block.group} />
+                      )
+                    )}
+                  </div>
                 )
               )}
+              {isStreaming &&
+                (groupedTurns[groupedTurns.length - 1]?.sender === 'user' ||
+                  groupedTurns.length === 0) && (
+                  <div className={styles.aiTurnWrapper}>
+                    <AiStatusIndicator task={currentAiTask} />
+                  </div>
+                )}
             </div>
           </>
-        ) : (
-          <InitialView onSuggestionClick={handleSendMessage} />
         )}
       </div>
-
       <div className={styles.bottomBar}>
         <div className={styles.inputContainer}>
           <Textarea
