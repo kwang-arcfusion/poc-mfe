@@ -1,5 +1,6 @@
 // remotes/ask_ai/src/AskAi.tsx
-import React, { useEffect, useRef } from 'react';
+// ✨ 1. เพิ่มการ import 'useRef' (มีอยู่แล้ว) และ 'useCallback'
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   makeStyles,
   tokens,
@@ -17,14 +18,12 @@ import { ChatMessage } from './components/ChatMessage';
 import { InitialView } from './components/InitialView';
 import { AssetTabs } from './components/AssetTabs';
 
-// Component สำหรับแสดงสถานะ AI (ไม่เปลี่ยนแปลง)
 const useStatusStyles = makeStyles({
   statusContainer: {
     display: 'flex',
     alignItems: 'center',
     ...shorthands.gap(tokens.spacingHorizontalS),
     color: tokens.colorNeutralForeground3,
-    // marginBottom ถูกเอาออกไป เพราะจะใช้ gap จาก parent แทน
   },
 });
 const TASK_DISPLAY_TEXT: Record<string, string> = {
@@ -56,7 +55,6 @@ const useStyles = makeStyles({
   chatContainer: {
     display: 'flex',
     flexDirection: 'column',
-    // ✨ กลับไปใช้ gap เดิม ✨
     ...shorthands.gap(tokens.spacingVerticalL),
     ...shorthands.padding(tokens.spacingVerticalL, tokens.spacingHorizontalXXXL),
     width: '100%',
@@ -65,14 +63,12 @@ const useStyles = makeStyles({
     marginRight: 'auto',
     boxSizing: 'border-box',
   },
-  // ✨ START: แก้ไข Wrapper ของ AI ให้ไม่มี Style ที่มองเห็น ✨
   aiTurnWrapper: {
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'flex-start', // จัด content ข้างในให้ชิดซ้าย
-    ...shorthands.gap(tokens.spacingVerticalL), // ระยะห่างระหว่าง status กับ content
+    alignItems: 'flex-start',
+    ...shorthands.gap(tokens.spacingVerticalL),
   },
-  // ✨ END: แก้ไข Wrapper ✨
   bottomBar: {
     flexShrink: 0,
     display: 'flex',
@@ -114,6 +110,16 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const [inputValue, setInputValue] = React.useState('');
   const isStreaming = status === 'streaming';
 
+  // ✨ 2. แก้ไขการประกาศ useState และเพิ่ม ref สำหรับ contentArea
+  const [isStopAutoScrollDown, setIsStopAutoScrollDown] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isStopAutoScrollDown) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [blocks, isStopAutoScrollDown]); // ✨ 3. เพิ่ม isStopAutoScrollDown ใน dependency array
+
   useEffect(() => {
     if (chatId) {
       if (useChatSessionStore.getState().threadId !== chatId) loadConversation(chatId);
@@ -122,10 +128,38 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
     }
   }, [chatId, loadConversation, clearChat]);
 
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 5;
+
+      if (isAtBottom) {
+        setIsStopAutoScrollDown(false);
+      } else {
+        setIsStopAutoScrollDown(true);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [handleScroll]);
+
   const handleSendMessage = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isStreaming) return;
     setInputValue('');
+
+    setIsStopAutoScrollDown(false);
+
     const currentThreadId = useChatSessionStore.getState().threadId;
     const newThreadId = await sendMessageFromStore(trimmed, currentThreadId);
     if (!currentThreadId && newThreadId) {
@@ -150,7 +184,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
 
   return (
     <div className={styles.root}>
-      <div className={styles.contentArea}>
+      <div className={styles.contentArea} ref={scrollContainerRef}>
         {blocks.length === 0 && !isStreaming ? (
           <InitialView onSuggestionClick={handleSendMessage} />
         ) : (
@@ -182,6 +216,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
                     <AiStatusIndicator task={currentAiTask} />
                   </div>
                 )}
+              <div ref={messagesEndRef} />
             </div>
           </>
         )}
