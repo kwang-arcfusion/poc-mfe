@@ -3,10 +3,10 @@ import type {
   PaginatedConversationsResponse,
   PaginatedStoriesResponse,
   Story,
-  ConversationResponse, // <-- Import the new type
+  ConversationResponse,
+  FeedbackRequest, // ✨ Import เพิ่ม
+  FeedbackResponse, // ✨ Import เพิ่ม
 } from '@arcfusion/types';
-
-console.log('%c[client] Module Loaded', 'color: purple; font-weight: bold;');
 
 let API_BASE_URL: string = '';
 
@@ -15,7 +15,6 @@ export function initApiClient(baseUrl: string) {
     throw new Error('API Base URL cannot be empty.');
   }
   API_BASE_URL = baseUrl;
-  // ✨ เพิ่ม Log ตรงนี้ ✨
   console.log(
     `%c[client] Initialized with URL: ${API_BASE_URL}`,
     'color: green; font-weight: bold;'
@@ -23,17 +22,13 @@ export function initApiClient(baseUrl: string) {
 }
 
 export const getApiBaseUrl = (): string => {
-  // ✨ เพิ่ม Log ตรงนี้ ✨
   if (!API_BASE_URL) {
     console.error('[client] getApiBaseUrl called BEFORE initialization!');
   }
   return API_BASE_URL;
 };
-/**
- * ฟังก์ชันกลางสำหรับเรียก fetch API
- */
+
 const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  // 2. เพิ่มเงื่อนไขเช็คว่า initApiClient ถูกเรียกแล้วหรือยัง
   if (!API_BASE_URL) {
     throw new Error(
       'API Client has not been initialized. Please call initApiClient(baseUrl) first.'
@@ -60,7 +55,7 @@ const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   return response.json();
 };
 
-// --- ส่วนที่เหลือของฟังก์ชันเหมือนเดิม ---
+// --- Stories API ---
 export const getStories = (page = 1, pageSize = 20): Promise<PaginatedStoriesResponse> => {
   return apiFetch(`/v1/stories?page=${page}&page_size=${pageSize}`);
 };
@@ -69,6 +64,7 @@ export const getStoryById = (storyId: string): Promise<Story> => {
   return apiFetch(`/v1/stories/${storyId}`);
 };
 
+// --- Chat API ---
 export const getConversations = (
   page = 1,
   pageSize = 20
@@ -76,8 +72,30 @@ export const getConversations = (
   return apiFetch(`/v1/chat/conversations?page=${page}&page_size=${pageSize}`);
 };
 
-// ✨ START: EDIT THIS FUNCTION ✨
 export const getConversationByThreadId = (threadId: string): Promise<ConversationResponse> => {
   return apiFetch(`/v1/chat/conversations/${threadId}`);
 };
-// ✨ END: EDIT THIS FUNCTION ✨
+
+// ✨ START: ADD NEW FEEDBACK FUNCTIONS ✨
+/**
+ * Submits or updates feedback for a specific message.
+ * @param feedbackData - The feedback data to submit.
+ * @returns The created or updated feedback record.
+ */
+export const submitFeedback = (feedbackData: FeedbackRequest): Promise<FeedbackResponse> => {
+  return apiFetch(`/v1/feedback/`, {
+    method: 'POST',
+    body: JSON.stringify(feedbackData),
+  });
+};
+
+/**
+ * Deletes feedback for a specific message.
+ * @param messageId - The ID of the message whose feedback should be deleted.
+ */
+export const deleteFeedback = (messageId: string): Promise<null> => {
+  return apiFetch(`/v1/feedback/${messageId}`, {
+    method: 'DELETE',
+  });
+};
+// ✨ END: ADD NEW FEEDBACK FUNCTIONS ✨

@@ -1,4 +1,5 @@
 // packages/types/src/index.ts
+
 // ตรงกับ StoryResponse ใน schemas.py
 export interface Story {
   id: string;
@@ -66,21 +67,15 @@ export interface ChatMessageContent {
   type: 'text';
   text: {
     value: string;
-    // Potentially other annotations in the future
   };
-  // This could be a union with other types like 'sql_result', 'chart', etc.
-  // to represent complex messages. For now, we only handle text.
 }
 
 export interface ChatMessage {
   role: 'user' | 'bot' | 'system';
   content: string | ChatMessageContent[];
-  // ✨ START: ADD NEW PROPERTIES ✨
-  // These fields are populated for historical messages from the API
   generated_sql?: string | null;
   sql_result?: Record<string, any>[] | null;
   chart_config?: Record<string, any> | null;
-  // ✨ END: ADD NEW PROPERTIES ✨
 }
 
 export interface ConversationResponse {
@@ -93,4 +88,26 @@ export interface ConversationResponse {
   messages: ChatMessage[];
 }
 // ✨ END: ADD NEW TYPES FOR CONVERSATION DETAIL ✨
+
+// ✨ START: ADD NEW TYPES FOR FEEDBACK ✨
+export type FeedbackType = 'thumb_up' | 'thumb_down';
+
+export interface FeedbackRequest {
+  message_id: string;
+  feedback_type: FeedbackType;
+  reason?: string;
+  details?: string;
+}
+
+export interface FeedbackResponse {
+  id: string;
+  message_id: string;
+  feedback_type: FeedbackType;
+  reason: string | null;
+  details: string | null;
+  created_at: string;
+  updated_at: string;
+}
+// ✨ END: ADD NEW TYPES FOR FEEDBACK ✨
+
 export * from './chat';

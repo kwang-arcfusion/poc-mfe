@@ -161,7 +161,7 @@ importers:
   packages/store:
     dependencies:
       '@arcfusion/client':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../client
       '@arcfusion/types':
         specifier: workspace:^
@@ -206,6 +206,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@arcfusion/client':
+        specifier: workspace:^
+        version: link:../client
       '@arcfusion/store':
         specifier: workspace:^
         version: link:../store

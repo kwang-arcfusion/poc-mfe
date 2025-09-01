@@ -24,17 +24,21 @@ export type AssetGroup = {
   charts: ChartAsset[];
 };
 
+// ✨ START: แก้ไข Type Definitions ที่นี่ ✨
 export type TextBlock = {
   kind: 'text';
-  id: number;
+  id: number; // ID สำหรับ React key
+  messageId?: string; // ID จริงจาก Backend (UUID)
   sender: 'user' | 'ai';
   content: string;
 };
 
 export type AssetsBlock = {
   kind: 'assets';
-  id: number;
+  id: number; // ID สำหรับ React key
+  messageId?: string; // ID จริงจาก Backend (UUID)
   group: AssetGroup;
 };
+// ✨ END: สิ้นสุดการแก้ไข ✨
 
 export type Block = TextBlock | AssetsBlock;

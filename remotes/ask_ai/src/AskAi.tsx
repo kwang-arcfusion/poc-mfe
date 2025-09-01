@@ -14,7 +14,7 @@ import { useChatHistoryStore, useChatSessionStore } from '@arcfusion/store';
 import { ChatMessage } from './components/ChatMessage';
 import { InitialView } from './components/InitialView';
 import { AssetTabs } from './components/AssetTabs';
-import type { Block } from './types';
+import type { Block, TextBlock } from './types'; // ✨ ใช้ type ที่อัปเดตแล้ว
 
 const useStatusStyles = makeStyles({
   statusContainer: {
@@ -109,7 +109,11 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const [isStopAutoScrollDown, setIsStopAutoScrollDown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
+  useEffect(() => {
+    if (blocks.length > 0) {
+      console.log('Current blocks in state:', blocks);
+    }
+  }, [blocks]);
   useEffect(() => {
     if (isStopAutoScrollDown) return;
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -127,32 +131,20 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
     const container = scrollContainerRef.current;
     if (container) {
       const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 5;
-
-      if (isAtBottom) {
-        setIsStopAutoScrollDown(false);
-      } else {
-        setIsStopAutoScrollDown(true);
-      }
+      setIsStopAutoScrollDown(!isAtBottom);
     }
   }, []);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-    }
-    return () => {
-      if (container) {
-        container.removeEventListener('scroll', handleScroll);
-      }
-    };
+    container?.addEventListener('scroll', handleScroll);
+    return () => container?.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
   const handleSendMessage = async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || isStreaming) return;
     setInputValue('');
-
     setIsStopAutoScrollDown(false);
 
     const currentThreadId = useChatSessionStore.getState().threadId;
@@ -165,14 +157,11 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
 
   const groupedTurns = React.useMemo(() => {
     if (!blocks.length) return [];
-
     const turns: { sender: 'user' | 'ai'; blocks: Block[] }[] = [];
 
     blocks.forEach((block) => {
       const lastTurn = turns[turns.length - 1];
-      // ตรวจสอบ sender ของ block ปัจจุบันอย่างปลอดภัย
       const currentSender = block.kind === 'text' ? block.sender : 'ai';
-
       if (lastTurn && lastTurn.sender === currentSender) {
         lastTurn.blocks.push(block);
       } else {
@@ -188,48 +177,51 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
         {blocks.length === 0 && !isStreaming ? (
           <InitialView onSuggestionClick={handleSendMessage} />
         ) : (
-          <>
-            <div className={styles.chatContainer}>
-              {groupedTurns.map((turn, turnIndex) => {
-                // สำหรับ User Turn: จะมีแค่ TextBlock เท่านั้น
-                if (turn.sender === 'user') {
-                  const userBlock = turn.blocks[0];
-                  // ตรวจสอบให้แน่ใจว่าเป็น TextBlock ก่อน Render
-                  if (userBlock.kind === 'text') {
-                    return (
-                      <ChatMessage key={turnIndex} sender="user" content={userBlock.content} />
-                    );
-                  }
-                  return null;
-                }
-
-                // สำหรับ AI Turn: อาจจะมีทั้ง TextBlock และ AssetsBlock
+          <div className={styles.chatContainer}>
+            {groupedTurns.map((turn, turnIndex) => {
+              if (turn.sender === 'user') {
+                const userBlock = turn.blocks[0] as TextBlock;
                 return (
-                  <div key={turnIndex} className={styles.aiTurnWrapper}>
-                    {isStreaming && turnIndex === groupedTurns.length - 1 && (
-                      <AiStatusIndicator task={currentAiTask} />
-                    )}
-                    {turn.blocks.map((block) =>
-                      block.kind === 'text' ? (
-                        <ChatMessage key={block.id} sender="ai" content={block.content} />
-                      ) : (
-                        <AssetTabs key={block.id} group={block.group} />
-                      )
-                    )}
-                  </div>
+                  <ChatMessage
+                    key={userBlock.id || turnIndex}
+                    sender="user"
+                    content={userBlock.content}
+                  />
                 );
-              })}
+              }
 
-              {isStreaming &&
-                (groupedTurns[groupedTurns.length - 1]?.sender === 'user' ||
-                  groupedTurns.length === 0) && (
-                  <div className={styles.aiTurnWrapper}>
+              return (
+                <div key={turnIndex} className={styles.aiTurnWrapper}>
+                  {isStreaming && turnIndex === groupedTurns.length - 1 && (
                     <AiStatusIndicator task={currentAiTask} />
-                  </div>
-                )}
-              <div ref={messagesEndRef} />
-            </div>
-          </>
+                  )}
+                  {turn.blocks.map((block) =>
+                    block.kind === 'text' ? (
+                      // ✨ START: ส่ง messageId ไปยัง ChatMessage ของ AI ✨
+                      <ChatMessage
+                        key={block.id}
+                        sender="ai"
+                        content={block.content}
+                        messageId={block.messageId}
+                      />
+                    ) : (
+                      // ✨ END: ส่ง messageId ✨
+                      <AssetTabs key={block.id} group={block.group} />
+                    )
+                  )}
+                </div>
+              );
+            })}
+
+            {isStreaming &&
+              (groupedTurns[groupedTurns.length - 1]?.sender === 'user' ||
+                groupedTurns.length === 0) && (
+                <div className={styles.aiTurnWrapper}>
+                  <AiStatusIndicator task={currentAiTask} />
+                </div>
+              )}
+            <div ref={messagesEndRef} />
+          </div>
         )}
       </div>
       <div className={styles.bottomBar}>

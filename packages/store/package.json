@@ -29,7 +29,7 @@
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
-    "@arcfusion/client": "workspace:^",
+    "@arcfusion/client": "workspace:*",
     "@arcfusion/types": "workspace:^",
     "@types/uuid": "^10.0.0",
     "uuid": "^11.1.0",

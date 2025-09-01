@@ -1,21 +1,6 @@
 // remotes/ask_ai/src/helpers/blocks.ts
-import type { AssetGroup } from '../types';
+import type { AssetGroup, Block } from '../types'; // ✨ แก้ import ให้อ้างอิงจากไฟล์ types.ts ที่ถูกต้อง
 import type { ConversationResponse } from '@arcfusion/types';
-
-export type TextBlock = {
-  kind: 'text';
-  id: number;
-  sender: 'user' | 'ai';
-  content: string;
-};
-
-export type AssetsBlock = {
-  kind: 'assets';
-  id: number;
-  group: AssetGroup;
-};
-
-export type Block = TextBlock | AssetsBlock;
 
 export function findLastAiTextIndex(blocks: Block[]): number {
   for (let i = blocks.length - 1; i >= 0; i--) {
@@ -53,9 +38,9 @@ export function transformConversationResponseToBlocks(response: ConversationResp
       blocks.push({
         kind: 'text',
         id: idCounter++,
-        // ✨ START: EDIT THIS LINE ✨
-        sender: message.role === 'bot' ? 'ai' : 'user', // ตรวจสอบหา 'bot' แทน 'assistant'
-        // ✨ END: EDIT THIS LINE ✨
+
+        messageId: (message as any).id, // ส่วนสำคัญที่เพิ่มเข้ามา
+        sender: message.role === 'bot' ? 'ai' : 'user',
         content: combinedText,
       });
     }

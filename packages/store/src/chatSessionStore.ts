@@ -5,7 +5,7 @@ import { getApiBaseUrl, getConversationByThreadId } from '@arcfusion/client';
 import type {
   ConversationResponse,
   StreamedEvent,
-  ChatMessage as ApiChatMessage,
+  ChatMessage as ApiChatMessage, // ✨ เปลี่ยนชื่อ import เพื่อไม่ให้ซ้ำ
   AssetGroup,
   Block,
   TextBlock,
@@ -14,7 +14,7 @@ import type {
 type StreamStatus = 'idle' | 'streaming' | 'completed' | 'error';
 type AiTask = 'thinking' | 'creating sql' | 'creating table' | 'answering' | null;
 
-// function transformConversationResponseToBlocks
+// ✨ START: แก้ไขฟังก์ชันนี้โดยตรง ✨
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
   if (!response || !response.messages) {
     return [];
@@ -23,6 +23,8 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
   let idCounter = Date.now();
   for (const message of response.messages) {
     if (message.role === 'system') continue;
+
+    // --- ส่วน Asset ไม่ต้องแก้ไข ---
     if (message.role === 'bot') {
       const assetGroup: AssetGroup = { id: uuidv4(), sqls: [], dataframes: [], charts: [] };
       let hasAssets = false;
@@ -44,14 +46,24 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
         hasAssets = true;
       }
       if (hasAssets) {
-        blocks.push({ kind: 'assets', id: idCounter++, group: assetGroup });
+        blocks.push({
+          kind: 'assets',
+          id: idCounter++,
+
+          messageId: (message as any).id, // เพิ่ม messageId ให้ Asset ด้วย
+          group: assetGroup,
+        });
       }
     }
+
+    // --- ส่วน Text ที่ต้องแก้ไข ---
     const textContent = typeof message.content === 'string' ? message.content : '';
     if (textContent) {
       blocks.push({
         kind: 'text',
-        id: idCounter++,
+        id: idCounter++, // ID สำหรับ React key
+
+        messageId: (message as any).id, // ⬅️ **จุดสำคัญที่แก้ไข**
         sender: message.role === 'bot' ? 'ai' : 'user',
         content: textContent,
       });
@@ -59,8 +71,9 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
   }
   return blocks;
 }
+// ✨ END: สิ้นสุดการแก้ไขฟังก์ชัน ✨
 
-// Store State and Actions
+// Store State and Actions (ส่วนที่เหลือของไฟล์เหมือนเดิม ไม่ต้องแก้ไข)
 export interface ChatSessionState {
   threadId?: string;
   blocks: Block[];
@@ -136,7 +149,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
     if (get().status === 'streaming') return currentThreadId || '';
     const newThreadId = currentThreadId || uuidv4();
 
-    // Setup initial state for a new message
     set((state) => ({
       threadId: newThreadId,
       status: 'streaming',
@@ -145,7 +157,7 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       activePrompt: state.activePrompt || text,
       blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }],
       processedEventsCount: 0,
-      pendingAssets: initialPendingAssets(), // Ensure pending is clean before starting
+      pendingAssets: initialPendingAssets(),
     }));
 
     try {
@@ -169,7 +181,7 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
 
         buffer += decoder.decode(value, { stream: true });
         const parts = buffer.split('data:');
-        buffer = parts.pop() || ''; // Keep the last, possibly incomplete, part
+        buffer = parts.pop() || '';
 
         for (const part of parts) {
           if (part.trim() === '' || part.trim() === '[DONE]') continue;
@@ -177,7 +189,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
           try {
             const eventData: StreamedEvent = JSON.parse(part.trim());
 
-            // Logic to flush pending assets BEFORE processing a text chunk
             if ('answer_chunk' in eventData || 'answer' in eventData) {
               const { pendingAssets } = get();
               if (
@@ -195,7 +206,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
               }
             }
 
-            // Process the current event
             set((state) => {
               let newPendingAssets = { ...state.pendingAssets };
               let updatedBlocks = [...state.blocks];
@@ -238,7 +248,7 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 return { blocks: updatedBlocks, currentAiTask: 'answering' };
               }
 
-              return {}; // No change for other event types
+              return {};
             });
           } catch (e) {
             console.warn('Could not parse SSE JSON part:', part);
@@ -249,7 +259,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       console.error('Streaming failed:', err);
       set({ error: err.message, status: 'error' });
     } finally {
-      // Final flush for any remaining assets when the stream ends
       const { pendingAssets } = get();
       if (
         pendingAssets.sqls.length > 0 ||

@@ -31,6 +31,7 @@
   "dependencies": {
     "@arcfusion/store": "workspace:^",
     "@arcfusion/types": "workspace:^",
+    "@arcfusion/client": "workspace:^",
     "@fluentui/react-components": "^9.69.0",
     "@fluentui/react-datepicker-compat": "^0.6.13",
     "@fluentui/react-icons": "^2.0.308",
