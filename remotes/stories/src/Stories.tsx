@@ -1,11 +1,11 @@
 // remotes/stories/src/Stories.tsx
 import React, { useState, useEffect } from 'react';
-import { makeStyles, shorthands, Button, tokens, Spinner } from '@fluentui/react-components';
+import { makeStyles, shorthands, Button, tokens, Spinner, Text } from '@fluentui/react-components';
 import { Filter28Filled } from '@fluentui/react-icons';
 import { DateRangePicker, type DateRange, MultiSelect } from '@arcfusion/ui';
 import { useGroupedStories } from './hooks/useGroupedStories';
 import { StoryGroup } from './components/StoryGroup';
-// ✨ 1. Import สิ่งที่จำเป็นสำหรับการดึงข้อมูล
+// ✨ 1. แก้ไขการ import เหลือแค่ getStories ก็เพียงพอ
 import { getStories } from '@arcfusion/client';
 import type { Story } from '@arcfusion/types';
 
@@ -42,12 +42,11 @@ const useStyles = makeStyles({
     paddingBottom: '48px',
     boxSizing: 'border-box',
   },
-  // ✨ 2. เพิ่ม Style สำหรับ Loading และ Error state
   centerContainer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 'calc(100vh - 200px)', // Adjust height as needed
+    height: 'calc(100vh - 200px)',
     flexDirection: 'column',
     ...shorthands.gap('16px'),
   },
@@ -82,23 +81,23 @@ interface StoriesProps {
 
 export default function Stories({ navigate }: StoriesProps) {
   const styles = useStyles();
-  // ✨ 3. เพิ่ม State สำหรับจัดการข้อมูล, loading, และ error
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // ✨ 2. ลบ loadingMessage state ออก ไม่จำเป็นแล้ว
 
   const allGroupedStories = useGroupedStories(stories);
   const [visibleGroupCount, setVisibleGroupCount] = useState(1);
   const [filters, setFilters] = useState<FilterValues>(initialFilters);
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
 
-  // ✨ 4. ใช้ useEffect เพื่อดึงข้อมูลจาก API
+  // ✨ 3. กลับมาใช้ useEffect แบบง่าย เรียก API แค่ครั้งเดียว
   useEffect(() => {
     const fetchStories = async () => {
       try {
         setIsLoading(true);
+        // การเรียก API แค่ครั้งเดียวก็จะได้ข้อมูลทั้งหมด รวมถึง echart_config
         const response = await getStories();
-        console.log('Stories.tsx:101 |response| : ', response);
         setStories(response.items);
         setError(null);
       } catch (err) {
@@ -117,6 +116,7 @@ export default function Stories({ navigate }: StoriesProps) {
       [category]: selection,
     }));
   };
+
   const visibleGroups = allGroupedStories.slice(0, visibleGroupCount);
   const hasMoreGroups = visibleGroupCount < allGroupedStories.length;
 
@@ -126,7 +126,6 @@ export default function Stories({ navigate }: StoriesProps) {
     }
   };
 
-  // ✨ 5. เพิ่ม Logic การแสดงผลสำหรับ Loading และ Error states
   if (isLoading) {
     return (
       <div className={styles.centerContainer}>
@@ -148,7 +147,6 @@ export default function Stories({ navigate }: StoriesProps) {
       <header className={styles.header}>
         <Filter28Filled />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
-
         <MultiSelect
           label="Channels"
           options={allFilterOptions.channels}
@@ -161,27 +159,10 @@ export default function Stories({ navigate }: StoriesProps) {
           selectedOptions={filters.campaigns || []}
           onSelectionChange={(selection) => handleFilterChange('campaigns', selection)}
         />
-        <MultiSelect
-          label="Group By"
-          options={allFilterOptions.groupBy}
-          selectedOptions={filters.groupBy || []}
-          onSelectionChange={(selection) => handleFilterChange('groupBy', selection)}
-        />
-        <MultiSelect
-          label="Ads"
-          options={allFilterOptions.ads}
-          selectedOptions={filters.ads || []}
-          onSelectionChange={(selection) => handleFilterChange('ads', selection)}
-        />
-        <MultiSelect
-          label="Metrics"
-          options={allFilterOptions.metrics}
-          selectedOptions={filters.metrics || []}
-          onSelectionChange={(selection) => handleFilterChange('metrics', selection)}
-        />
       </header>
 
       <div className={styles.storiesGroup}>
+        {/* ✨ 4. ไม่ต้องแก้ไขอะไรตรงนี้ เพราะ InsightCard รับ story object ทั้งก้อนอยู่แล้ว */}
         {visibleGroups.map((group) => (
           <StoryGroup
             key={group.title}

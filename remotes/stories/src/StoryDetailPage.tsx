@@ -15,13 +15,12 @@ import { useLayoutStore } from '@arcfusion/store';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { getStoryById } from '@arcfusion/client';
 import type { Story } from '@arcfusion/types';
-
-// ✨ 1. นำ Components กลับเข้ามา
 import { NarrativeCard } from './storyDetail/NarrativeCard';
 import { ActionsCard } from './storyDetail/ActionsCard';
 import { EvidenceSection } from './storyDetail/EvidenceSection';
-import { WrapupKpis } from './storyDetail/WrapupKpis';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
+// ✨ 1. Import component ใหม่ที่เราสร้างขึ้น
+import { TechnicalDetails } from './storyDetail/TechnicalDetails';
 
 const useStyles = makeStyles({
   outer: {
@@ -223,9 +222,9 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
             <NarrativeCard story={story} />
             <ActionsCard story={story} />
           </section>
-          {/* ✨ 2. เพิ่ม Components กลับเข้ามา */}
           <EvidenceSection story={story} />
-          <WrapupKpis story={story} />
+          {/* ✨ 2. เพิ่ม Component ใหม่เข้ามาในหน้า */}
+          <TechnicalDetails story={story} />
         </div>
       </section>
     );

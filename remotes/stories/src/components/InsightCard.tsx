@@ -1,12 +1,12 @@
 // remotes/stories/src/components/InsightCard.tsx
-import React from 'react';
+import React, { useMemo } from 'react'; // ✨ 1. Import useMemo
 import { makeStyles, shorthands, tokens, Badge } from '@fluentui/react-components';
 import { Sparkle24Regular } from '@fluentui/react-icons';
-// ✨ 1. Import ReactMarkdown เพื่อแสดงผล Markdown ได้อย่างปลอดภัย
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-// ✨ 2. Import Story type จาก @arcfusion/types
 import type { Story } from '@arcfusion/types';
+// ✨ 2. Import Recharts components
+import { ResponsiveContainer, LineChart, Line } from 'recharts';
 
 const useStyles = makeStyles({
   insightCard: {
@@ -15,15 +15,11 @@ const useStyles = makeStyles({
     boxShadow: tokens.shadow8,
     ...shorthands.padding('24px'),
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
-    transitionProperty: 'box-shadow, transform',
-    transitionDuration: '0.2s',
-    transitionTimingFunction: 'ease-in-out',
-    boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
     ...shorthands.gap('16px'),
     cursor: 'pointer',
-    transition: '0.25s ease',
+    transition: '0.2s ease-in-out',
     ':hover': {
       boxShadow: tokens.shadow28,
       border: `1px solid ${tokens.colorBrandStroke1}`,
@@ -36,11 +32,10 @@ const useStyles = makeStyles({
     alignItems: 'center',
     width: '100%',
   },
-  // ✨ 3. เพิ่ม Style สำหรับ Platform Icon ที่จะสร้างขึ้นมาใหม่
   platformIcon: {
     fontSize: '24px',
     fontWeight: tokens.fontWeightBold,
-    color: '#1877F2', // Default color, can be changed based on logic
+    color: '#1877F2',
   },
   timeAgo: {
     fontSize: tokens.fontSizeBase200,
@@ -51,13 +46,12 @@ const useStyles = makeStyles({
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
     lineHeight: 1.4,
-    // ✨ 4. เพิ่ม Style เพื่อจัดการข้อความยาว
     display: '-webkit-box',
     '-webkit-line-clamp': 2,
     '-webkit-box-orient': 'vertical',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    minHeight: '40px', // Reserve space for 2 lines
+    minHeight: '40px',
   },
   kpiContainer: {
     display: 'flex',
@@ -79,7 +73,6 @@ const useStyles = makeStyles({
   kpiValue: {
     fontSize: '32px',
     fontWeight: tokens.fontWeightBold,
-    color: tokens.colorPaletteRedForeground1, // Default to red
     lineHeight: 1,
   },
   summaryContainer: {
@@ -93,12 +86,11 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeBase300,
     color: tokens.colorNeutralForeground2,
     lineHeight: 1.5,
-    // ✨ 5. เพิ่ม Style สำหรับ Markdown เพื่อให้แสดงผลสวยงาม
-    '& p': {
-      margin: 0,
-    },
-    '& strong': {
-      color: tokens.colorNeutralForeground1,
+    '& p': { margin: 0 },
+    '& strong': { color: tokens.colorNeutralForeground1 },
+    '& ul, & ol': {
+      ...shorthands.margin(0),
+      paddingLeft: tokens.spacingHorizontalL,
     },
   },
   sparkleIcon: {
@@ -106,9 +98,15 @@ const useStyles = makeStyles({
     flexShrink: 0,
     marginTop: '2px',
   },
+  // ✨ 3. เพิ่ม Style สำหรับ Container ของกราฟ
+  chartContainer: {
+    width: '100%',
+    height: '60px', // กำหนดความสูงของกราฟ
+    marginTop: tokens.spacingVerticalS,
+  },
 });
 
-// ✨ 6. สร้าง Helper Functions เพื่อแปลงข้อมูล
+// Helper Functions
 const formatTimeAgo = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
@@ -131,7 +129,22 @@ const getPlatformIcon = (storyType: string): string => {
   if (storyType.toLowerCase().includes('facebook')) return 'f';
   if (storyType.toLowerCase().includes('google')) return 'G';
   if (storyType.toLowerCase().includes('tiktok')) return 't';
-  return '📊'; // Default icon
+  return '📊';
+};
+
+// ✨ 4. สร้างฟังก์ชันสำหรับสร้างข้อมูลกราฟตัวอย่าง
+const generateSparklineData = (direction: 'up' | 'down') => {
+  const data = [];
+  let value = 50; // Starting point
+  const trend = direction === 'up' ? 5 : -5;
+
+  for (let i = 0; i < 15; i++) {
+    data.push({ value });
+    const randomFactor = (Math.random() - 0.4) * 10; // Add some noise
+    value += trend + randomFactor;
+    if (value < 10) value = 10; // Keep it above a baseline
+  }
+  return data;
 };
 
 interface InsightCardProps {
@@ -141,8 +154,6 @@ interface InsightCardProps {
 
 export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   const styles = useStyles();
-
-  // ✨ 7. ดึงและแปลงข้อมูลจาก Prop `story` เพื่อนำไปใช้งาน
   const timeAgo = formatTimeAgo(story.created_at);
   const platformIcon = getPlatformIcon(story.type);
   const topMover = story.top_movers && story.top_movers.length > 0 ? story.top_movers[0] : null;
@@ -153,6 +164,11 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
       ? tokens.colorPaletteRedForeground1
       : tokens.colorPaletteGreenForeground1
     : tokens.colorNeutralForeground2;
+
+  // ✨ 5. สร้างข้อมูลกราฟด้วย useMemo เพื่อไม่ให้ re-render ทุกครั้งโดยไม่จำเป็น
+  const chartData = useMemo(() => {
+    return generateSparklineData(topMover?.direction || 'down');
+  }, [topMover?.direction]);
 
   return (
     <div className={styles.insightCard} onClick={onClick}>
@@ -179,11 +195,25 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
         </div>
       </div>
 
+      {/* ✨ 6. เพิ่มส่วนแสดงผลกราฟ */}
+      <div className={styles.chartContainer}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke={kpiValueColor}
+              strokeWidth={2.5}
+              dot={false}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
       {story.narrative_markdown && (
         <div className={styles.summaryContainer}>
           <Sparkle24Regular className={styles.sparkleIcon} />
           <div className={styles.summaryText}>
-            {/* ✨ 8. ใช้ ReactMarkdown แทน dangerouslySetInnerHTML */}
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {story.narrative_markdown.split('\n')[0]}
             </ReactMarkdown>
