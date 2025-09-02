@@ -1,5 +1,6 @@
 // remotes/stories/src/StoryDetailPage.tsx
 import * as React from 'react';
+// ✨ 1. เอา useParams ออกไป ไม่ได้ใช้แล้ว
 import {
   Badge,
   Button,
@@ -8,24 +9,17 @@ import {
   makeStyles,
   shorthands,
   tokens,
+  Spinner,
 } from '@fluentui/react-components';
 import { Sparkle24Regular, TriangleDown16Filled } from '@fluentui/react-icons';
 import { useLayoutStore } from '@arcfusion/store';
-import { WrapupKpis } from './storyDetail/WrapupKpis';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { getStoryById } from '@arcfusion/client';
+import type { Story } from '@arcfusion/types';
 import { NarrativeCard } from './storyDetail/NarrativeCard';
 import { ActionsCard } from './storyDetail/ActionsCard';
-import { EvidenceSection } from './storyDetail/EvidenceSection';
-import {
-  trendCurrent,
-  trendPrior,
-  funnelRows,
-  breakdownDevice,
-  breakdownRegion,
-} from './storyDetail/mock';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
 
-// ✨ 1. Import component for Resizable Panel
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 const useStyles = makeStyles({
   outer: {
@@ -35,8 +29,8 @@ const useStyles = makeStyles({
   },
   askAiButton: {
     position: 'fixed',
-    top: '62px',
-    right: '36px',
+    top: '72px',
+    right: '24px',
     zIndex: 10,
   },
   singleGrid: {
@@ -44,7 +38,6 @@ const useStyles = makeStyles({
     gridTemplateColumns: '1fr',
     height: '100%',
   },
-  // ✨ 2. Adjust splitGrid to be a simple flex container
   splitGrid: {
     display: 'flex',
     height: '100%',
@@ -53,7 +46,7 @@ const useStyles = makeStyles({
   },
   leftPane: {
     height: '100%',
-    overflow: 'auto', // The content can scroll
+    overflow: 'auto',
   },
   rightPane: {
     height: '100%',
@@ -61,10 +54,8 @@ const useStyles = makeStyles({
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
     backgroundColor: tokens.colorNeutralBackground1,
-    // ✨ 3. Add minWidth to prevent the panel from getting too small
     minWidth: '320px',
   },
-  // ✨ 4. Add Style for the Resize Handle
   resizeHandle: {
     width: '12px',
     display: 'flex',
@@ -102,6 +93,7 @@ const useStyles = makeStyles({
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     gap: '12px',
+    paddingTop: '24px',
   },
   detailRow: {
     display: 'flex',
@@ -124,20 +116,116 @@ const useStyles = makeStyles({
     },
     paddingBottom: '16px',
   },
+  centerContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 'calc(100vh - 60px)',
+    flexDirection: 'column',
+    ...shorthands.gap('16px'),
+  },
 });
 
-export default function StoryDetailPage() {
+// ✨ 2. สร้าง Interface สำหรับ Props ที่จะรับเข้ามา
+interface StoryDetailPageProps {
+  storyId?: string;
+}
+
+export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
   const s = useStyles();
   const { setMainOverflow } = useLayoutStore();
+
+  const [story, setStory] = React.useState<Story | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const [aiOpen, setAiOpen] = React.useState(false);
 
   React.useEffect(() => {
-    setMainOverflow('visible');
+    setMainOverflow('hidden');
     return () => {
       setMainOverflow('auto');
     };
   }, [setMainOverflow]);
 
+  React.useEffect(() => {
+    // ✨ 3. ใช้ storyId จาก prop แทนการดึงจาก hook
+    if (!storyId) {
+      setError('Story ID not found.');
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchStory = async () => {
+      try {
+        setIsLoading(true);
+        const storyData = await getStoryById(storyId);
+        setStory(storyData);
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch story details.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStory();
+  }, [storyId]); // ✨ 4. ให้ useEffect ทำงานเมื่อ storyId จาก prop เปลี่ยนไป
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className={s.centerContainer}>
+          <Spinner size="huge" />
+        </div>
+      );
+    }
+
+    if (error || !story) {
+      return (
+        <div className={s.centerContainer}>
+          <h3>{error || 'Story not found.'}</h3>
+        </div>
+      );
+    }
+    
+    const topMover = story.top_movers && story.top_movers.length > 0 ? story.top_movers[0] : null;
+
+    return (
+      <section className={s.leftPane}>
+        <div className={s.page}>
+          <div className={s.heroTitleRow}>
+            <Title1>{story.title}</Title1>
+            <div className={s.detailRow}>
+              {topMover && (
+                 <Badge
+                    icon={topMover.direction === 'down' ? <TriangleDown16Filled /> : undefined}
+                    appearance="tint"
+                    color={topMover.direction === 'down' ? "danger" : "success"}
+                    size="extra-large"
+                  >
+                    <Text size={400} weight="semibold">
+                      {topMover.change.toFixed(2)}% vs prior period
+                    </Text>
+                  </Badge>
+              )}
+              <div className={s.chips} role="toolbar" aria-label="page context">
+                <Badge appearance="tint">
+                  <strong>{story.type.split('_')[0].toUpperCase()}</strong>
+                </Badge>
+                <Badge appearance="tint">Period: {new Date(story.created_at).toLocaleDateString()}</Badge>
+              </div>
+            </div>
+          </div>
+          <section className={s.mainGrid}>
+            <NarrativeCard story={story} />
+            <ActionsCard story={story} />
+          </section>
+        </div>
+      </section>
+    );
+  };
+  
   return (
     <div className={s.outer}>
       {!aiOpen && (
@@ -151,55 +239,13 @@ export default function StoryDetailPage() {
         </Button>
       )}
 
-      {/* ✨ 5. Use PanelGroup instead of the original div */}
       <div className={aiOpen ? s.splitGrid : s.singleGrid}>
         {aiOpen ? (
           <PanelGroup direction="horizontal">
-            {/* Left Panel (Main Content) */}
             <Panel defaultSize={70} minSize={40}>
-              <section className={s.leftPane}>
-                <div className={s.page}>
-                  <div className={s.heroTitleRow}>
-                    <Title1>Conversions plummeting at checkout</Title1>
-                    <div className={s.detailRow}>
-                      <Badge
-                        icon={<TriangleDown16Filled />}
-                        appearance="tint"
-                        color="danger"
-                        size="extra-large"
-                      >
-                        <Text size={400} weight="semibold">
-                          −88% vs prior 7 days
-                        </Text>
-                      </Badge>
-                      <div className={s.chips} role="toolbar" aria-label="page context">
-                        <Badge appearance="tint">
-                          <strong>Facebook</strong>
-                        </Badge>
-                        <Badge appearance="tint">Period: Aug 3–9, 2025</Badge>
-                        <Badge appearance="tint">Compared to: Jul 27–Aug 2, 2025</Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <section className={s.mainGrid}>
-                    <NarrativeCard />
-                    <ActionsCard />
-                  </section>
-                  <EvidenceSection
-                    trend={{ current: trendCurrent, prior: trendPrior }}
-                    funnel={funnelRows}
-                    deviceRows={breakdownDevice}
-                    regionRows={breakdownRegion}
-                  />
-                  <WrapupKpis />
-                </div>
-              </section>
+              {renderContent()}
             </Panel>
-
-            {/* Resize Handle */}
             <PanelResizeHandle className={s.resizeHandle} />
-
-            {/* Right Panel (Ask AI) */}
             <Panel defaultSize={30} minSize={20}>
               <aside className={s.rightPane} aria-label="AI Chat Panel">
                 <AskAiPanel onClose={() => setAiOpen(false)} />
@@ -207,45 +253,7 @@ export default function StoryDetailPage() {
             </Panel>
           </PanelGroup>
         ) : (
-          // Original layout when AI Panel is closed
-          <section className={s.leftPane}>
-            <div className={s.page}>
-              {/* ... (Same content as above) ... */}
-              <div className={s.heroTitleRow}>
-                <Title1>Conversions plummeting at checkout</Title1>
-                <div className={s.detailRow}>
-                  <Badge
-                    icon={<TriangleDown16Filled />}
-                    appearance="tint"
-                    color="danger"
-                    size="extra-large"
-                  >
-                    <Text size={400} weight="semibold">
-                      −88% vs prior 7 days
-                    </Text>
-                  </Badge>
-                  <div className={s.chips} role="toolbar" aria-label="page context">
-                    <Badge appearance="tint">
-                      <strong>Facebook</strong>
-                    </Badge>
-                    <Badge appearance="tint">Period: Aug 3–9, 2025</Badge>
-                    <Badge appearance="tint">Compared to: Jul 27–Aug 2, 2025</Badge>
-                  </div>
-                </div>
-              </div>
-              <section className={s.mainGrid}>
-                <NarrativeCard />
-                <ActionsCard />
-              </section>
-              <EvidenceSection
-                trend={{ current: trendCurrent, prior: trendPrior }}
-                funnel={funnelRows}
-                deviceRows={breakdownDevice}
-                regionRows={breakdownRegion}
-              />
-              <WrapupKpis />
-            </div>
-          </section>
+          renderContent()
         )}
       </div>
     </div>
