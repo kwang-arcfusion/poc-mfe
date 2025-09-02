@@ -1,6 +1,5 @@
 // remotes/stories/src/StoryDetailPage.tsx
 import * as React from 'react';
-// ✨ 1. เอา useParams ออกไป ไม่ได้ใช้แล้ว
 import {
   Badge,
   Button,
@@ -16,10 +15,13 @@ import { useLayoutStore } from '@arcfusion/store';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { getStoryById } from '@arcfusion/client';
 import type { Story } from '@arcfusion/types';
+
+// ✨ 1. นำ Components กลับเข้ามา
 import { NarrativeCard } from './storyDetail/NarrativeCard';
 import { ActionsCard } from './storyDetail/ActionsCard';
+import { EvidenceSection } from './storyDetail/EvidenceSection';
+import { WrapupKpis } from './storyDetail/WrapupKpis';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
-
 
 const useStyles = makeStyles({
   outer: {
@@ -126,7 +128,6 @@ const useStyles = makeStyles({
   },
 });
 
-// ✨ 2. สร้าง Interface สำหรับ Props ที่จะรับเข้ามา
 interface StoryDetailPageProps {
   storyId?: string;
 }
@@ -148,7 +149,6 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
   }, [setMainOverflow]);
 
   React.useEffect(() => {
-    // ✨ 3. ใช้ storyId จาก prop แทนการดึงจาก hook
     if (!storyId) {
       setError('Story ID not found.');
       setIsLoading(false);
@@ -170,7 +170,7 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
     };
 
     fetchStory();
-  }, [storyId]); // ✨ 4. ให้ useEffect ทำงานเมื่อ storyId จาก prop เปลี่ยนไป
+  }, [storyId]);
 
   const renderContent = () => {
     if (isLoading) {
@@ -188,7 +188,7 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
         </div>
       );
     }
-    
+
     const topMover = story.top_movers && story.top_movers.length > 0 ? story.top_movers[0] : null;
 
     return (
@@ -198,22 +198,24 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
             <Title1>{story.title}</Title1>
             <div className={s.detailRow}>
               {topMover && (
-                 <Badge
-                    icon={topMover.direction === 'down' ? <TriangleDown16Filled /> : undefined}
-                    appearance="tint"
-                    color={topMover.direction === 'down' ? "danger" : "success"}
-                    size="extra-large"
-                  >
-                    <Text size={400} weight="semibold">
-                      {topMover.change.toFixed(2)}% vs prior period
-                    </Text>
-                  </Badge>
+                <Badge
+                  icon={topMover.direction === 'down' ? <TriangleDown16Filled /> : undefined}
+                  appearance="tint"
+                  color={topMover.direction === 'down' ? 'danger' : 'success'}
+                  size="extra-large"
+                >
+                  <Text size={400} weight="semibold">
+                    {topMover.change.toFixed(2)}% vs prior period
+                  </Text>
+                </Badge>
               )}
               <div className={s.chips} role="toolbar" aria-label="page context">
                 <Badge appearance="tint">
                   <strong>{story.type.split('_')[0].toUpperCase()}</strong>
                 </Badge>
-                <Badge appearance="tint">Period: {new Date(story.created_at).toLocaleDateString()}</Badge>
+                <Badge appearance="tint">
+                  Period: {new Date(story.created_at).toLocaleDateString()}
+                </Badge>
               </div>
             </div>
           </div>
@@ -221,11 +223,14 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
             <NarrativeCard story={story} />
             <ActionsCard story={story} />
           </section>
+          {/* ✨ 2. เพิ่ม Components กลับเข้ามา */}
+          <EvidenceSection story={story} />
+          <WrapupKpis story={story} />
         </div>
       </section>
     );
   };
-  
+
   return (
     <div className={s.outer}>
       {!aiOpen && (
