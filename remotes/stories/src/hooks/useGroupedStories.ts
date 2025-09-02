@@ -1,6 +1,7 @@
 // remotes/stories/src/hooks/useGroupedStories.ts
 import { useMemo } from 'react';
-import { Story } from '../types';
+// ✨ 1. เปลี่ยนการ import Story type จาก @arcfusion/types
+import type { Story } from '@arcfusion/types';
 
 // --- Date Formatting Helper ---
 // Formats a Date object into a string like "14 Aug 2025"
@@ -21,7 +22,8 @@ export const useGroupedStories = (stories: Story[]) => {
 
     // 1. Group stories by their date string (e.g., "2025-08-26")
     stories.forEach((story) => {
-      const dateKey = story.timestamp.toISOString().split('T')[0];
+      // ✨ 2. แก้ไขจากการใช้ story.timestamp มาเป็น story.created_at และแปลงเป็น Date object
+      const dateKey = new Date(story.created_at).toISOString().split('T')[0];
       if (!groups[dateKey]) {
         groups[dateKey] = [];
       }

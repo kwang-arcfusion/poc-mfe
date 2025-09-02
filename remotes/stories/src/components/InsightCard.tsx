@@ -2,7 +2,11 @@
 import React from 'react';
 import { makeStyles, shorthands, tokens, Badge } from '@fluentui/react-components';
 import { Sparkle24Regular } from '@fluentui/react-icons';
-import { Story } from '../types';
+// ✨ 1. Import ReactMarkdown เพื่อแสดงผล Markdown ได้อย่างปลอดภัย
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+// ✨ 2. Import Story type จาก @arcfusion/types
+import type { Story } from '@arcfusion/types';
 
 const useStyles = makeStyles({
   insightCard: {
@@ -18,12 +22,12 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     ...shorthands.gap('16px'),
-    cursor: 'pointer', // Make it obvious it's clickable
+    cursor: 'pointer',
     transition: '0.25s ease',
     ':hover': {
       boxShadow: tokens.shadow28,
       border: `1px solid ${tokens.colorBrandStroke1}`,
-      scale: '1.02',
+      transform: 'scale(1.02)',
     },
   },
   cardHeader: {
@@ -32,10 +36,11 @@ const useStyles = makeStyles({
     alignItems: 'center',
     width: '100%',
   },
+  // ✨ 3. เพิ่ม Style สำหรับ Platform Icon ที่จะสร้างขึ้นมาใหม่
   platformIcon: {
     fontSize: '24px',
     fontWeight: tokens.fontWeightBold,
-    color: '#1877F2',
+    color: '#1877F2', // Default color, can be changed based on logic
   },
   timeAgo: {
     fontSize: tokens.fontSizeBase200,
@@ -46,6 +51,13 @@ const useStyles = makeStyles({
     fontWeight: tokens.fontWeightSemibold,
     color: tokens.colorNeutralForeground1,
     lineHeight: 1.4,
+    // ✨ 4. เพิ่ม Style เพื่อจัดการข้อความยาว
+    display: '-webkit-box',
+    '-webkit-line-clamp': 2,
+    '-webkit-box-orient': 'vertical',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    minHeight: '40px', // Reserve space for 2 lines
   },
   kpiContainer: {
     display: 'flex',
@@ -67,29 +79,8 @@ const useStyles = makeStyles({
   kpiValue: {
     fontSize: '32px',
     fontWeight: tokens.fontWeightBold,
-    color: tokens.colorPaletteRedForeground1,
+    color: tokens.colorPaletteRedForeground1, // Default to red
     lineHeight: 1,
-  },
-  chartContainer: {
-    width: '100%',
-    height: '80px',
-    display: 'flex',
-    ...shorthands.gap(tokens.spacingHorizontalM),
-  },
-  yAxis: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    ...shorthands.padding(0, tokens.spacingHorizontalM, 0, 0),
-    ...shorthands.borderRight('1px', 'solid', tokens.colorNeutralStroke2),
-    fontSize: tokens.fontSizeBase200,
-    color: tokens.colorNeutralForeground3,
-    flexShrink: 0,
-  },
-  graphArea: {
-    flexGrow: 1,
-    position: 'relative',
   },
   summaryContainer: {
     display: 'flex',
@@ -102,6 +93,13 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeBase300,
     color: tokens.colorNeutralForeground2,
     lineHeight: 1.5,
+    // ✨ 5. เพิ่ม Style สำหรับ Markdown เพื่อให้แสดงผลสวยงาม
+    '& p': {
+      margin: 0,
+    },
+    '& strong': {
+      color: tokens.colorNeutralForeground1,
+    },
   },
   sparkleIcon: {
     color: tokens.colorBrandForeground1,
@@ -110,86 +108,88 @@ const useStyles = makeStyles({
   },
 });
 
+// ✨ 6. สร้าง Helper Functions เพื่อแปลงข้อมูล
+const formatTimeAgo = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  let interval = seconds / 31536000;
+  if (interval > 1) return `${Math.floor(interval)} years ago`;
+  interval = seconds / 2592000;
+  if (interval > 1) return `${Math.floor(interval)} months ago`;
+  interval = seconds / 86400;
+  if (interval > 1) return `${Math.floor(interval)} days ago`;
+  interval = seconds / 3600;
+  if (interval > 1) return `${Math.floor(interval)} hours ago`;
+  interval = seconds / 60;
+  if (interval > 1) return `${Math.floor(interval)} minutes ago`;
+  return `${Math.floor(seconds)} seconds ago`;
+};
+
+const getPlatformIcon = (storyType: string): string => {
+  if (storyType.toLowerCase().includes('facebook')) return 'f';
+  if (storyType.toLowerCase().includes('google')) return 'G';
+  if (storyType.toLowerCase().includes('tiktok')) return 't';
+  return '📊'; // Default icon
+};
+
 interface InsightCardProps {
   story: Story;
   onClick: () => void;
 }
+
 export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   const styles = useStyles();
+
+  // ✨ 7. ดึงและแปลงข้อมูลจาก Prop `story` เพื่อนำไปใช้งาน
+  const timeAgo = formatTimeAgo(story.created_at);
+  const platformIcon = getPlatformIcon(story.type);
+  const topMover = story.top_movers && story.top_movers.length > 0 ? story.top_movers[0] : null;
+
+  const kpiValue = topMover ? `${topMover.change.toFixed(2)}%` : 'N/A';
+  const kpiValueColor = topMover
+    ? topMover.direction === 'down'
+      ? tokens.colorPaletteRedForeground1
+      : tokens.colorPaletteGreenForeground1
+    : tokens.colorNeutralForeground2;
+
   return (
     <div className={styles.insightCard} onClick={onClick}>
       <div className={styles.cardHeader}>
-        <div className={styles.platformIcon}>{story.platform.icon}</div>
-        <span className={styles.timeAgo}>{story.timeAgo}</span>
+        <div className={styles.platformIcon}>{platformIcon}</div>
+        <span className={styles.timeAgo}>{timeAgo}</span>
       </div>
-      <div className={styles.titleText}>{story.kpi.title}</div>
+      <div className={styles.titleText}>{story.title}</div>
       <div className={styles.kpiContainer}>
         <div className={styles.kpiLeft}>
-          {story.kpi.tag && (
-            <Badge appearance="tint" color="danger" size="large">
-              {story.kpi.tag}
+          {topMover && (
+            <Badge
+              appearance="tint"
+              color={topMover.direction === 'down' ? 'danger' : 'success'}
+              size="large"
+            >
+              {topMover.direction === 'down' ? 'Significant Drop' : 'Significant Growth'}
             </Badge>
           )}
-          <div className={styles.kpiMetric}>{story.kpi.metric}</div>
+          <div className={styles.kpiMetric}>{story.metric_label}</div>
         </div>
-        <div className={styles.kpiValue}>{story.kpi.value}</div>
-      </div>
-
-      <div className={styles.chartContainer}>
-        <div className={styles.yAxis}>
-          <span>1.5%</span> <span>0%</span>
-        </div>
-
-        <div className={styles.graphArea}>
-          <svg width="100%" height="100%" viewBox="0 0 100 40" preserveAspectRatio="none">
-            <path
-              d="M 0,25 C 10,15 25,10 40,20 L 60,35 L 75,30 L 100,28"
-              stroke={tokens.colorBrandStroke1}
-              strokeWidth="1.5"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            <path
-              d="M 40,20 L 60,35"
-              stroke={tokens.colorPaletteRedBorderActive}
-              strokeWidth="2"
-              fill="none"
-              strokeLinecap="round"
-            />
-            <circle cx="40" cy="20" r="1.5" fill={tokens.colorBrandStroke1} />
-            <circle cx="60" cy="35" r="1.5" fill={tokens.colorPaletteRedBorderActive} />
-
-            <text
-              x="38"
-              y="40"
-              fontSize="5"
-              textAnchor="middle"
-              fill={tokens.colorNeutralForeground3}
-            >
-              Aug 7
-            </text>
-
-            <text
-              x="60"
-              y="40"
-              fontSize="5"
-              textAnchor="middle"
-              fill={tokens.colorNeutralForeground3}
-            >
-              {story.chartHighlightLabel}
-            </text>
-          </svg>
+        <div className={styles.kpiValue} style={{ color: kpiValueColor }}>
+          {kpiValue}
         </div>
       </div>
 
-      <div className={styles.summaryContainer}>
-        <Sparkle24Regular className={styles.sparkleIcon} />
-        <div className={styles.summaryText}>
-          <span dangerouslySetInnerHTML={{ __html: story.summary }} />
+      {story.narrative_markdown && (
+        <div className={styles.summaryContainer}>
+          <Sparkle24Regular className={styles.sparkleIcon} />
+          <div className={styles.summaryText}>
+            {/* ✨ 8. ใช้ ReactMarkdown แทน dangerouslySetInnerHTML */}
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {story.narrative_markdown.split('\n')[0]}
+            </ReactMarkdown>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

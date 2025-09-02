@@ -1,7 +1,8 @@
 // remotes/stories/src/components/StoryGroup.tsx
 import React from 'react';
 import { makeStyles, shorthands, tokens, Badge } from '@fluentui/react-components';
-import { Story } from '../types';
+// ✨ 1. เปลี่ยนการ import Story type จาก @arcfusion/types
+import type { Story } from '@arcfusion/types';
 import { InsightCard } from './InsightCard';
 
 const useStyles = makeStyles({

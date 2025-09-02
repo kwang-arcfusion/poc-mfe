@@ -1,5 +1,6 @@
 // packages/types/src/index.ts
 
+// ✨ START: แก้ไข Type Definitions ที่นี่ ✨
 // ตรงกับ StoryResponse ใน schemas.py
 export interface Story {
   id: string;
@@ -30,6 +31,7 @@ export interface PaginatedStoriesResponse {
   page: number;
   page_size: number;
 }
+// ✨ END: สิ้นสุดการแก้ไข ✨
 
 // ตรงกับ ConversationSummary
 export interface ConversationSummary {

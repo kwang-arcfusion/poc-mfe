@@ -1,11 +1,13 @@
 // remotes/stories/src/Stories.tsx
-import React, { useState } from 'react';
-import { makeStyles, shorthands, Button, tokens } from '@fluentui/react-components';
+import React, { useState, useEffect } from 'react';
+import { makeStyles, shorthands, Button, tokens, Spinner } from '@fluentui/react-components';
 import { Filter28Filled } from '@fluentui/react-icons';
 import { DateRangePicker, type DateRange, MultiSelect } from '@arcfusion/ui';
-import { mockStories } from './data/mockData';
 import { useGroupedStories } from './hooks/useGroupedStories';
 import { StoryGroup } from './components/StoryGroup';
+// ✨ 1. Import สิ่งที่จำเป็นสำหรับการดึงข้อมูล
+import { getStories } from '@arcfusion/client';
+import type { Story } from '@arcfusion/types';
 
 interface FilterValues {
   channels?: string[];
@@ -40,6 +42,15 @@ const useStyles = makeStyles({
     paddingBottom: '48px',
     boxSizing: 'border-box',
   },
+  // ✨ 2. เพิ่ม Style สำหรับ Loading และ Error state
+  centerContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 'calc(100vh - 200px)', // Adjust height as needed
+    flexDirection: 'column',
+    ...shorthands.gap('16px'),
+  },
   storiesGroup: {
     display: 'flex',
     flexDirection: 'column',
@@ -71,10 +82,34 @@ interface StoriesProps {
 
 export default function Stories({ navigate }: StoriesProps) {
   const styles = useStyles();
-  const allGroupedStories = useGroupedStories(mockStories);
+  // ✨ 3. เพิ่ม State สำหรับจัดการข้อมูล, loading, และ error
+  const [stories, setStories] = useState<Story[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const allGroupedStories = useGroupedStories(stories);
   const [visibleGroupCount, setVisibleGroupCount] = useState(1);
   const [filters, setFilters] = useState<FilterValues>(initialFilters);
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
+
+  // ✨ 4. ใช้ useEffect เพื่อดึงข้อมูลจาก API
+  useEffect(() => {
+    const fetchStories = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getStories();
+        console.log('Stories.tsx:101 |response| : ', response);
+        setStories(response.items);
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch stories. Please try again later.');
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStories();
+  }, []);
 
   const handleFilterChange = (category: keyof FilterValues, selection: string[]) => {
     setFilters((prevFilters) => ({
@@ -91,6 +126,23 @@ export default function Stories({ navigate }: StoriesProps) {
     }
   };
 
+  // ✨ 5. เพิ่ม Logic การแสดงผลสำหรับ Loading และ Error states
+  if (isLoading) {
+    return (
+      <div className={styles.centerContainer}>
+        <Spinner size="huge" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.centerContainer}>
+        <h3>{error}</h3>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.root}>
       <header className={styles.header}>
@@ -103,28 +155,24 @@ export default function Stories({ navigate }: StoriesProps) {
           selectedOptions={filters.channels || []}
           onSelectionChange={(selection) => handleFilterChange('channels', selection)}
         />
-
         <MultiSelect
           label="Campaigns"
           options={allFilterOptions.campaigns}
           selectedOptions={filters.campaigns || []}
           onSelectionChange={(selection) => handleFilterChange('campaigns', selection)}
         />
-
         <MultiSelect
           label="Group By"
           options={allFilterOptions.groupBy}
           selectedOptions={filters.groupBy || []}
           onSelectionChange={(selection) => handleFilterChange('groupBy', selection)}
         />
-
         <MultiSelect
           label="Ads"
           options={allFilterOptions.ads}
           selectedOptions={filters.ads || []}
           onSelectionChange={(selection) => handleFilterChange('ads', selection)}
         />
-
         <MultiSelect
           label="Metrics"
           options={allFilterOptions.metrics}
