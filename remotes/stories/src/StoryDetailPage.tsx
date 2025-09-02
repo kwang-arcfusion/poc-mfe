@@ -24,7 +24,7 @@ import {
 } from './storyDetail/mock';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
 
-// ✨ 1. Import คอมโพเนนต์สำหรับ Resizable Panel
+// ✨ 1. Import component for Resizable Panel
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 const useStyles = makeStyles({
@@ -44,7 +44,7 @@ const useStyles = makeStyles({
     gridTemplateColumns: '1fr',
     height: '100%',
   },
-  // ✨ 2. ปรับแก้ splitGrid ให้เป็น flex container ธรรมดา
+  // ✨ 2. Adjust splitGrid to be a simple flex container
   splitGrid: {
     display: 'flex',
     height: '100%',
@@ -53,7 +53,7 @@ const useStyles = makeStyles({
   },
   leftPane: {
     height: '100%',
-    overflow: 'auto', // ส่วนเนื้อหา scroll ได้
+    overflow: 'auto', // The content can scroll
   },
   rightPane: {
     height: '100%',
@@ -61,10 +61,10 @@ const useStyles = makeStyles({
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
     backgroundColor: tokens.colorNeutralBackground1,
-    // ✨ 3. เพิ่ม minWidth เพื่อไม่ให้ panel เล็กเกินไป
+    // ✨ 3. Add minWidth to prevent the panel from getting too small
     minWidth: '320px',
   },
-  // ✨ 4. เพิ่ม Style สำหรับตัวลากปรับขนาด (Resize Handle)
+  // ✨ 4. Add Style for the Resize Handle
   resizeHandle: {
     width: '12px',
     display: 'flex',
@@ -151,16 +151,16 @@ export default function StoryDetailPage() {
         </Button>
       )}
 
-      {/* ✨ 5. เปลี่ยนมาใช้ PanelGroup แทน div เดิม */}
+      {/* ✨ 5. Use PanelGroup instead of the original div */}
       <div className={aiOpen ? s.splitGrid : s.singleGrid}>
         {aiOpen ? (
           <PanelGroup direction="horizontal">
-            {/* Panel ด้านซ้าย (เนื้อหาหลัก) */}
+            {/* Left Panel (Main Content) */}
             <Panel defaultSize={70} minSize={40}>
               <section className={s.leftPane}>
                 <div className={s.page}>
                   <div className={s.heroTitleRow}>
-                    <Title1>Conversions ร่วงแรงที่ขั้นชำระเงิน</Title1>
+                    <Title1>Conversions plummeting at checkout</Title1>
                     <div className={s.detailRow}>
                       <Badge
                         icon={<TriangleDown16Filled />}
@@ -176,8 +176,8 @@ export default function StoryDetailPage() {
                         <Badge appearance="tint">
                           <strong>Facebook</strong>
                         </Badge>
-                        <Badge appearance="tint">ช่วง: 3–9 ส.ค. 2025</Badge>
-                        <Badge appearance="tint">เทียบกับ: 27 ก.ค.–2 ส.ค. 2025</Badge>
+                        <Badge appearance="tint">Period: Aug 3–9, 2025</Badge>
+                        <Badge appearance="tint">Compared to: Jul 27–Aug 2, 2025</Badge>
                       </div>
                     </div>
                   </div>
@@ -196,10 +196,10 @@ export default function StoryDetailPage() {
               </section>
             </Panel>
 
-            {/* ตัวลากปรับขนาด */}
+            {/* Resize Handle */}
             <PanelResizeHandle className={s.resizeHandle} />
 
-            {/* Panel ด้านขวา (Ask AI) */}
+            {/* Right Panel (Ask AI) */}
             <Panel defaultSize={30} minSize={20}>
               <aside className={s.rightPane} aria-label="AI Chat Panel">
                 <AskAiPanel onClose={() => setAiOpen(false)} />
@@ -207,12 +207,12 @@ export default function StoryDetailPage() {
             </Panel>
           </PanelGroup>
         ) : (
-          // Layout เดิมเมื่อ AI Panel ปิดอยู่
+          // Original layout when AI Panel is closed
           <section className={s.leftPane}>
             <div className={s.page}>
-              {/* ... (เนื้อหาเหมือนด้านบน) ... */}
+              {/* ... (Same content as above) ... */}
               <div className={s.heroTitleRow}>
-                <Title1>Conversions ร่วงแรงที่ขั้นชำระเงิน</Title1>
+                <Title1>Conversions plummeting at checkout</Title1>
                 <div className={s.detailRow}>
                   <Badge
                     icon={<TriangleDown16Filled />}
@@ -228,8 +228,8 @@ export default function StoryDetailPage() {
                     <Badge appearance="tint">
                       <strong>Facebook</strong>
                     </Badge>
-                    <Badge appearance="tint">ช่วง: 3–9 ส.ค. 2025</Badge>
-                    <Badge appearance="tint">เทียบกับ: 27 ก.ค.–2 ส.ค. 2025</Badge>
+                    <Badge appearance="tint">Period: Aug 3–9, 2025</Badge>
+                    <Badge appearance="tint">Compared to: Jul 27–Aug 2, 2025</Badge>
                   </div>
                 </div>
               </div>

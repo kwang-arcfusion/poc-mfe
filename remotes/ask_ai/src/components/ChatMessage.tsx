@@ -42,7 +42,7 @@ const useStyles = makeStyles({
     whiteSpace: 'pre-wrap',
     wordWrap: 'break-word',
     '&[data-sender="user"]': {
-      backgroundColor: tokens.colorNeutralBackground1,
+      backgroundColor: tokens.colorNeutralStroke3,
       color: tokens.colorNeutralForeground1,
     },
     '&[data-sender="ai"]': {

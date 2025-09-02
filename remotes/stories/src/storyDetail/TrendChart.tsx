@@ -30,7 +30,7 @@ export const TrendChart: React.FC<Props> = ({ current, prior, eventLines = [] })
   const s = useStyles();
   return (
     <Card appearance="filled" className={s.card}>
-      <Text weight="semibold">Trend — เทียบช่วงก่อนหน้า</Text>
+      <Text weight="semibold">Trend — Compared to Prior Period</Text>
       <div className={s.chart}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={current}>
@@ -69,7 +69,7 @@ export const TrendChart: React.FC<Props> = ({ current, prior, eventLines = [] })
       </div>
       {eventLines.length > 0 && (
         <Text className={s.note}>
-          หมายเหตุ:{' '}
+          Note:{' '}
           {eventLines
             .map((e) => e.label)
             .filter(Boolean)

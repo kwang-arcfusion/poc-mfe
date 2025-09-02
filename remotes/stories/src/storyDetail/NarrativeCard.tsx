@@ -63,9 +63,9 @@ export const NarrativeCard: React.FC = () => {
 
       <div className={s.tldr}>
         <Body1>
-          <strong>TL;DR</strong> — การซื้อหล่น <strong>−88%</strong> สัมพันธ์กับ{' '}
-          <strong>Phone Verification (OTP)</strong> และเหตุการณ์ <strong>payment timeout</strong>{' '}
-          ช่วง 5 ส.ค. โดยเฉพาะบนมือถือ ขณะที่ตัวชี้วัด (impr/click/spend) ใกล้เคียงเดิม
+          <strong>TL;DR</strong> — Purchases dropped <strong>−88%</strong> related to{' '}
+          <strong>Phone Verification (OTP)</strong> and a <strong>payment timeout</strong> event on
+          Aug 5, especially on mobile, while metrics (impr/click/spend) remained similar.
         </Body1>
       </div>
 
@@ -73,36 +73,36 @@ export const NarrativeCard: React.FC = () => {
         <div className={s.bullet}>
           <span className={s.dot} />
           <span className={s.narrativeText}>
-            <strong>Top-funnel แข็งแรง</strong>: Impressions +3%, CTR −7%, Spend −2% →
-            ไม่ใช่ปัญหาการหาทราฟฟิก
+            <strong>Strong top-funnel</strong>: Impressions +3%, CTR −7%, Spend −2% → Not a traffic
+            acquisition issue.
           </span>
         </div>
         <div className={s.bullet}>
           <span className={s.dot} />
           <Body1>
-            <strong>คอขวดอยู่ที่ขั้นจ่ายเงิน</strong>: Purchases/1k clicks จาก 6.86 →{' '}
-            <strong>0.82</strong>; จุดเปลี่ยนเริ่ม 4–5 ส.ค.
+            <strong>Checkout is the bottleneck</strong>: Purchases/1k clicks from 6.86 →{' '}
+            <strong>0.82</strong>; The change began on Aug 4–5.
           </Body1>
         </div>
         <div className={s.bullet}>
           <span className={s.dot} />
           <Body1>
-            <strong>Mobile เจ็บสุด</strong>: drop-off หลัง OTP เพิ่ม +27%, TTI เพิ่ม +0.6s
-            จากสคริปต์ heatmap
+            <strong>Mobile hit hardest</strong>: drop-off after OTP increased +27%, TTI increased
+            +0.6s from heatmap scripts.
           </Body1>
         </div>
         <div className={s.bullet}>
           <span className={s.dot} />
           <Body1>
-            <strong>เหตุการณ์สนับสนุน</strong>: payment provider timeout <em>5 ส.ค. 01:10–03:20</em>{' '}
-            (error 8%); เปิด OTP 4 ส.ค.
+            <strong>Supporting events</strong>: payment provider timeout <em>Aug 5, 01:10–03:20</em>{' '}
+            (8% error); OTP enabled Aug 4.
           </Body1>
         </div>
         <div className={s.bullet}>
           <span className={s.dot} />
           <Body1>
-            <strong>การแข่งขัน/ราคาโฆษณา</strong> ไม่เปลี่ยนมาก (CPM/CPC ใกล้เดิม) →
-            ตัดข้อสงสัยเรื่อง auction
+            <strong>Competition/ad pricing</strong> didn't change much (CPM/CPC remained similar) →
+            Rules out an auction issue.
           </Body1>
         </div>
       </div>

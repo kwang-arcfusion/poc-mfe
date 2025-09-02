@@ -1,10 +1,10 @@
 // remotes/stories/src/storyDetail/ActionsCard.tsx
 import * as React from 'react';
 import { Text, Body1, Badge, makeStyles, shorthands, tokens } from '@fluentui/react-components';
-// ✨ 1. Import icon ที่ต้องการ
+// ✨ 1. Import the necessary icon
 import { CheckmarkCircle20Regular, CheckmarkCircle24Color } from '@fluentui/react-icons';
 
-// ✨ 2. ปรับแก้ useStyles ทั้งหมดให้เหมือนกับ NarrativeCard
+// ✨ 2. Adjust all useStyles to match NarrativeCard
 const useStyles = makeStyles({
   card: {
     display: 'flex',
@@ -60,43 +60,43 @@ const useStyles = makeStyles({
   },
 });
 
-// ✨ 3. (แนะนำ) ย้ายข้อมูลมาไว้ใน Array เพื่อให้จัดการง่ายขึ้น
+// ✨ 3. (Recommended) Move data into an Array for easier management
 const recommendedActions = [
   {
-    text: 'ลดแรงเสียดทาน OTP บน Mobile (A/B) — guest checkout / OTP เฉพาะ high-risk; cache หน้า OTP',
-    badge: { text: 'วันนี้–พรุ่งนี้', color: 'danger' as const },
-    kpi: 'KPI: Checkout→Purchase ↑ ≥ +200% ภายใน 48 ชม.',
+    text: 'Reduce OTP friction on Mobile (A/B test) — guest checkout / OTP for high-risk only; cache OTP page',
+    badge: { text: 'Today–Tomorrow', color: 'danger' as const },
+    kpi: 'KPI: Checkout→Purchase ↑ ≥ +200% within 48 hrs.',
   },
   {
-    text: 'ถอดสคริปต์ heatmap บน mobile — ใช้ sampling/เฉพาะ staging',
-    badge: { text: 'วันนี้', color: 'danger' as const },
+    text: 'Remove heatmap scripts on mobile — use sampling/staging only',
+    badge: { text: 'Today', color: 'danger' as const },
     kpi: 'KPI: TTI ↓ ≥ 0.5s',
   },
   {
-    text: 'สลับเส้นทางชำระเงินสำรอง + Alert — failover auto + alert เมื่อ error > 2%',
-    badge: { text: 'เร่งด่วน', color: 'danger' as const },
+    text: 'Switch to a backup payment route + Alert — automatic failover + alert when errors > 2%',
+    badge: { text: 'Urgent', color: 'danger' as const },
     kpi: 'KPI: Payment error < 1%',
   },
   {
     text: 'Wallet priority / One-click Pay',
-    badge: { text: '2–7 วัน', color: 'brand' as const },
+    badge: { text: '2–7 Days', color: 'brand' as const },
     kpi: 'KPI: Mobile CPA ↓ ≥ 30%',
   },
   {
-    text: 'รีมาร์เก็ตติ้ง Drop-off (3 กลุ่ม) — ATC / Checkout / OTP abandon',
-    badge: { text: '2–7 วัน', color: 'brand' as const },
-    kpi: 'KPI: ROAS กลุ่มรีมาร์เก็ต ≥ 6.0',
+    text: 'Remarket to drop-off groups (3 segments) — ATC / Checkout / OTP abandon',
+    badge: { text: '2–7 Days', color: 'brand' as const },
+    kpi: 'KPI: Remarketing ROAS ≥ 6.0',
   },
   {
-    text: 'ปรับ Checkout เป็น step เดียวบน Mobile',
-    badge: { text: '1–2 สัปดาห์', color: 'success' as const },
-    kpi: 'KPI: Purchase rate mobile ≥ 0.5%',
+    text: 'Simplify Checkout to a single step on Mobile',
+    badge: { text: '1–2 Weeks', color: 'success' as const },
+    kpi: 'KPI: Mobile purchase rate ≥ 0.5%',
   },
 ];
 
 export const ActionsCard: React.FC = () => {
   const s = useStyles();
-  // ✨ 4. ปรับแก้ JSX ทั้งหมดให้ใช้โครงสร้างและสไตล์ใหม่
+  // ✨ 4. Adjust all JSX to use the new structure and style
   return (
     <div className={s.card}>
       <div className={s.titleGroup}>

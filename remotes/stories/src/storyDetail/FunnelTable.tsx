@@ -20,13 +20,13 @@ export const FunnelTable: React.FC<{ rows: FunnelRow[] }> = ({ rows }) => {
   const s = useStyles();
   return (
     <Card appearance="filled" className={s.card}>
-      <Text weight="semibold">Funnel — 1,000 คลิก</Text>
+      <Text weight="semibold">Funnel — per 1,000 Clicks</Text>
       <Table size="small">
         <TableHeader>
           <TableRow>
-            <TableHeaderCell>ขั้น</TableHeaderCell>
-            <TableHeaderCell>ล่าสุด</TableHeaderCell>
-            <TableHeaderCell>ก่อนหน้า</TableHeaderCell>
+            <TableHeaderCell>Step</TableHeaderCell>
+            <TableHeaderCell>Current</TableHeaderCell>
+            <TableHeaderCell>Prior</TableHeaderCell>
             <TableHeaderCell>Δ</TableHeaderCell>
           </TableRow>
         </TableHeader>
