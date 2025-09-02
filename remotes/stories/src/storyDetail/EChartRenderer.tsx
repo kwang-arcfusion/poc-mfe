@@ -3,6 +3,10 @@ import * as React from 'react';
 import { Card, Text, makeStyles, shorthands, tokens } from '@fluentui/react-components';
 import { ChartMultiple24Color } from '@fluentui/react-icons';
 
+// ✨ 1. Import ECharts component และ Theme store
+import ReactECharts from 'echarts-for-react';
+import { useThemeStore } from '@arcfusion/store';
+
 const useStyles = makeStyles({
   card: {
     ...shorthands.padding('20px'),
@@ -20,17 +24,6 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
     fontSize: '18px',
   },
-  jsonBox: {
-    ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
-    backgroundColor: tokens.colorNeutralBackground1,
-    fontFamily: 'monospace',
-    fontSize: '12px',
-    maxHeight: '400px',
-    overflow: 'auto',
-    whiteSpace: 'pre',
-  },
 });
 
 interface EChartRendererProps {
@@ -39,6 +32,8 @@ interface EChartRendererProps {
 
 export const EChartRenderer: React.FC<EChartRendererProps> = ({ config }) => {
   const s = useStyles();
+  // ✨ 2. ดึง theme ปัจจุบันมาจาก store
+  const { theme } = useThemeStore();
 
   if (!config) {
     return null;
@@ -48,14 +43,16 @@ export const EChartRenderer: React.FC<EChartRendererProps> = ({ config }) => {
     <Card className={s.card}>
       <div className={s.titleWrap}>
         <ChartMultiple24Color />
-        <Text className={s.title}>Chart Configuration (ECharts)</Text>
+        <Text className={s.title}>{config?.title?.text || 'Chart'}</Text>
       </div>
-      <Text>
-        The backend has provided a complete chart configuration. A dedicated ECharts rendering component is needed to display this visually.
-      </Text>
-      <pre className={s.jsonBox}>
-        {JSON.stringify(config, null, 2)}
-      </pre>
+      {/* ✨ 3. ใช้ ReactECharts component ในการ render กราฟ */}
+      <ReactECharts
+        option={config}
+        theme={theme} // ส่ง theme ปัจจุบัน (light/dark) ให้กับกราฟ
+        style={{ height: '400px', width: '100%' }}
+        notMerge={true}
+        lazyUpdate={true}
+      />
     </Card>
   );
 };
