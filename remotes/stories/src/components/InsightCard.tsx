@@ -190,7 +190,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   return (
     <div className={styles.insightCard} onClick={onClick}>
       <header className={styles.cardHeader}>
-        {platformIconElement}
+        <Badge appearance="tint">Channel</Badge>
         <Text className={styles.timeAgo}>{timeAgo}</Text>
       </header>
 
