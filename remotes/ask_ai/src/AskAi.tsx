@@ -22,7 +22,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const styles = useStyles();
   const {
     blocks,
-    status,
+    status, // <--- 1. ดึง status มาใช้งาน
     currentAiTask,
     threadId,
     loadConversation,
@@ -34,20 +34,27 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
 
   const isStreaming = status === 'streaming';
 
+  // 👇 2. แก้ไข useEffect ทั้งหมดที่นี่
   useEffect(() => {
+    // ถ้ากำลัง stream อยู่ ไม่ต้องทำอะไรทั้งสิ้น ปล่อยให้ stream ทำงานไป
+    if (status === 'streaming') {
+      return;
+    }
+
+    // ถ้า URL มี chatId และไม่ตรงกับ threadId ใน store ให้โหลดข้อมูลแชทนั้น
     if (chatId && chatId !== threadId) {
       loadConversation(chatId);
-    } else if (!chatId) {
+    }
+    // ถ้า URL ไม่มี chatId แต่ใน store ยังมี threadId ของแชทเก่าค้างอยู่ ให้ล้างข้อมูล
+    else if (!chatId && threadId) {
       clearChat();
     }
-  }, [chatId, threadId, loadConversation, clearChat]);
+  }, [chatId, threadId, status, loadConversation, clearChat]); // <--- 3. เพิ่ม status ใน dependency array
 
   const handleSendMessage = (text: string) => {
     const currentThreadId = useChatSessionStore.getState().threadId;
 
-    // ✨ ใช้ .then() เพื่อให้ UI update ทันทีโดยไม่รอ API
     sendMessageFromStore(text, currentThreadId).then((newThreadId) => {
-      // Logic ส่วนนี้จะทำงานในเบื้องหลังหลังจากที่ stream จบลง
       if (!currentThreadId && newThreadId) {
         navigate(`/ask_ai/${newThreadId}`, { replace: true });
         refreshHistory();
