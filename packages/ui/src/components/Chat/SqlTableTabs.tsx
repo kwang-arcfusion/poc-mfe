@@ -1,4 +1,4 @@
-// packages/ui/src/components/Chat/SqlTableTabs.tsx
+// packages/ui/src/components/SqlTableTabs.tsx
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import {
@@ -12,10 +12,11 @@ import {
 } from '@fluentui/react-components';
 import { ArrowDownload24Regular, Copy24Regular, Checkmark24Regular } from '@fluentui/react-icons';
 import { getExportCsvUrl } from '@arcfusion/client';
-// ✨ 1. แก้ไข Path การ Import
-import type { SqlAsset, DataframeAsset } from '@arcfusion/types';
+// ✨ 1. Import สิ่งที่ต้องใช้เพิ่ม
+import type { SqlAsset, DataframeAsset, ChartAsset } from '@arcfusion/types';
+import ReactECharts from 'echarts-for-react';
+import { useThemeStore } from '@arcfusion/store';
 
-// ... (Styles เหมือนเดิม) ...
 const useStyles = makeStyles({
   assetGroup: {
     ...shorthands.border('2px', 'solid', tokens.colorNeutralStroke2),
@@ -43,14 +44,17 @@ const useStyles = makeStyles({
   tableWrap: { overflowX: 'auto' },
 });
 
+// ✨ 2. แก้ไข Props Interface ให้รับ chart ที่ประมวลผลแล้วได้
 interface SqlTableTabsProps {
   sql: SqlAsset;
   dataframe: DataframeAsset;
+  chart?: ChartAsset & { processedConfig: Record<string, any> }; // Chart เป็น optional
   messageId?: string;
 }
 
-export function SqlTableTabs({ sql, dataframe, messageId }: SqlTableTabsProps) {
+export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsProps) {
   const styles = useStyles();
+  const { theme } = useThemeStore(); // ✨ 3. ดึง theme มาใช้กับ Chart
   const [activeTab, setActiveTab] = React.useState<TabValue>('table');
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
   const timeoutRef = useRef<number | null>(null);
@@ -91,7 +95,10 @@ export function SqlTableTabs({ sql, dataframe, messageId }: SqlTableTabsProps) {
     <div className={styles.assetGroup}>
       <div className={styles.tabHeader}>
         <TabList selectedValue={activeTab} onTabSelect={(_, data) => setActiveTab(data.value)}>
-          <Tab value="table">Table</Tab> <Tab value="sql">SQL</Tab>
+          <Tab value="table">Table</Tab>
+          <Tab value="sql">SQL</Tab>
+          {/* ✨ 4. เพิ่ม Tab Chart ถ้ามีข้อมูล chart ส่งเข้ามา */}
+          {chart && <Tab value="chart">Chart</Tab>}
         </TabList>
 
         {activeTab === 'table' && messageId && (
@@ -136,6 +143,7 @@ export function SqlTableTabs({ sql, dataframe, messageId }: SqlTableTabsProps) {
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {dataframe.rows.map((r: (string | number)[], idx: number) => (
                   <tr key={idx}>
@@ -155,6 +163,18 @@ export function SqlTableTabs({ sql, dataframe, messageId }: SqlTableTabsProps) {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+      {/* ✨ 5. เพิ่ม Logic การแสดงผลของ Chart Panel */}
+      {activeTab === 'chart' && chart && (
+        <div className={styles.tabPanelPad}>
+          <ReactECharts
+            option={chart.processedConfig}
+            theme={theme}
+            style={{ height: '400px', width: '100%' }}
+            notMerge={true}
+            lazyUpdate={true}
+          />
         </div>
       )}
     </div>

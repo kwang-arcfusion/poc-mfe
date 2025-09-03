@@ -224,6 +224,12 @@ importers:
       '@fluentui/react-icons':
         specifier: ^2.0.308
         version: 2.0.308(react@19.1.1)
+      echarts:
+        specifier: ^5.6.0
+        version: 5.6.0
+      echarts-for-react:
+        specifier: ^3.0.2
+        version: 3.0.2(echarts@5.6.0)(react@19.1.1)
       react-dom:
         specifier: ^19.1.1
         version: 19.1.1(react@19.1.1)

@@ -11,7 +11,13 @@ import type {
 } from '@arcfusion/types';
 
 type StreamStatus = 'idle' | 'streaming' | 'completed' | 'error';
-type AiTask = 'thinking' | 'creating sql' | 'creating table' | 'answering' | null;
+type AiTask =
+  | 'thinking'
+  | 'creating sql'
+  | 'creating table'
+  | 'creating chart'
+  | 'answering'
+  | null;
 
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
   if (!response || !response.messages) {
@@ -38,6 +44,14 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
           title: 'Query Result',
           columns: Object.keys(message.sql_result[0]),
           rows: message.sql_result.map((row: Record<string, any>) => Object.values(row)),
+        });
+        hasAssets = true;
+      }
+      if (message.chart_config) {
+        assetGroup.charts.push({
+          id: `chart-${idCounter}`,
+          title: message.chart_config.title?.text || 'Chart',
+          config: message.chart_config,
         });
         hasAssets = true;
       }
@@ -213,7 +227,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 }));
               }
             }
-            // ✨ START: นี่คือ Logic ที่แก้ไขแล้วและทำงานถูกต้อง ✨
             set((state) => {
               const newBlocks = [...state.blocks];
               if ('sql_query' in eventData) {
@@ -238,6 +251,20 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 }
                 return { pendingAssets: newPendingAssets, currentAiTask: 'creating table' };
               }
+              // ✨ START: เพิ่ม Logic การจัดการ Chart
+              if ('chart_builder_result' in eventData) {
+                const newPendingAssets = { ...state.pendingAssets };
+                const chartConfig = eventData.chart_builder_result;
+                if (chartConfig) {
+                  newPendingAssets.charts.push({
+                    id: `chart-${Date.now()}`,
+                    title: chartConfig.title?.text || 'Chart',
+                    config: chartConfig,
+                  });
+                }
+                return { pendingAssets: newPendingAssets, currentAiTask: 'creating chart' };
+              }
+              // ✨ END: สิ้นสุดการจัดการ Chart
               if ('answer_chunk' in eventData || 'answer' in eventData) {
                 const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
                 const lastBlock = newBlocks[newBlocks.length - 1];
@@ -253,10 +280,8 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 }
                 return { blocks: newBlocks, currentAiTask: 'answering' };
               }
-              // ถ้า event ไม่ตรงกับเงื่อนไขใดๆ ให้ return state เดิม ไม่ใช่ object ว่าง
               return state;
             });
-            // ✨ END: สิ้นสุด Logic ที่แก้ไขแล้ว ✨
           } catch (e) {
             console.warn('Could not parse SSE JSON part:', part);
           }

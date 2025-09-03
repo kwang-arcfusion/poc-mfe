@@ -3,42 +3,40 @@
 export type SqlAsset = { id: string; title: string; sql: string };
 
 export type DataframeAsset = {
-  id: string;
-  title: string;
-  columns: string[];
-  rows: (string | number)[][];
+ id: string;
+ title: string;
+ columns: string[];
+ rows: (string | number)[][];
 };
 
+// ✨ START: เพิ่ม Type ใหม่สำหรับ Chart Asset
 export type ChartAsset = {
-  id: string;
-  title: string;
-  type: 'bar';
-  labels: string[];
-  values: number[];
+ id: string;
+ title: string;
+ config: Record<string, any>; // สำหรับเก็บ ECharts config
 };
+// ✨ END: สิ้นสุดการเพิ่ม
 
 export type AssetGroup = {
-  id: string;
-  sqls: SqlAsset[];
-  dataframes: DataframeAsset[];
-  charts: ChartAsset[];
+ id: string;
+ sqls: SqlAsset[];
+ dataframes: DataframeAsset[];
+ charts: ChartAsset[]; // ✨ เพิ่ม property นี้
 };
 
-// ✨ START: แก้ไข Type Definitions ที่นี่ ✨
 export type TextBlock = {
-  kind: 'text';
-  id: number; // ID สำหรับ React key
-  messageId?: string; // ID จริงจาก Backend (UUID)
-  sender: 'user' | 'ai';
-  content: string;
+ kind: 'text';
+ id: number; // ID สำหรับ React key
+ messageId?: string; // ID จริงจาก Backend (UUID)
+ sender: 'user' | 'ai';
+ content: string;
 };
 
 export type AssetsBlock = {
-  kind: 'assets';
-  id: number; // ID สำหรับ React key
-  messageId?: string; // ID จริงจาก Backend (UUID)
-  group: AssetGroup;
+ kind: 'assets';
+ id: number; // ID สำหรับ React key
+ messageId?: string; // ID จริงจาก Backend (UUID)
+ group: AssetGroup;
 };
-// ✨ END: สิ้นสุดการแก้ไข ✨
 
 export type Block = TextBlock | AssetsBlock;

@@ -1,7 +1,5 @@
 // packages/types/src/index.ts
 
-// ✨ START: แก้ไข Type Definitions ที่นี่ ✨
-// ตรงกับ StoryResponse ใน schemas.py
 export interface Story {
   id: string;
   user_id: string | null;
@@ -24,16 +22,13 @@ export interface Story {
   updated_at: string; // ISO date string
 }
 
-// ตรงกับ PaginatedStoriesResponse
 export interface PaginatedStoriesResponse {
   items: Story[];
   total: number;
   page: number;
   page_size: number;
 }
-// ✨ END: สิ้นสุดการแก้ไข ✨
 
-// ตรงกับ ConversationSummary
 export interface ConversationSummary {
   id: string;
   thread_id: string;
@@ -43,7 +38,6 @@ export interface ConversationSummary {
   updated_at: string;
 }
 
-// ตรงกับ PaginatedConversationsResponse
 export interface PaginatedConversationsResponse {
   items: ConversationSummary[];
   total: number;
@@ -54,17 +48,20 @@ export interface PaginatedConversationsResponse {
 // Event types ที่จะได้รับจาก SSE stream ของ /chat/ask
 export type SqlQueryEvent = { sql_query: string };
 export type SqlResultEvent = { sql_query_result: Record<string, any>[] };
-export type ChartConfigEvent = { chart_builder_result: Record<string, any> };
+// ✨ START: แก้ไขส่วนนี้
+export type ChartBuilderResultEvent = { chart_builder_result: Record<string, any> };
+// ✨ END: สิ้นสุดการแก้ไข
 export type AnswerChunkEvent = { answer_chunk: string };
 export type FinalAnswerEvent = { answer: string };
 export type StreamedEvent =
   | SqlQueryEvent
   | SqlResultEvent
-  | ChartConfigEvent
+  // ✨ START: แก้ไขส่วนนี้
+  | ChartBuilderResultEvent
+  // ✨ END: สิ้นสุดการแก้ไข
   | AnswerChunkEvent
   | FinalAnswerEvent;
 
-// ✨ START: ADD NEW TYPES FOR CONVERSATION DETAIL ✨
 export interface ChatMessageContent {
   type: 'text';
   text: {
@@ -89,9 +86,7 @@ export interface ConversationResponse {
   updated_at: string;
   messages: ChatMessage[];
 }
-// ✨ END: ADD NEW TYPES FOR CONVERSATION DETAIL ✨
 
-// ✨ START: ADD NEW TYPES FOR FEEDBACK ✨
 export type FeedbackType = 'thumb_up' | 'thumb_down';
 
 export interface FeedbackRequest {
@@ -110,6 +105,5 @@ export interface FeedbackResponse {
   created_at: string;
   updated_at: string;
 }
-// ✨ END: ADD NEW TYPES FOR FEEDBACK ✨
 
 export * from './chat';

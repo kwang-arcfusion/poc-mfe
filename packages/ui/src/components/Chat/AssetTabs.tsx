@@ -1,16 +1,7 @@
-// packages/ui/src/components/Chat/AssetTabs.tsx
+// packages/ui/src/components/AssetTabs.tsx
 import * as React from 'react';
-import {
-  makeStyles,
-  tokens,
-  shorthands,
-  Caption1,
-  TabList,
-  Tab,
-  TabValue,
-} from '@fluentui/react-components';
-// ✨ 1. แก้ไข Path การ Import
-import type { AssetGroup, SqlAsset, DataframeAsset, ChartAsset } from '@arcfusion/types';
+import { makeStyles, tokens, shorthands } from '@fluentui/react-components';
+import type { AssetGroup } from '@arcfusion/types';
 import { SqlTableTabs } from './SqlTableTabs';
 
 const useStyles = makeStyles({
@@ -20,147 +11,81 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground3,
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
   },
-  tabPanelPad: { ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS) },
-  codeBox: {
-    ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    backgroundColor: tokens.colorNeutralBackground3,
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
-    fontFamily:
-      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-    fontSize: tokens.fontSizeBase200,
-    overflowX: 'auto',
-    whiteSpace: 'pre',
-  },
-  chartBarWrap: {
-    display: 'flex',
-    alignItems: 'flex-end',
-    ...shorthands.gap(tokens.spacingHorizontalS),
-    height: '140px',
-  },
-  chartBar: {
-    width: '24px',
-    backgroundColor: tokens.colorBrandBackground,
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
-  },
-  tableWrap: { overflowX: 'auto' },
 });
-
-type TabItem = { key: string; label: string; render: () => React.ReactNode };
 
 export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?: string }) {
   const styles = useStyles();
 
-  const isSimpleSqlTablePair =
-    group.sqls.length === 1 && group.dataframes.length === 1 && group.charts.length === 0;
+  const processedCharts = React.useMemo(() => {
+    return group.charts.map((ch) => {
+      const newConfig = JSON.parse(JSON.stringify(ch.config));
+      const source = newConfig.dataset?.source;
+      const seriesConfig = newConfig.series?.[0];
 
-  if (isSimpleSqlTablePair) {
-    return (
-      <SqlTableTabs sql={group.sqls[0]} dataframe={group.dataframes[0]} messageId={messageId} />
-    );
+      if (source && seriesConfig?.encode) {
+        const xKey = seriesConfig.encode.x;
+        const yKey = seriesConfig.encode.y;
+
+        const xAxisData = source.map((row: any) => row[xKey]);
+        const seriesData = source.map((row: any) => {
+          const value = row[yKey];
+          return typeof value === 'object' ? 0 : parseFloat(value) || 0;
+        });
+
+        if (newConfig.xAxis) {
+          newConfig.xAxis.data = xAxisData;
+        }
+        if (newConfig.series?.[0]) {
+          newConfig.series[0].data = seriesData;
+        }
+
+        delete newConfig.dataset;
+        if (newConfig.series?.[0]) {
+          delete newConfig.series[0].encode;
+        }
+
+        if (newConfig.tooltip) {
+          newConfig.tooltip.formatter = (params: any) => {
+            if (!Array.isArray(params) || params.length === 0) return '';
+            const param = params[0];
+            const categoryName = param.name;
+            const value = param.value;
+            const formattedValue = typeof value === 'number' ? value.toFixed(2) : 'N/A';
+            return `${categoryName}: ${formattedValue}%`;
+          };
+        }
+
+        // ✨ START: ปรับแก้ Layout ของ Legend และ Grid เพื่อไม่ให้ซ้อนกัน
+        // 1. ย้าย Legend ไปไว้ด้านล่าง
+        if (newConfig.legend) {
+          newConfig.legend.top = 'bottom';
+        } else {
+          // ถ้าไม่มี object legend มาให้ ก็สร้างขึ้นมาใหม่
+          newConfig.legend = { top: 'bottom' };
+        }
+
+        // 2. ปรับขนาดของ Grid (พื้นที่วาดกราฟ) ให้มีที่ว่างสำหรับ Legend ด้านล่าง
+        if (newConfig.grid) {
+          newConfig.grid.bottom = '12%'; // เพิ่มระยะห่างจากขอบล่าง 12%
+        } else {
+          newConfig.grid = { bottom: '12%' };
+        }
+        // ✨ END: สิ้นสุดการแก้ไข
+      }
+      return { ...ch, processedConfig: newConfig };
+    });
+  }, [group.charts]);
+
+  if (group.sqls.length === 0 || group.dataframes.length === 0) {
+    return null;
   }
 
-  const [active, setActive] = React.useState<TabValue>(() => {
-    if (group.sqls[0]) return `sql:${group.sqls[0].id}`;
-    if (group.dataframes[0]) return `df:${group.dataframes[0].id}`;
-    if (group.charts[0]) return `chart:${group.charts[0].id}`;
-    return 'none';
-  });
-
-  const tabs: TabItem[] = [];
-
-  group.sqls.forEach((s: SqlAsset) => {
-    tabs.push({
-      key: `sql:${s.id}`,
-      label: `SQL`,
-      render: () => (
-        <div className={styles.tabPanelPad}>
-          <pre className={styles.codeBox}>{s.sql}</pre>
-        </div>
-      ),
-    });
-  });
-
-  group.dataframes.forEach((df: DataframeAsset) => {
-    tabs.push({
-      key: `df:${df.id}`,
-      label: `Table`,
-      render: () => (
-        <div className={styles.tabPanelPad}>
-          <div className={styles.tableWrap}>
-            <table>
-              <thead>
-                <tr>
-                  {df.columns.map((c: string) => (
-                    <th key={c} style={{ textAlign: 'left', padding: '6px 10px' }}>
-                      {c}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {df.rows.map((r: (string | number)[], idx: number) => (
-                  <tr key={idx}>
-                    {r.map((cell: string | number, i: number) => (
-                      <td
-                        key={i}
-                        style={{
-                          padding: '6px 10px',
-                          borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
-                        }}
-                      >
-                        {String(cell)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ),
-    });
-  });
-
-  group.charts.forEach((ch: ChartAsset) => {
-    if (ch.type === 'bar') {
-      const max = Math.max(1, ...ch.values);
-      tabs.push({
-        key: `chart:${ch.id}`,
-        label: `Chart`,
-        render: () => (
-          <div className={styles.tabPanelPad}>
-            <div className={styles.chartBarWrap}>
-              {ch.values.map((v: number, i: number) => (
-                <div
-                  key={i}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-                >
-                  <div className={styles.chartBar} style={{ height: `${(v / max) * 100}%` }} />
-                  <Caption1>{ch.labels[i]}</Caption1>
-                </div>
-              ))}
-            </div>
-          </div>
-        ),
-      });
-    }
-  });
-
-  if (tabs.length === 0) return null;
-
-  const activeTab = tabs.find((t) => t.key === active) ?? tabs[0];
-
   return (
-    <div className={styles.assetGroup}>
-      <TabList selectedValue={active} onTabSelect={(_, data) => setActive(data.value)}>
-        {tabs.map((t) => (
-          <Tab key={t.key} value={t.key}>
-            {t.label}
-          </Tab>
-        ))}
-      </TabList>
-      <div>{activeTab.render()}</div>
-    </div>
+    <SqlTableTabs
+      sql={group.sqls[0]}
+      dataframe={group.dataframes[0]}
+      chart={processedCharts[0]}
+      messageId={messageId}
+    />
   );
 }
