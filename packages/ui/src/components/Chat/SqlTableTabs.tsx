@@ -1,5 +1,4 @@
-// remotes/ask_ai/src/components/SqlTableTabs.tsx
-
+// packages/ui/src/components/Chat/SqlTableTabs.tsx
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import {
@@ -13,8 +12,10 @@ import {
 } from '@fluentui/react-components';
 import { ArrowDownload24Regular, Copy24Regular, Checkmark24Regular } from '@fluentui/react-icons';
 import { getExportCsvUrl } from '@arcfusion/client';
-import type { SqlAsset, DataframeAsset } from '../types';
+// ✨ 1. แก้ไข Path การ Import
+import type { SqlAsset, DataframeAsset } from '@arcfusion/types';
 
+// ... (Styles เหมือนเดิม) ...
 const useStyles = makeStyles({
   assetGroup: {
     ...shorthands.border('2px', 'solid', tokens.colorNeutralStroke2),
@@ -128,18 +129,17 @@ export function SqlTableTabs({ sql, dataframe, messageId }: SqlTableTabsProps) {
             <table>
               <thead>
                 <tr>
-                  {dataframe.columns.map((c) => (
+                  {dataframe.columns.map((c: string) => (
                     <th key={c} style={{ textAlign: 'left', padding: '6px 10px' }}>
                       {c}
                     </th>
                   ))}
                 </tr>
               </thead>
-
               <tbody>
-                {dataframe.rows.map((r, idx) => (
+                {dataframe.rows.map((r: (string | number)[], idx: number) => (
                   <tr key={idx}>
-                    {r.map((cell, i) => (
+                    {r.map((cell: string | number, i: number) => (
                       <td
                         key={i}
                         style={{

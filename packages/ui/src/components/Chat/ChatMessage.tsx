@@ -1,15 +1,14 @@
-// remotes/ask_ai/src/components/ChatMessage.tsx
-import React, { useState } from 'react'; // ✨ Import useState
+// packages/ui/src/components/Chat/ChatMessage.tsx
+import React, { useState } from 'react';
 import {
   makeStyles,
   shorthands,
   tokens,
-  Button, // ✨ Import Button
-  Tooltip, // ✨ Import Tooltip
+  Button,
+  Tooltip,
 } from '@fluentui/react-components';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-// ✨ START: Import เพิ่มเติมสำหรับ Feedback ✨
 import {
   ThumbLike24Regular,
   ThumbLike24Filled,
@@ -18,15 +17,15 @@ import {
 } from '@fluentui/react-icons';
 import { submitFeedback, deleteFeedback } from '@arcfusion/client';
 import { FeedbackType } from '@arcfusion/types';
-// ✨ END: Import เพิ่มเติมสำหรับ Feedback ✨
 
+// ... (Styles เหมือนเดิม) ...
 const useStyles = makeStyles({
   root: {
     display: 'flex',
     ...shorthands.gap(tokens.spacingHorizontalM),
     maxWidth: '85%',
     width: 'fit-content',
-    flexDirection: 'column', // ✨ ปรับเป็น column เพื่อให้ปุ่ม Feedback อยู่ข้างใต้
+    flexDirection: 'column',
     '&[data-sender="user"]': {
       alignSelf: 'flex-end',
       alignItems: 'flex-end',
@@ -58,25 +57,21 @@ const useStyles = makeStyles({
     },
     '& li': { marginBottom: tokens.spacingVerticalXS },
   },
-  // ✨ START: เพิ่ม Style สำหรับส่วน Feedback ✨
   feedbackContainer: {
     display: 'flex',
     ...shorthands.gap(tokens.spacingHorizontalXS),
     marginTop: tokens.spacingVerticalXL,
   },
-  // ✨ END: เพิ่ม Style สำหรับส่วน Feedback ✨
 });
 
 interface ChatMessageProps {
   sender: 'user' | 'ai';
   content: string;
-  messageId?: string; // ✨ เพิ่ม Prop นี้เพื่อรับ ID ของข้อความ
+  messageId?: string;
 }
 
 export function ChatMessage({ sender, content, messageId }: ChatMessageProps) {
   const styles = useStyles();
-
-  // ✨ START: เพิ่ม State และ Logic สำหรับ Feedback ✨
   const [feedbackState, setFeedbackState] = useState<FeedbackType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -85,12 +80,10 @@ export function ChatMessage({ sender, content, messageId }: ChatMessageProps) {
 
     setIsSubmitting(true);
     try {
-      // ถ้ากดปุ่มเดิมซ้ำ (เป็นการยกเลิก)
       if (feedbackState === newFeedback) {
         await deleteFeedback(messageId);
         setFeedbackState(null);
       } else {
-        // ถ้ากดปุ่มใหม่ (เป็นการส่ง/อัปเดต)
         await submitFeedback({
           message_id: messageId,
           feedback_type: newFeedback,
@@ -99,12 +92,10 @@ export function ChatMessage({ sender, content, messageId }: ChatMessageProps) {
       }
     } catch (error) {
       console.error('Failed to submit feedback:', error);
-      // อาจจะแสดง Error UI ที่นี่
     } finally {
       setIsSubmitting(false);
     }
   };
-  // ✨ END: เพิ่ม State และ Logic สำหรับ Feedback ✨
 
   return (
     <div className={styles.root} data-sender={sender}>

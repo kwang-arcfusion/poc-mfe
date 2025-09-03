@@ -1,4 +1,4 @@
-// remotes/ask_ai/src/components/AssetTabs.tsx
+// packages/ui/src/components/Chat/AssetTabs.tsx
 import * as React from 'react';
 import {
   makeStyles,
@@ -9,7 +9,8 @@ import {
   Tab,
   TabValue,
 } from '@fluentui/react-components';
-import type { AssetGroup } from '../types';
+// ✨ 1. แก้ไข Path การ Import
+import type { AssetGroup, SqlAsset, DataframeAsset, ChartAsset } from '@arcfusion/types';
 import { SqlTableTabs } from './SqlTableTabs';
 
 const useStyles = makeStyles({
@@ -68,7 +69,7 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
 
   const tabs: TabItem[] = [];
 
-  group.sqls.forEach((s) => {
+  group.sqls.forEach((s: SqlAsset) => {
     tabs.push({
       key: `sql:${s.id}`,
       label: `SQL`,
@@ -80,7 +81,7 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
     });
   });
 
-  group.dataframes.forEach((df) => {
+  group.dataframes.forEach((df: DataframeAsset) => {
     tabs.push({
       key: `df:${df.id}`,
       label: `Table`,
@@ -90,18 +91,17 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
             <table>
               <thead>
                 <tr>
-                  {df.columns.map((c) => (
+                  {df.columns.map((c: string) => (
                     <th key={c} style={{ textAlign: 'left', padding: '6px 10px' }}>
                       {c}
                     </th>
                   ))}
                 </tr>
               </thead>
-
               <tbody>
-                {df.rows.map((r, idx) => (
+                {df.rows.map((r: (string | number)[], idx: number) => (
                   <tr key={idx}>
-                    {r.map((cell, i) => (
+                    {r.map((cell: string | number, i: number) => (
                       <td
                         key={i}
                         style={{
@@ -122,7 +122,7 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
     });
   });
 
-  group.charts.forEach((ch) => {
+  group.charts.forEach((ch: ChartAsset) => {
     if (ch.type === 'bar') {
       const max = Math.max(1, ...ch.values);
       tabs.push({
@@ -131,7 +131,7 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
         render: () => (
           <div className={styles.tabPanelPad}>
             <div className={styles.chartBarWrap}>
-              {ch.values.map((v, i) => (
+              {ch.values.map((v: number, i: number) => (
                 <div
                   key={i}
                   style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}

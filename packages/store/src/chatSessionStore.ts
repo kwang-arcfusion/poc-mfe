@@ -5,7 +5,6 @@ import { getApiBaseUrl, getConversationByThreadId } from '@arcfusion/client';
 import type {
   ConversationResponse,
   StreamedEvent,
-  ChatMessage as ApiChatMessage,
   AssetGroup,
   Block,
   TextBlock,
@@ -75,7 +74,7 @@ export interface ChatSessionState {
   currentAiTask: AiTask;
   pendingAssets: AssetGroup;
   loadConversation: (threadId: string) => Promise<void>;
-  sendMessage: (text: string, currentThreadId?: string) => Promise<string>;
+  sendMessage: (text: string, currentThreadId?: string, storyId?: string) => Promise<string>;
   clearChat: () => void;
   updateLastMessageWithData: (threadId: string) => Promise<void>;
 }
@@ -134,11 +133,8 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
     try {
       const fullConversation = await getConversationByThreadId(threadId);
       const lastBotMessageFromApi = fullConversation.messages.filter((m) => m.role === 'bot').pop();
-
       if (!lastBotMessageFromApi || !(lastBotMessageFromApi as any).id) return;
-
       const newMessageId = (lastBotMessageFromApi as any).id;
-
       set((state) => {
         const newBlocks = [...state.blocks];
         let lastUserIndex = -1;
@@ -149,7 +145,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
             break;
           }
         }
-
         if (lastUserIndex !== -1) {
           for (let i = lastUserIndex + 1; i < newBlocks.length; i++) {
             newBlocks[i] = { ...newBlocks[i], messageId: newMessageId };
@@ -161,7 +156,7 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       console.error('Failed to update last message with data:', error);
     }
   },
-  sendMessage: async (text, currentThreadId) => {
+  sendMessage: async (text, currentThreadId, storyId) => {
     if (get().status === 'streaming') return currentThreadId || '';
     const newThreadId = currentThreadId || uuidv4();
     set((state) => ({
@@ -177,10 +172,14 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
     try {
       const API_BASE_URL = getApiBaseUrl();
       if (!API_BASE_URL) throw new Error('API Client not initialized.');
+      const requestBody: any = { query: text, thread_id: newThreadId };
+      if (storyId) {
+        requestBody.story_id = storyId;
+      }
       const response = await fetch(`${API_BASE_URL}/v1/chat/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: text, thread_id: newThreadId }),
+        body: JSON.stringify(requestBody),
       });
       if (!response.ok || !response.body)
         throw new Error(`API error: ${response.status} ${response.statusText}`);
@@ -214,10 +213,11 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 }));
               }
             }
+            // ✨ START: นี่คือ Logic ที่แก้ไขแล้วและทำงานถูกต้อง ✨
             set((state) => {
-              let newPendingAssets = { ...state.pendingAssets };
-              let updatedBlocks = [...state.blocks];
+              const newBlocks = [...state.blocks];
               if ('sql_query' in eventData) {
+                const newPendingAssets = { ...state.pendingAssets };
                 newPendingAssets.sqls.push({
                   id: `sql-${Date.now()}`,
                   title: 'Generated SQL',
@@ -226,6 +226,7 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 return { pendingAssets: newPendingAssets, currentAiTask: 'creating sql' };
               }
               if ('sql_query_result' in eventData) {
+                const newPendingAssets = { ...state.pendingAssets };
                 const df = eventData.sql_query_result;
                 if (df && df.length > 0) {
                   newPendingAssets.dataframes.push({
@@ -239,21 +240,23 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
               }
               if ('answer_chunk' in eventData || 'answer' in eventData) {
                 const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
-                const lastBlock = updatedBlocks[updatedBlocks.length - 1];
+                const lastBlock = newBlocks[newBlocks.length - 1];
                 if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
                   (lastBlock as TextBlock).content += textContent;
                 } else {
-                  updatedBlocks.push({
+                  newBlocks.push({
                     kind: 'text',
                     id: Date.now(),
                     sender: 'ai',
                     content: textContent,
                   });
                 }
-                return { blocks: updatedBlocks, currentAiTask: 'answering' };
+                return { blocks: newBlocks, currentAiTask: 'answering' };
               }
-              return {};
+              // ถ้า event ไม่ตรงกับเงื่อนไขใดๆ ให้ return state เดิม ไม่ใช่ object ว่าง
+              return state;
             });
+            // ✨ END: สิ้นสุด Logic ที่แก้ไขแล้ว ✨
           } catch (e) {
             console.warn('Could not parse SSE JSON part:', part);
           }

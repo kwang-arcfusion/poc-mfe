@@ -252,7 +252,8 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
             <PanelResizeHandle className={s.resizeHandle} />
             <Panel defaultSize={30} minSize={20}>
               <aside className={s.rightPane} aria-label="AI Chat Panel">
-                <AskAiPanel onClose={() => setAiOpen(false)} />
+                {/* ✨ ส่ง story object ทั้งก้อนลงไป */}
+                <AskAiPanel story={story!} onClose={() => setAiOpen(false)} />
               </aside>
             </Panel>
           </PanelGroup>
