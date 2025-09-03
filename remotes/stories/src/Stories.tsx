@@ -144,23 +144,6 @@ export default function Stories({ navigate }: StoriesProps) {
 
   return (
     <div className={styles.root}>
-      <header className={styles.header}>
-        <Filter28Filled />
-        <DateRangePicker value={dateRange} onChange={setDateRange} />
-        <MultiSelect
-          label="Channels"
-          options={allFilterOptions.channels}
-          selectedOptions={filters.channels || []}
-          onSelectionChange={(selection) => handleFilterChange('channels', selection)}
-        />
-        <MultiSelect
-          label="Campaigns"
-          options={allFilterOptions.campaigns}
-          selectedOptions={filters.campaigns || []}
-          onSelectionChange={(selection) => handleFilterChange('campaigns', selection)}
-        />
-      </header>
-
       <div className={styles.storiesGroup}>
         {/* ✨ 4. ไม่ต้องแก้ไขอะไรตรงนี้ เพราะ InsightCard รับ story object ทั้งก้อนอยู่แล้ว */}
         {visibleGroups.map((group) => (
