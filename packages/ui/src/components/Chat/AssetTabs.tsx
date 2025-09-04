@@ -1,4 +1,4 @@
-// packages/ui/src/components/AssetTabs.tsx
+// packages/ui/src/components/Chat/AssetTabs.tsx
 import * as React from 'react';
 import { makeStyles, tokens, shorthands } from '@fluentui/react-components';
 import type { AssetGroup } from '@arcfusion/types';
@@ -45,6 +45,9 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
         }
 
         if (newConfig.tooltip) {
+          // ✨ FIX: ลบ valueFormatter ที่อาจจะมีปัญหาซึ่งส่งมาจาก Backend
+          delete newConfig.tooltip.valueFormatter;
+
           newConfig.tooltip.formatter = (params: any) => {
             if (!Array.isArray(params) || params.length === 0) return '';
             const param = params[0];
@@ -55,22 +58,17 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
           };
         }
 
-        // ✨ START: ปรับแก้ Layout ของ Legend และ Grid เพื่อไม่ให้ซ้อนกัน
-        // 1. ย้าย Legend ไปไว้ด้านล่าง
         if (newConfig.legend) {
           newConfig.legend.top = 'bottom';
         } else {
-          // ถ้าไม่มี object legend มาให้ ก็สร้างขึ้นมาใหม่
           newConfig.legend = { top: 'bottom' };
         }
 
-        // 2. ปรับขนาดของ Grid (พื้นที่วาดกราฟ) ให้มีที่ว่างสำหรับ Legend ด้านล่าง
         if (newConfig.grid) {
-          newConfig.grid.bottom = '12%'; // เพิ่มระยะห่างจากขอบล่าง 12%
+          newConfig.grid.bottom = '12%';
         } else {
           newConfig.grid = { bottom: '12%' };
         }
-        // ✨ END: สิ้นสุดการแก้ไข
       }
       return { ...ch, processedConfig: newConfig };
     });
