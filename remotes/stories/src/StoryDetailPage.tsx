@@ -10,6 +10,7 @@ import {
   tokens,
   Spinner,
 } from '@fluentui/react-components';
+// ✨ 1. ลบการ import useSearchParams ออกไป
 import { Sparkle24Regular, TriangleDown16Filled } from '@fluentui/react-icons';
 import { useLayoutStore } from '@arcfusion/store';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -19,9 +20,9 @@ import { NarrativeCard } from './storyDetail/NarrativeCard';
 import { ActionsCard } from './storyDetail/ActionsCard';
 import { EvidenceSection } from './storyDetail/EvidenceSection';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
-// ✨ 1. Import component ใหม่ที่เราสร้างขึ้น
 import { TechnicalDetails } from './storyDetail/TechnicalDetails';
 
+// ... (โค้ด styles เหมือนเดิม) ...
 const useStyles = makeStyles({
   outer: {
     overflow: 'hidden',
@@ -127,11 +128,13 @@ const useStyles = makeStyles({
   },
 });
 
+// ✨ 2. แก้ไข Props ให้รับ threadId
 interface StoryDetailPageProps {
   storyId?: string;
+  threadId?: string | null;
 }
 
-export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
+export default function StoryDetailPage({ storyId, threadId }: StoryDetailPageProps) {
   const s = useStyles();
   const { setMainOverflow } = useLayoutStore();
 
@@ -145,9 +148,16 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
     return () => {
       setMainOverflow('auto');
     };
-  }, [setMainOverflow]);
+  }, [setMainOverflow]); // ✨ 3. แก้ไข useEffect ให้ขึ้นอยู่กับ threadId ที่มาจาก prop แทน
 
   React.useEffect(() => {
+    if (threadId && !isLoading) {
+      setAiOpen(true);
+    }
+  }, [threadId, isLoading]);
+
+  React.useEffect(() => {
+    // ... (โค้ดส่วน fetchStory เหมือนเดิม ไม่ต้องแก้ไข) ...
     if (!storyId) {
       setError('Story ID not found.');
       setIsLoading(false);
@@ -172,6 +182,7 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
   }, [storyId]);
 
   const renderContent = () => {
+    // ... (โค้ดส่วน renderContent เหมือนเดิมทั้งหมด) ...
     if (isLoading) {
       return (
         <div className={s.centerContainer}>
@@ -208,22 +219,24 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
                   </Text>
                 </Badge>
               )}
+
               <div className={s.chips} role="toolbar" aria-label="page context">
                 <Badge appearance="tint">
                   <strong>{story.type.split('_')[0].toUpperCase()}</strong>
                 </Badge>
+
                 <Badge appearance="tint">
                   Period: {new Date(story.created_at).toLocaleDateString()}
                 </Badge>
               </div>
             </div>
           </div>
+
           <section className={s.mainGrid}>
             <NarrativeCard story={story} />
             <ActionsCard story={story} />
           </section>
           <EvidenceSection story={story} />
-          {/* ✨ 2. เพิ่ม Component ใหม่เข้ามาในหน้า */}
           <TechnicalDetails story={story} />
         </div>
       </section>
@@ -232,6 +245,7 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
 
   return (
     <div className={s.outer}>
+      {/* ... (โค้ดปุ่ม Ask AI เหมือนเดิม) ... */}
       {!aiOpen && (
         <Button
           className={s.askAiButton}
@@ -252,8 +266,13 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
             <PanelResizeHandle className={s.resizeHandle} />
             <Panel defaultSize={30} minSize={20}>
               <aside className={s.rightPane} aria-label="AI Chat Panel">
-                {/* ✨ ส่ง story object ทั้งก้อนลงไป */}
-                <AskAiPanel story={story!} onClose={() => setAiOpen(false)} />
+                {/* ✨ 4. ส่ง threadId ที่ได้รับจาก prop ลงไป */}
+
+                <AskAiPanel
+                  story={story!}
+                  threadId={threadId || undefined}
+                  onClose={() => setAiOpen(false)}
+                />
               </aside>
             </Panel>
           </PanelGroup>

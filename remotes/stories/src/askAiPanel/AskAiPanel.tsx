@@ -6,6 +6,7 @@ import { useChatSessionStore, useChatHistoryStore } from '@arcfusion/store';
 import type { Story } from '@arcfusion/types';
 import { ChatLog, ChatInputBar } from '@arcfusion/ui';
 
+// ... (โค้ด styles เหมือนเดิม) ...
 const useStyles = makeStyles({
   panelRoot: {
     display: 'flex',
@@ -30,36 +31,48 @@ const useStyles = makeStyles({
   },
 });
 
+// ✨ 1. เพิ่ม threadId ใน Props
 interface AskAiPanelProps {
   story: Story;
   onClose: () => void;
+  threadId?: string;
 }
 
-export function AskAiPanel({ story, onClose }: AskAiPanelProps) {
+export function AskAiPanel({ story, onClose, threadId }: AskAiPanelProps) {
   const styles = useStyles();
   const {
     blocks,
     status,
-    currentAiTask,
-    threadId,
+    currentAiTask, // ✨ 2. ดึง threadId ปัจจุบันใน store มาเพื่อเปรียบเทียบ
+    threadId: currentThreadId,
     sendMessage: sendMessageFromStore,
     clearChat,
-    updateLastMessageWithData,
+    updateLastMessageWithData, // ✨ 3. ดึง loadConversation มาใช้งาน
+    loadConversation,
   } = useChatSessionStore();
   const { fetchConversations: refreshHistory } = useChatHistoryStore();
 
-  const isStreaming = status === 'streaming';
+  const isStreaming = status === 'streaming'; // ✨ 4. แก้ไข Logic การทำงานของ useEffect ทั้งหมด
 
   useEffect(() => {
-    clearChat();
-  }, [clearChat]);
+    if (threadId) {
+      // ถ้ามี threadId จาก prop (เช่น มาจาก URL) ให้โหลดประวัติแชทนั้น
+      // เช็คก่อนว่า thread ที่จะโหลดไม่ตรงกับที่อยู่ใน store แล้ว เพื่อป้องกันการโหลดซ้ำ
+      if (currentThreadId !== threadId) {
+        loadConversation(threadId);
+      }
+    } else {
+      // ถ้าไม่มี threadId (เช่น ผู้ใช้กดปุ่ม 'Ask AI' เพื่อเริ่มแชทใหม่) ให้ล้างแชทเก่าทิ้ง
+      clearChat();
+    } // เพิ่ม dependencies ให้ครบถ้วน
+  }, [threadId, currentThreadId, loadConversation, clearChat]);
 
   const handleSendMessage = (text: string) => {
-    const currentThreadId = useChatSessionStore.getState().threadId;
+    // ใช้ threadId จาก prop ถ้ามี, หรือจาก store ถ้าไม่มี (กรณีแชทต่อเนื่อง)
+    const conversationThreadId = threadId || currentThreadId;
 
-    // ✨ ใช้ .then() เพื่อให้ UI update ทันทีโดยไม่รอ API
-    sendMessageFromStore(text, currentThreadId, story.id).then((newThreadId) => {
-      if (!currentThreadId && newThreadId) {
+    sendMessageFromStore(text, conversationThreadId, story.id).then((newThreadId) => {
+      if (!conversationThreadId && newThreadId) {
         refreshHistory();
       }
       if (newThreadId) {
@@ -72,9 +85,9 @@ export function AskAiPanel({ story, onClose }: AskAiPanelProps) {
     <div className={styles.panelRoot}>
       <div className={styles.header}>
         <div className={styles.titleGroup}>
-          <Sparkle24Filled />
-          <Text weight="semibold">Ask about this Story</Text>
+          <Sparkle24Filled /> <Text weight="semibold">Ask about this Story</Text>
         </div>
+
         <Button
           appearance="transparent"
           icon={<Dismiss24Regular />}
