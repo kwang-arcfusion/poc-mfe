@@ -3,24 +3,26 @@ import { create } from 'zustand';
 import { getConversations } from '@arcfusion/client';
 import type { ConversationSummary } from '@arcfusion/types';
 
-// ✨ 1. กำหนด Type ของ Tab ที่จะใช้
 export type ChatHistoryTab = 'ask' | 'story';
 
 export interface ChatHistoryState {
-  conversations: ConversationSummary[]; // ✨ 2. เพิ่ม State สำหรับเก็บรายการที่กรองแล้ว
+  conversations: ConversationSummary[];
   askConversations: ConversationSummary[];
   storyConversations: ConversationSummary[];
   isLoading: boolean;
-  isPopoverOpen: boolean; // ✨ 3. เพิ่ม State สำหรับ Tab ปัจจุบัน
+  isPopoverOpen: boolean;
   activeTab: ChatHistoryTab;
   fetchConversations: () => Promise<void>;
   togglePopover: () => void;
-  closePopover: () => void; // ✨ 4. เพิ่ม Action สำหรับเปลี่ยน Tab
+  closePopover: () => void;
   setActiveTab: (tab: ChatHistoryTab) => void;
+  addOptimisticConversation: (
+    newConvo: Partial<ConversationSummary> & { title: string; thread_id: string }
+  ) => void;
 }
 
 export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
-  conversations: [], // ✨ 5. กำหนดค่าเริ่มต้น
+  conversations: [],
   askConversations: [],
   storyConversations: [],
   isLoading: false,
@@ -31,8 +33,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
     if (get().isLoading) return;
     set({ isLoading: true });
     try {
-      const response = await getConversations(1, 100); // ดึงสูงสุด 100 รายการ
-      // ✨ 6. กรองข้อมูลและจัดเก็บลง State ที่แยกกัน
+      const response = await getConversations(1, 100);
       const askItems = response.items.filter((c) => !c.story_id);
       const storyItems = response.items.filter((c) => !!c.story_id);
 
@@ -54,9 +55,38 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
 
   closePopover: () => {
     set({ isPopoverOpen: false });
-  }, // ✨ 7. Implement Action สำหรับเปลี่ยน Tab
+  },
 
   setActiveTab: (tab) => {
     set({ activeTab: tab });
   },
+
+  addOptimisticConversation: (newConvo) =>
+    set((state) => {
+      const optimisticConvo: ConversationSummary = {
+        id: newConvo.thread_id,
+        user_id: '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        ...newConvo,
+      }; // ✨ FIX: แก้ไขเงื่อนไขตรงนี้ จาก c.id เป็น c.thread_id
+
+      if (state.conversations.some((c) => c.thread_id === optimisticConvo.thread_id)) {
+        return state; // ถ้ามี thread นี้อยู่แล้ว ไม่ต้องทำอะไร
+      }
+
+      const isStoryChat = !!newConvo.story_id;
+      const newAskConversations = isStoryChat
+        ? state.askConversations
+        : [optimisticConvo, ...state.askConversations];
+      const newStoryConversations = isStoryChat
+        ? [optimisticConvo, ...state.storyConversations]
+        : state.storyConversations;
+
+      return {
+        conversations: [optimisticConvo, ...state.conversations],
+        askConversations: newAskConversations,
+        storyConversations: newStoryConversations,
+      };
+    }),
 }));

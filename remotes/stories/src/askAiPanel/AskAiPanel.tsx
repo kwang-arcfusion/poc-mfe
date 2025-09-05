@@ -6,7 +6,6 @@ import { useChatSessionStore, useChatHistoryStore } from '@arcfusion/store';
 import type { Story } from '@arcfusion/types';
 import { ChatLog, ChatInputBar } from '@arcfusion/ui';
 
-// ... (โค้ด styles เหมือนเดิม) ...
 const useStyles = makeStyles({
   panelRoot: {
     display: 'flex',
@@ -31,7 +30,6 @@ const useStyles = makeStyles({
   },
 });
 
-// ✨ 1. เพิ่ม threadId ใน Props
 interface AskAiPanelProps {
   story: Story;
   onClose: () => void;
@@ -43,33 +41,33 @@ export function AskAiPanel({ story, onClose, threadId }: AskAiPanelProps) {
   const {
     blocks,
     status,
-    currentAiTask, // ✨ 2. ดึง threadId ปัจจุบันใน store มาเพื่อเปรียบเทียบ
+    currentAiTask,
     threadId: currentThreadId,
     sendMessage: sendMessageFromStore,
     clearChat,
-    updateLastMessageWithData, // ✨ 3. ดึง loadConversation มาใช้งาน
+    updateLastMessageWithData,
     loadConversation,
   } = useChatSessionStore();
   const { fetchConversations: refreshHistory } = useChatHistoryStore();
 
-  const isStreaming = status === 'streaming'; // ✨ 4. แก้ไข Logic การทำงานของ useEffect ทั้งหมด
+  const isStreaming = status === 'streaming'; // ✨ FIX: แก้ไข useEffect และ dependency array
 
   useEffect(() => {
+    // Logic นี้จะทำงานแค่ครั้งเดียวเมื่อ component ถูก mount
+    // หรือเมื่อ `threadId` ที่เป็น prop เปลี่ยนไปเท่านั้น
     if (threadId) {
       // ถ้ามี threadId จาก prop (เช่น มาจาก URL) ให้โหลดประวัติแชทนั้น
-      // เช็คก่อนว่า thread ที่จะโหลดไม่ตรงกับที่อยู่ใน store แล้ว เพื่อป้องกันการโหลดซ้ำ
-      if (currentThreadId !== threadId) {
-        loadConversation(threadId);
-      }
+      loadConversation(threadId);
     } else {
-      // ถ้าไม่มี threadId (เช่น ผู้ใช้กดปุ่ม 'Ask AI' เพื่อเริ่มแชทใหม่) ให้ล้างแชทเก่าทิ้ง
+      // ถ้าไม่มี threadId (ผู้ใช้กดปุ่ม 'Ask AI' เพื่อเริ่มแชทใหม่) ให้ล้างแชทเก่าทิ้ง
       clearChat();
-    } // เพิ่ม dependencies ให้ครบถ้วน
-  }, [threadId, currentThreadId, loadConversation, clearChat]);
+    } // การเอา currentThreadId ออกจาก dependency array เป็นการป้องกันไม่ให้ effect นี้ทำงานซ้ำ
+    // ทุกครั้งที่ state ภายใน session เปลี่ยนแปลง
+  }, [threadId, loadConversation, clearChat]);
 
   const handleSendMessage = (text: string) => {
-    // ใช้ threadId จาก prop ถ้ามี, หรือจาก store ถ้าไม่มี (กรณีแชทต่อเนื่อง)
-    const conversationThreadId = threadId || currentThreadId;
+    // Logic ตรงนี้ถูกต้องแล้ว มันจะใช้ threadId จาก store ที่อัปเดตล่าสุดเสมอ
+    const conversationThreadId = currentThreadId;
 
     sendMessageFromStore(text, conversationThreadId, story.id).then((newThreadId) => {
       if (!conversationThreadId && newThreadId) {

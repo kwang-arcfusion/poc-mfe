@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { getApiBaseUrl, getConversationByThreadId } from '@arcfusion/client';
+import { useChatHistoryStore } from './chatHistoryStore';
 import type {
   ConversationResponse,
   StreamedEvent,
@@ -183,6 +184,12 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       pendingAssets: initialPendingAssets(),
     }));
 
+    useChatHistoryStore.getState().addOptimisticConversation({
+      thread_id: newThreadId,
+      title: text,
+      story_id: storyId,
+    });
+
     try {
       const API_BASE_URL = getApiBaseUrl();
       if (!API_BASE_URL) throw new Error('API Client not initialized.');
@@ -251,7 +258,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 }
                 return { pendingAssets: newPendingAssets, currentAiTask: 'creating table' };
               }
-              // ✨ START: เพิ่ม Logic การจัดการ Chart
               if ('chart_builder_result' in eventData) {
                 const newPendingAssets = { ...state.pendingAssets };
                 const chartConfig = eventData.chart_builder_result;
@@ -264,7 +270,6 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
                 }
                 return { pendingAssets: newPendingAssets, currentAiTask: 'creating chart' };
               }
-              // ✨ END: สิ้นสุดการจัดการ Chart
               if ('answer_chunk' in eventData || 'answer' in eventData) {
                 const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
                 const lastBlock = newBlocks[newBlocks.length - 1];

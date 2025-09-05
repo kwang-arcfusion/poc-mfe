@@ -1,4 +1,4 @@
-// remotes/ask_ai/src/components/AiStatusIndicator.tsx
+// packages/ui/src/components/Chat/AiStatusIndicator.tsx
 import React from 'react';
 import { makeStyles, shorthands, tokens, Spinner, Body1 } from '@fluentui/react-components';
 
@@ -11,10 +11,12 @@ const useStatusStyles = makeStyles({
   },
 });
 
-const TASK_DISPLAY_TEXT: Record<string, string> = {
+// ✨ เพิ่ม export เพื่อให้ component อื่นสามารถนำไปใช้ได้
+export const TASK_DISPLAY_TEXT: Record<string, string> = {
   thinking: 'Thinking',
   'creating sql': 'Creating SQL',
   'creating table': 'Creating Table',
+  'creating chart': 'Creating Chart', // เพิ่มจากขั้นตอนก่อนหน้า
   answering: 'Answering',
 };
 

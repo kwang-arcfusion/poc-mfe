@@ -8,16 +8,18 @@ import {
   Popover,
   PopoverTrigger,
   PopoverSurface,
-  Spinner,
-  Text, // ✨ 1. Import TabList และ Tab
+  Spinner, // ✨ 1. Import Spinner
+  Text,
   TabList,
   Tab,
 } from '@fluentui/react-components';
 import { Chat24Regular, Chat24Filled } from '@fluentui/react-icons';
-// ✨ 2. Import Type เพิ่มเติม
-import { useChatHistoryStore, type ChatHistoryTab } from '@arcfusion/store';
+// ✨ 2. Import store และ type เพิ่มเติม
+import { useChatHistoryStore, useChatSessionStore, type ChatHistoryTab } from '@arcfusion/store';
 import type { ConversationSummary } from '@arcfusion/types';
 import { useNavigate } from 'react-router-dom';
+// ✨ 3. Import ค่าคงที่สำหรับแสดงผลสถานะ
+import { TASK_DISPLAY_TEXT } from '../Chat/AiStatusIndicator';
 
 const useStyles = makeStyles({
   popoverSurface: {
@@ -41,8 +43,10 @@ const useStyles = makeStyles({
     top: 0,
     backgroundColor: tokens.colorNeutralBackground1,
     zIndex: 1,
-  }, // ✨ 3. เพิ่ม Style สำหรับ TabList
-  tabContainer: {},
+  },
+  tabContainer: {
+    ...shorthands.padding(0, tokens.spacingHorizontalL),
+  },
   listContainer: {
     overflowY: 'auto',
     flexGrow: 1,
@@ -75,6 +79,11 @@ const useStyles = makeStyles({
   itemDate: {
     color: tokens.colorNeutralForeground4,
   },
+  // ✨ 4. เพิ่ม Style สำหรับข้อความสถานะ
+  itemStatus: {
+    color: tokens.colorNeutralForeground3,
+    fontStyle: 'italic',
+  },
   center: {
     display: 'flex',
     alignItems: 'center',
@@ -97,7 +106,9 @@ const formatDate = (dateString: string) => {
 
 export const ChatHistoryPopover = () => {
   const styles = useStyles();
-  const navigate = useNavigate(); // ✨ 4. ดึง State และ Actions ใหม่จาก Store
+  const navigate = useNavigate();
+
+  // State จาก Store สำหรับ "รายการ" ประวัติแชท
   const {
     conversations,
     askConversations,
@@ -111,22 +122,23 @@ export const ChatHistoryPopover = () => {
     setActiveTab,
   } = useChatHistoryStore();
 
+  // ✨ 5. ดึง State จาก Store สำหรับ "เซสชัน" แชทปัจจุบัน
+  const { threadId: activeThreadId, status: activeStatus, currentAiTask } = useChatSessionStore();
+
   useEffect(() => {
     if (isPopoverOpen && conversations.length === 0) {
       fetchConversations();
     }
-  }, [isPopoverOpen, conversations.length, fetchConversations]); // ✨ 5. ปรับปรุง Handler ให้รองรับทั้งสองกรณี
+  }, [isPopoverOpen, conversations.length, fetchConversations]);
 
   const handleSelectConversation = (convo: ConversationSummary) => {
     if (convo.story_id) {
-      // ถ้ามี story_id, navigate ไปที่หน้า story detail พร้อมส่ง thread_id ไปใน URL
       navigate(`/stories/${convo.story_id}?thread=${convo.thread_id}`);
     } else {
-      // ถ้าไม่มี, navigate ไปที่หน้า ask_ai เหมือนเดิม
       navigate(`/ask_ai/${convo.thread_id}`);
     }
     closePopover();
-  }; // ✨ 6. สร้างฟังก์ชัน Helper เพื่อ render รายการแชท (ลดโค้ดซ้ำซ้อน)
+  };
 
   const renderList = (items: ConversationSummary[]) => {
     if (items.length === 0) {
@@ -137,27 +149,39 @@ export const ChatHistoryPopover = () => {
       );
     }
 
-    return items.map((convo) => (
-      <div
-        key={convo.id}
-        className={styles.listItem}
-        onClick={() => handleSelectConversation(convo)} // <-- ใช้ Handler ที่ปรับปรุงแล้ว
-      >
-        <div className={styles.iconWrapper}>
-          <Chat24Regular />
-        </div>
+    return items.map((convo) => {
+      // ✨ 6. ตรวจสอบว่ารายการแชทนี้ คือแชทที่กำลังทำงานอยู่หรือไม่
+      const isActiveStreaming = activeStatus === 'streaming' && convo.thread_id === activeThreadId;
 
-        <div className={styles.itemText}>
-          <Text size={300} weight="semibold" className={styles.itemTitle}>
-            {convo.title}
-          </Text>
+      return (
+        <div
+          key={convo.id}
+          className={styles.listItem}
+          onClick={() => handleSelectConversation(convo)}
+        >
+          <div className={styles.iconWrapper}>
+            {/* ✨ 7. แสดง Spinner ถ้ากำลังทำงาน, มิฉะนั้นแสดงไอคอนแชท */}
+            {isActiveStreaming ? <Spinner size="tiny" /> : <Chat24Regular />}
+          </div>
+          <div className={styles.itemText}>
+            <Text size={300} weight="semibold" className={styles.itemTitle}>
+              {convo.title}
+            </Text>
 
-          <Text size={200} className={styles.itemDate}>
-            {formatDate(convo.updated_at)}
-          </Text>
+            {/* ✨ 8. แสดงสถานะถ้ากำลังทำงาน, มิฉะนั้นแสดงวันที่ */}
+            {isActiveStreaming && currentAiTask ? (
+              <Text size={200} className={styles.itemStatus}>
+                {TASK_DISPLAY_TEXT[currentAiTask] || 'Processing...'}
+              </Text>
+            ) : (
+              <Text size={200} className={styles.itemDate}>
+                {formatDate(convo.updated_at)}
+              </Text>
+            )}
+          </div>
         </div>
-      </div>
-    ));
+      );
+    });
   };
 
   return (
@@ -169,25 +193,27 @@ export const ChatHistoryPopover = () => {
           aria-label="Chat History"
         />
       </PopoverTrigger>
-
       <PopoverSurface className={styles.popoverSurface}>
-        {/* ✨ 7. เพิ่ม TabList UI */}
+        <div className={styles.header}>
+          <Text as="h2" size={500} weight="semibold">
+            Chat History
+          </Text>
+        </div>
         <div className={styles.tabContainer}>
           <TabList
             selectedValue={activeTab}
             onTabSelect={(_, data) => setActiveTab(data.value as ChatHistoryTab)}
           >
-            <Tab value="ask">Ask</Tab> <Tab value="story">Story</Tab>
+            <Tab value="ask">Ask</Tab>
+            <Tab value="story">Story</Tab>
           </TabList>
         </div>
-
         <div className={styles.listContainer}>
           {isLoading ? (
             <div className={styles.center}>
               <Spinner />
             </div>
-          ) : // ✨ 8. ใช้เงื่อนไขเพื่อเลือกว่าจะ render list ไหน
-          activeTab === 'ask' ? (
+          ) : activeTab === 'ask' ? (
             renderList(askConversations)
           ) : (
             renderList(storyConversations)
