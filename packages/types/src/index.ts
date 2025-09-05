@@ -36,6 +36,7 @@ export interface ConversationSummary {
   title: string | null;
   created_at: string;
   updated_at: string;
+  story_id?: string | null;
 }
 
 export interface PaginatedConversationsResponse {
