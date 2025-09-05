@@ -45,7 +45,9 @@ const useStyles = makeStyles({
     zIndex: 1,
   },
   tabContainer: {
-    ...shorthands.padding(0, tokens.spacingHorizontalL),
+    paddingLeft: '6px',
+    paddingRight: '6px',
+    boxSizing: 'border-box',
   },
   listContainer: {
     overflowY: 'auto',
@@ -195,7 +197,7 @@ export const ChatHistoryPopover = () => {
       </PopoverTrigger>
       <PopoverSurface className={styles.popoverSurface}>
         <div className={styles.header}>
-          <Text as="h2" size={500} weight="semibold">
+          <Text as="h2" size={400} weight="semibold">
             Chat History
           </Text>
         </div>
