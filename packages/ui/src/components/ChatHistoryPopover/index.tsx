@@ -1,4 +1,3 @@
-// packages/ui/src/components/ChatHistoryPopover/index.tsx
 import React, { useEffect } from 'react';
 import {
   makeStyles,
@@ -8,17 +7,15 @@ import {
   Popover,
   PopoverTrigger,
   PopoverSurface,
-  Spinner, // ✨ 1. Import Spinner
+  Spinner,
   Text,
   TabList,
   Tab,
 } from '@fluentui/react-components';
 import { Chat24Regular, Chat24Filled } from '@fluentui/react-icons';
-// ✨ 2. Import store และ type เพิ่มเติม
 import { useChatHistoryStore, useChatSessionStore, type ChatHistoryTab } from '@arcfusion/store';
 import type { ConversationSummary } from '@arcfusion/types';
 import { useNavigate } from 'react-router-dom';
-// ✨ 3. Import ค่าคงที่สำหรับแสดงผลสถานะ
 import { TASK_DISPLAY_TEXT } from '../Chat/AiStatusIndicator';
 
 const useStyles = makeStyles({
@@ -81,7 +78,6 @@ const useStyles = makeStyles({
   itemDate: {
     color: tokens.colorNeutralForeground4,
   },
-  // ✨ 4. เพิ่ม Style สำหรับข้อความสถานะ
   itemStatus: {
     color: tokens.colorNeutralForeground3,
     fontStyle: 'italic',
@@ -110,7 +106,6 @@ export const ChatHistoryPopover = () => {
   const styles = useStyles();
   const navigate = useNavigate();
 
-  // State จาก Store สำหรับ "รายการ" ประวัติแชท
   const {
     conversations,
     askConversations,
@@ -124,7 +119,6 @@ export const ChatHistoryPopover = () => {
     setActiveTab,
   } = useChatHistoryStore();
 
-  // ✨ 5. ดึง State จาก Store สำหรับ "เซสชัน" แชทปัจจุบัน
   const { threadId: activeThreadId, status: activeStatus, currentAiTask } = useChatSessionStore();
 
   useEffect(() => {
@@ -152,7 +146,6 @@ export const ChatHistoryPopover = () => {
     }
 
     return items.map((convo) => {
-      // ✨ 6. ตรวจสอบว่ารายการแชทนี้ คือแชทที่กำลังทำงานอยู่หรือไม่
       const isActiveStreaming = activeStatus === 'streaming' && convo.thread_id === activeThreadId;
 
       return (
@@ -162,7 +155,6 @@ export const ChatHistoryPopover = () => {
           onClick={() => handleSelectConversation(convo)}
         >
           <div className={styles.iconWrapper}>
-            {/* ✨ 7. แสดง Spinner ถ้ากำลังทำงาน, มิฉะนั้นแสดงไอคอนแชท */}
             {isActiveStreaming ? <Spinner size="tiny" /> : <Chat24Regular />}
           </div>
           <div className={styles.itemText}>
@@ -170,7 +162,6 @@ export const ChatHistoryPopover = () => {
               {convo.title}
             </Text>
 
-            {/* ✨ 8. แสดงสถานะถ้ากำลังทำงาน, มิฉะนั้นแสดงวันที่ */}
             {isActiveStreaming && currentAiTask ? (
               <Text size={200} className={styles.itemStatus}>
                 {TASK_DISPLAY_TEXT[currentAiTask] || 'Processing...'}

@@ -1,4 +1,3 @@
-// remotes/overview/src/components/DailyPerformanceChart.tsx
 import React from 'react';
 import { Card, Text, makeStyles, shorthands, tokens } from '@fluentui/react-components';
 import {
@@ -21,7 +20,6 @@ const useStyles = makeStyles({
   },
 });
 
-// A color palette for the chart lines
 const LINE_COLORS = [
   tokens.colorBrandStroke1,
   tokens.colorPaletteGreenForeground3,
@@ -30,13 +28,11 @@ const LINE_COLORS = [
   tokens.colorPalettePurpleForeground2,
 ];
 
-// Helper function to format dates for the X-axis
 const formatXAxis = (tickItem: string) => {
   const date = new Date(tickItem);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-// Custom tooltip for better styling
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -64,8 +60,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export const DailyPerformanceChart: React.FC<{ data: SeriesData }> = ({ data }) => {
   const styles = useStyles();
 
-  // Combine points from all series and pivot the data for Recharts
-  // from { series: [{ points: [...] }] } to [{ date: '...', series1: y, series2: y }]
   const processedData = data.series[0].points.map((point, index) => {
     const dataPoint: { [key: string]: string | number } = { date: point.date };
     data.series.forEach((s) => {

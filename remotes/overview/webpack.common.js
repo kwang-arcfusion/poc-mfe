@@ -1,6 +1,5 @@
-// remotes/overview/webpack.common.js
 const path = require('path');
-const createRemoteConfig = require('../../configs/webpack.config.remote'); // <-- Fix path correctly
+const createRemoteConfig = require('../../configs/webpack.config.remote');
 
 module.exports = (env = {}) =>
   createRemoteConfig({
@@ -8,7 +7,6 @@ module.exports = (env = {}) =>
     exposes: {
       './Overview': './src/Overview.tsx',
     },
-    // Pass the path to its own package.json
     packageJsonPath: path.resolve(__dirname, './package.json'),
     mode: env.mode,
   });

@@ -1,7 +1,5 @@
-// packages/ui/src/components/Chat/ChatLog.tsx
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { makeStyles, shorthands, tokens } from '@fluentui/react-components';
-// ✨ 1. แก้ไข Path การ Import Type จาก '../types' เป็น '@arcfusion/types'
 import type { Block, TextBlock } from '@arcfusion/types';
 import { ChatMessage } from './ChatMessage';
 import { AssetTabs } from './AssetTabs';

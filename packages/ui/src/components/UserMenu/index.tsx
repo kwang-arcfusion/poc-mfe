@@ -17,7 +17,7 @@ import {
   shorthands,
   tokens,
   Card,
-  DialogActions, // still used in the Logout dialog
+  DialogActions,
 } from '@fluentui/react-components';
 import { useThemeStore } from '@arcfusion/store';
 import { SignOut24Regular, Color24Regular, CheckmarkCircle24Regular } from '@fluentui/react-icons';
@@ -132,7 +132,6 @@ const useStyles = makeStyles({
   growList: { flexGrow: 1, width: '100%' },
 });
 
-// Hardcoded palettes for preview
 const LIGHT_PALETTE = {
   bg: '#F6F7FB',
   surface: '#FFFFFF',
@@ -166,7 +165,7 @@ function ThemePreview({
   palette: typeof LIGHT_PALETTE;
   selected: boolean;
   label: string;
-  onApply: () => void; // click to apply immediately
+  onApply: () => void;
 }) {
   const styles = useStyles();
 
@@ -247,7 +246,6 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
 
   const { theme, toggleTheme } = useThemeStore();
 
-  // Click card to toggle immediately (will toggle only when different from current)
   const applyTheme = (target: ThemeName) => {
     if (target !== (theme as ThemeName)) {
       toggleTheme();

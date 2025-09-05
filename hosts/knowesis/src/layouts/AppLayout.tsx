@@ -1,9 +1,5 @@
-// hosts/knowesis/src/layouts/AppLayout.tsx
-
 import React from 'react';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
-// ✨ ลบ useAuth0 ออก
-// import { useAuth0 } from '@auth0/auth0-react';
 import {
   useGlobalStyles,
   AppShell,
@@ -13,7 +9,6 @@ import {
   type SidebarNavGroup,
 } from '@arcfusion/ui';
 
-// Import Icons
 import {
   Apps28Color,
   ChatMultiple24Color,
@@ -23,7 +18,6 @@ import {
 } from '@fluentui/react-icons';
 import { useTopbarStore } from '../stores/topbarStore';
 
-// Data for Sidebar
 const menuGroups: SidebarNavGroup[] = [
   {
     title: 'MAIN',
@@ -43,29 +37,23 @@ export function AppLayout() {
   useGlobalStyles();
   const location = useLocation();
   const navigate = useNavigate();
-  // ✨ ลบการเรียกใช้ useAuth0 ออก
-  // const { user, logout } = useAuth0();
   const { actions } = useTopbarStore();
 
-  // ✨ สร้างข้อมูลผู้ใช้จำลองและฟังก์ชัน logout จำลอง
   const mockUser = {
     name: 'Guest User',
     email: 'guest@example.com',
   };
   const handleLogout = () => {
     console.log('Logout action triggered.');
-    // ในอนาคตอาจจะ redirect ไปหน้าแรก
     navigate('/', { replace: true });
   };
 
-  // Logic การหา pageTitle (ส่วนนี้ทำงานถูกต้องอยู่แล้ว)
   const allMenuItems = menuGroups.flatMap((g) => g.items);
   const matchingPage = allMenuItems
     .filter((item) => location.pathname.startsWith(item.value))
     .sort((a, b) => b.value.length - a.value.length)[0];
   const pageTitle = matchingPage ? matchingPage.label : 'Page Not Found';
 
-  // Sidebar logic (ส่วนนี้ทำงานถูกต้องอยู่แล้ว)
   const selectedValue =
     menuGroups
       .flatMap((g) => g.items)
@@ -90,7 +78,6 @@ export function AppLayout() {
       topbar={
         <Topbar
           pageTitle={pageTitle}
-          // ✨ ส่งข้อมูลจำลองเข้าไปแทน
           user={mockUser}
           onLogout={handleLogout}
           methodsLeft={actions.left}

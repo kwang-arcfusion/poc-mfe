@@ -1,4 +1,3 @@
-// remotes/stories/src/storyDetail/ActionsCard.tsx
 import * as React from 'react';
 import { Text, Body1, Badge, makeStyles, shorthands, tokens } from '@fluentui/react-components';
 import { CheckmarkCircle24Color } from '@fluentui/react-icons';
@@ -67,7 +66,7 @@ export const ActionsCard: React.FC<ActionsCardProps> = ({ story }) => {
   const s = useStyles();
 
   if (!story.recommended_actions || story.recommended_actions.length === 0) {
-    return null; // Don't render if there are no actions
+    return null;
   }
 
   return (

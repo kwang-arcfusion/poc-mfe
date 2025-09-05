@@ -1,4 +1,3 @@
-// packages/ui/src/components/Chat/AssetTabs.tsx
 import * as React from 'react';
 import { makeStyles, tokens, shorthands } from '@fluentui/react-components';
 import type { AssetGroup } from '@arcfusion/types';
@@ -45,7 +44,6 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
         }
 
         if (newConfig.tooltip) {
-          // ✨ FIX: ลบ valueFormatter ที่อาจจะมีปัญหาซึ่งส่งมาจาก Backend
           delete newConfig.tooltip.valueFormatter;
 
           newConfig.tooltip.formatter = (params: any) => {

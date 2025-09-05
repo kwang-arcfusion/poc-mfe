@@ -1,4 +1,3 @@
-// hosts/knowesis/src/decls.d.ts
 declare module 'ask_ai/AskAi' {
   import { ComponentType } from 'react';
   const Cmp: ComponentType<any>;

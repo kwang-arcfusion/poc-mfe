@@ -1,9 +1,7 @@
-// remotes/stories/src/storyDetail/EChartRenderer.tsx
 import * as React from 'react';
 import { Card, Text, makeStyles, shorthands, tokens } from '@fluentui/react-components';
 import { ChartMultiple24Color } from '@fluentui/react-icons';
 
-// ✨ 1. Import ECharts component และ Theme store
 import ReactECharts from 'echarts-for-react';
 import { useThemeStore } from '@arcfusion/store';
 
@@ -32,7 +30,6 @@ interface EChartRendererProps {
 
 export const EChartRenderer: React.FC<EChartRendererProps> = ({ config }) => {
   const s = useStyles();
-  // ✨ 2. ดึง theme ปัจจุบันมาจาก store
   const { theme } = useThemeStore();
 
   if (!config) {
@@ -45,10 +42,9 @@ export const EChartRenderer: React.FC<EChartRendererProps> = ({ config }) => {
         <ChartMultiple24Color />
         <Text className={s.title}>{config?.title?.text || 'Chart'}</Text>
       </div>
-      {/* ✨ 3. ใช้ ReactECharts component ในการ render กราฟ */}
       <ReactECharts
         option={config}
-        theme={theme} // ส่ง theme ปัจจุบัน (light/dark) ให้กับกราฟ
+        theme={theme}
         style={{ height: '400px', width: '100%' }}
         notMerge={true}
         lazyUpdate={true}

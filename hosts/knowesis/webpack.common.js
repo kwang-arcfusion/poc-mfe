@@ -1,5 +1,3 @@
-// hosts/knowesis/webpack.common.js
-
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -75,8 +73,6 @@ module.exports = (env = {}) => {
       strictVersion: false,
       eager: false,
      },
-     // ✨ ลบบรรทัดข้างล่างนี้ออก
-     // '@auth0/auth0-react': { ... },
      zustand: { singleton: true, requiredVersion: false },
      '@arcfusion/store': { singleton: true, requiredVersion: false },
      '@fluentui/react-components': {

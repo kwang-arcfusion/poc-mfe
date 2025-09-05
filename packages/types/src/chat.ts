@@ -1,5 +1,3 @@
-// packages/types/src/chat.ts
-
 export type SqlAsset = { id: string; title: string; sql: string };
 
 export type DataframeAsset = {
@@ -9,33 +7,31 @@ export type DataframeAsset = {
  rows: (string | number)[][];
 };
 
-// ✨ START: เพิ่ม Type ใหม่สำหรับ Chart Asset
 export type ChartAsset = {
  id: string;
  title: string;
- config: Record<string, any>; // สำหรับเก็บ ECharts config
+ config: Record<string, any>;
 };
-// ✨ END: สิ้นสุดการเพิ่ม
 
 export type AssetGroup = {
  id: string;
  sqls: SqlAsset[];
  dataframes: DataframeAsset[];
- charts: ChartAsset[]; // ✨ เพิ่ม property นี้
+ charts: ChartAsset[];
 };
 
 export type TextBlock = {
  kind: 'text';
- id: number; // ID สำหรับ React key
- messageId?: string; // ID จริงจาก Backend (UUID)
+ id: number;
+ messageId?: string;
  sender: 'user' | 'ai';
  content: string;
 };
 
 export type AssetsBlock = {
  kind: 'assets';
- id: number; // ID สำหรับ React key
- messageId?: string; // ID จริงจาก Backend (UUID)
+ id: number;
+ messageId?: string;
  group: AssetGroup;
 };
 

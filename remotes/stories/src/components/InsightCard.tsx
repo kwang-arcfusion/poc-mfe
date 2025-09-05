@@ -1,4 +1,3 @@
-// remotes/stories/src/components/InsightCard.tsx
 import React, { useMemo } from 'react';
 import { makeStyles, shorthands, tokens, Badge, Text } from '@fluentui/react-components';
 import { Sparkle24Regular } from '@fluentui/react-icons';
@@ -8,9 +7,7 @@ import type { Story } from '@arcfusion/types';
 import ReactECharts from 'echarts-for-react';
 import { useThemeStore } from '@arcfusion/store';
 
-// 👇 1. ปรับปรุง Styles เพื่อแก้ปัญหา Layout
 const useStyles = makeStyles({
-  // --- Overall Card ---
   insightCard: {
     display: 'flex',
     flexDirection: 'column',
@@ -27,7 +24,6 @@ const useStyles = makeStyles({
       transform: 'translateY(-4px)',
     },
   },
-  // --- Header: Icon & Timestamp ---
   cardHeader: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -35,7 +31,6 @@ const useStyles = makeStyles({
     width: '100%',
     flexShrink: 0,
   },
-  // 👇 2. เพิ่ม Style สำหรับสร้าง Icon กราฟแท่งขึ้นมาใหม่
   platformIconContainer: {
     height: '28px',
     width: '28px',
@@ -56,13 +51,11 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground3,
   },
-  // --- Content Body ---
   cardBody: {
     display: 'flex',
     flexDirection: 'column',
     ...shorthands.gap('12px'),
   },
-  // --- Title ---
   titleText: {
     fontSize: tokens.fontSizeBase500,
     fontWeight: tokens.fontWeightSemibold,
@@ -76,7 +69,6 @@ const useStyles = makeStyles({
     minHeight: '40px',
     padding: '6px 0',
   },
-  // --- KPI Block ---
   kpiBlock: {
     display: 'flex',
     flexDirection: 'column',
@@ -94,20 +86,17 @@ const useStyles = makeStyles({
     lineHeight: 1,
     marginBottom: '4px',
   },
-  // --- ECharts ---
   chartContainer: {
     width: '100%',
     height: '120px',
     flexShrink: 0,
   },
-  // --- Summary (Footer) ---
   summaryContainer: {
     display: 'flex',
     ...shorthands.gap(tokens.spacingHorizontalS),
     alignItems: 'flex-start',
     ...shorthands.borderTop('1px', 'solid', tokens.colorNeutralStroke2),
     paddingTop: '12px',
-    // marginTop: 'auto', // 👈 3. ลบ Style ที่เป็นปัญหาออก
   },
   summaryText: {
     fontSize: tokens.fontSizeBase300,
@@ -169,7 +158,6 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
     };
   }, [story.echart_config]);
 
-  // 👇 4. สร้าง Icon Element ขึ้นมาใหม่ด้วย JSX
   const platformIconElement = (
     <div className={styles.platformIconContainer}>
       <div

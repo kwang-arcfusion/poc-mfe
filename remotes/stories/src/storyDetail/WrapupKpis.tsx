@@ -1,4 +1,3 @@
-// remotes/stories/src/storyDetail/WrapupKpis.tsx
 import * as React from 'react';
 import { makeStyles, Text, tokens } from '@fluentui/react-components';
 import { DataLine24Color } from '@fluentui/react-icons';

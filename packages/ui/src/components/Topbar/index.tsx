@@ -1,4 +1,3 @@
-// packages/ui/src/components/Topbar/index.tsx
 import React from 'react';
 import { makeStyles, tokens, Avatar, SearchBox } from '@fluentui/react-components';
 import { Alert24Regular } from '@fluentui/react-icons';

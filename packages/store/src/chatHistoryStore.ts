@@ -1,4 +1,3 @@
-// packages/store/src/chatHistoryStore.ts
 import { create } from 'zustand';
 import { getConversations } from '@arcfusion/client';
 import type { ConversationSummary } from '@arcfusion/types';
@@ -69,10 +68,10 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...newConvo,
-      }; // ✨ FIX: แก้ไขเงื่อนไขตรงนี้ จาก c.id เป็น c.thread_id
+      };
 
       if (state.conversations.some((c) => c.thread_id === optimisticConvo.thread_id)) {
-        return state; // ถ้ามี thread นี้อยู่แล้ว ไม่ต้องทำอะไร
+        return state;
       }
 
       const isStoryChat = !!newConvo.story_id;

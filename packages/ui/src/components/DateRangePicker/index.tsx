@@ -1,8 +1,5 @@
-// packages/ui/src/components/DateRangePicker/index.tsx
-
 import * as React from 'react';
 import { makeStyles, tokens, shorthands, Button, mergeClasses } from '@fluentui/react-components';
-// <-- [1] Import new icons and remove unused ones
 import {
   ArrowRight16Regular,
   DismissCircle20Regular,
@@ -23,8 +20,8 @@ export type DateRangePickerProps = {
   onChange?: (next: DateRange) => void;
   minDate?: Date;
   maxDate?: Date;
-  startLabel?: string; // not used by compat DatePicker
-  endLabel?: string; // not used by compat DatePicker
+  startLabel?: string;
+  endLabel?: string;
   startPlaceholder?: string;
   endPlaceholder?: string;
   disabled?: boolean;
@@ -32,7 +29,6 @@ export type DateRangePickerProps = {
   className?: string;
 };
 
-// <-- [2] Edit all styles
 const useStyles = makeStyles({
   root: {
     display: 'flex',
@@ -59,8 +55,6 @@ const useStyles = makeStyles({
     flexShrink: 0,
     paddingLeft: '12px',
     paddingRight: '12px',
-    // paddingLeft: '22px',
-    // paddingRight: '12px',
   },
   clearBtn: {
     flexShrink: 0,
@@ -71,7 +65,6 @@ const useStyles = makeStyles({
     marginRight: '6px',
   },
   pickerStart: {
-    // Hide the original DatePicker border
     direction: 'rtl',
     '--spacingHorizontalMNudge': '0',
     ...shorthands.border('none'),
@@ -88,7 +81,6 @@ const useStyles = makeStyles({
     },
   },
   pickerEnd: {
-    // Hide the original DatePicker border
     '--spacingHorizontalMNudge': '0',
     ...shorthands.border('none'),
     '& input': {
@@ -99,7 +91,6 @@ const useStyles = makeStyles({
       cursor: 'pointer',
       width: '76px',
     },
-    // <-- [Edit] Make this selector more specific
     '& .fui-Input__contentAfter': {
       display: 'none',
     },
@@ -192,7 +183,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     if (range.start && range.end && startOfDay(range.end) < startOfDay(range.start)) {
       setRange({ start: range.start, end: null });
     }
-  }, [range.start]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [range.start]);
 
   const endMinDate = React.useMemo(
     () => (range.start ? maxDate(minDate, startOfDay(range.start)) : minDate),
@@ -259,7 +250,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   return (
     <div ref={rootRef} className={mergeClasses(styles.root, className)}>
-      {/* <-- [3] Edit the entire JSX structure --> */}
       <div className={styles.group} aria-label="Date range" role="group">
         <div className={styles.field}>
           <DatePicker

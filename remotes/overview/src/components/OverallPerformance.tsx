@@ -1,4 +1,3 @@
-// remotes/overview/src/components/OverallPerformance.tsx
 import React from 'react';
 import { makeStyles, shorthands } from '@fluentui/react-components';
 import { CardData } from '../types';
@@ -8,7 +7,6 @@ const useStyles = makeStyles({
   grid: {
     display: 'grid',
     ...shorthands.gap('16px'),
-    // Responsive grid that shows as many cards as fit, with a minimum width
     gridTemplateColumns: `repeat(auto-fill, minmax(220px, 1fr))`,
   },
 });

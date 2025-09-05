@@ -1,4 +1,3 @@
-// remotes/stories/src/storyDetail/NarrativeCard.tsx
 import * as React from 'react';
 import { Card, Text, Body1, makeStyles, shorthands, tokens } from '@fluentui/react-components';
 import { Document24Color } from '@fluentui/react-icons';

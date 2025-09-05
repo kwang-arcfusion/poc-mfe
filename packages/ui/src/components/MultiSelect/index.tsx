@@ -1,4 +1,3 @@
-// packages/ui/src/components/MultiSelect/index.tsx
 import React, { useMemo, useState } from 'react';
 import {
   Badge,
@@ -45,7 +44,6 @@ const useStyles = makeStyles({
   },
 });
 
-// ✨ 1. Rename Interface
 export interface MultiSelectProps {
   label: string;
   options: string[];
@@ -53,7 +51,6 @@ export interface MultiSelectProps {
   onSelectionChange: (newSelection: string[]) => void;
 }
 
-// ✨ 2. Rename Component
 export const MultiSelect: React.FC<MultiSelectProps> = ({
   label,
   options,

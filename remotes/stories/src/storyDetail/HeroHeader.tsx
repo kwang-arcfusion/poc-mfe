@@ -1,4 +1,3 @@
-// remotes/stories/src/storyDetail/HeroHeader.tsx
 import * as React from 'react';
 import { Card, Title1, Text, makeStyles, shorthands, tokens } from '@fluentui/react-components';
 

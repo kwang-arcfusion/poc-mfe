@@ -1,4 +1,3 @@
-// remotes/stories/src/storyDetail/TechnicalDetails.tsx
 import * as React from 'react';
 import { makeStyles, shorthands, tokens, Tab, TabList, Text } from '@fluentui/react-components';
 import { Code24Filled, DataUsage24Filled } from '@fluentui/react-icons';

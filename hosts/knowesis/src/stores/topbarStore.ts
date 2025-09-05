@@ -1,4 +1,3 @@
-// hosts/knowesis/src/stores/topbarStore.ts
 import { create } from 'zustand';
 
 // Define the type of Actions

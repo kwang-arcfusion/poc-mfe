@@ -1,4 +1,3 @@
-// remotes/stories/src/storyDetail/ContextChips.tsx
 import * as React from 'react';
 import { Badge, makeStyles } from '@fluentui/react-components';
 

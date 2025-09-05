@@ -1,4 +1,3 @@
-// packages/ui/src/hooks/useGlobalStyles.ts
 import { makeStaticStyles } from '@fluentui/react-components';
 
 export const useGlobalStyles = makeStaticStyles({
@@ -8,5 +7,4 @@ export const useGlobalStyles = makeStaticStyles({
     '-webkit-font-smoothing': 'antialiased',
     '-moz-osx-font-smoothing': 'grayscale',
   },
-  // Add other global styles here in the future
 });

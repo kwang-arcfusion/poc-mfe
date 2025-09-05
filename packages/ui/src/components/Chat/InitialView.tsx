@@ -22,18 +22,12 @@ const useStyles = makeStyles({
     maxWidth: '620px',
   },
   buttonStartConversation: {
-    // --- Normal state ---
-    // Text color
-    // Border color
-    // --- On hover ---
-    // Change text color for better readability
-    color: tokens.colorBrandForeground1, // Text color
+    color: tokens.colorBrandForeground1,
     fontSize: tokens.fontSizeBase200,
-    ...shorthands.borderColor(tokens.colorBrandStroke1), // Border color
+    ...shorthands.borderColor(tokens.colorBrandStroke1),
 
-    // --- On hover ---
     ':hover': {
-      color: tokens.colorBrandForeground1, // Change text color for better readability
+      color: tokens.colorBrandForeground1,
       backgroundColor: tokens.colorNeutralBackground4,
     },
   },

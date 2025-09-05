@@ -1,4 +1,3 @@
-// remotes/ask_ai/src/components/ChatInputBar.tsx
 import React, { useState } from 'react';
 import { makeStyles, tokens, Textarea, Button } from '@fluentui/react-components';
 import { Send24Regular } from '@fluentui/react-icons';

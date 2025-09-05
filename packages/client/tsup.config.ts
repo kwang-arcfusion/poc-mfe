@@ -7,7 +7,6 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  // เราไม่มี peerDependencies ใน package นี้
   external: [],
   tsconfig: 'tsconfig.json',
 });

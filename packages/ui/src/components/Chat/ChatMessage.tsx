@@ -1,4 +1,3 @@
-// packages/ui/src/components/Chat/ChatMessage.tsx
 import React, { useState } from 'react';
 import {
   makeStyles,
@@ -18,7 +17,6 @@ import {
 import { submitFeedback, deleteFeedback } from '@arcfusion/client';
 import { FeedbackType } from '@arcfusion/types';
 
-// ... (Styles เหมือนเดิม) ...
 const useStyles = makeStyles({
   root: {
     display: 'flex',

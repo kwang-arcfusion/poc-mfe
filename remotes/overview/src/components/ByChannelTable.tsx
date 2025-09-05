@@ -1,4 +1,3 @@
-// remotes/overview/src/components/ByChannelTable.tsx
 import React from 'react';
 import {
   TableBody,
@@ -18,11 +17,10 @@ const useStyles = makeStyles({
   tableCard: {
     padding: 0,
     marginTop: '12px',
-    overflowX: 'auto', // Ensure table is scrollable on small screens
+    overflowX: 'auto',
   },
 });
 
-// Helper to format cell values
 const formatCell = (
   value: string | number,
   format: { type: string; precision?: number | null }

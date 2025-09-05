@@ -1,5 +1,4 @@
-// remotes/overview/src/Overview.tsx
-import React, { useState, useEffect, useMemo, useRef } from 'react'; // 1. Import useRef
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { makeStyles, shorthands, Spinner, tokens, Text } from '@fluentui/react-components';
 
 import { OverviewApiResponse, FilterValues, AnalyticsOptions, FilterOption } from './types';
@@ -39,7 +38,6 @@ const useStyles = makeStyles({
   },
 });
 
-// Default initial state for filters, based on the options API response
 const initialFilters: FilterValues = {
   channels: ['SMS', 'Email'],
   metrics: ['conversions_rate', 'impression_rate'],
@@ -47,43 +45,34 @@ const initialFilters: FilterValues = {
 
 export default function Overview() {
   const styles = useStyles();
-  const isInitialMount = useRef(true); // 2. สร้าง ref เพื่อเช็คการ render ครั้งแรก
+  const isInitialMount = useRef(true);
 
-  // State for data, loading states, and errors
   const [data, setData] = useState<OverviewApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // State for filter options fetched from the API
   const [filterOptions, setFilterOptions] = useState<AnalyticsOptions | null>(null);
 
-  // State for user's selected filters
   const [selectedFilters, setSelectedFilters] = useState<FilterValues>(initialFilters);
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
 
-  // 3. useEffect สำหรับการโหลดข้อมูลครั้งแรก (Initial Load)
   useEffect(() => {
-    // ฟังก์ชันสำหรับโหลดข้อมูลเริ่มต้นทั้งหมด
     const loadInitialData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        // ดึงทั้ง Options และ Overview Data พร้อมกัน
         const [options, overviewData] = await Promise.all([
           fetchAnalyticsOptions(),
-          fetchOverviewData({ start: null, end: null }, initialFilters), // ส่งค่าว่างเพื่อให้ API ใช้ default
+          fetchOverviewData({ start: null, end: null }, initialFilters),
         ]);
 
         setFilterOptions(options);
         setData(overviewData);
 
-        // --- ✨ จุดสำคัญ: ตั้งค่า Date Range จาก Response ของ API ---
         const { start, end } = overviewData.meta.filters;
         if (start && end) {
-          // แปลง string 'YYYY-MM-DD' เป็น Date object
           setDateRange({ start: new Date(start), end: new Date(end) });
         }
-        // --------------------------------------------------------
 
       } catch (err: any) {
         console.error('Failed to load initial data:', err);
@@ -94,11 +83,9 @@ export default function Overview() {
     };
 
     loadInitialData();
-  }, []); // Dependency array เป็นค่าว่างเพื่อให้ทำงานแค่ครั้งเดียว
+  }, []);
 
-  // 4. useEffect สำหรับติดตามการเปลี่ยนแปลงจากผู้ใช้ (User-driven updates)
   useEffect(() => {
-    // เช็ค ref เพื่อไม่ให้ effect นี้ทำงานในครั้งแรกที่ component โหลด
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
@@ -119,17 +106,15 @@ export default function Overview() {
     };
 
     fetchDataOnUpdate();
-  }, [selectedFilters, dateRange]); // Effect นี้จะทำงานเมื่อ filter หรือ dateRange เปลี่ยน
+  }, [selectedFilters, dateRange]);
 
 
-  // Memoized values for filter options to avoid re-computation
   const channelOptions = useMemo(
     () => filterOptions?.dimensions.find((d) => d.key === 'channel')?.options || [],
     [filterOptions]
   );
   const metricOptions = useMemo(() => filterOptions?.metrics || [], [filterOptions]);
 
-  // Handler for updating filter state
   const handleFilterChange = (category: keyof FilterValues, selection: string[]) => {
     setSelectedFilters((prevFilters) => ({
       ...prevFilters,
@@ -137,7 +122,6 @@ export default function Overview() {
     }));
   };
 
-  // Helper to get labels from keys for the MultiSelect components
   const getOptionsFromKeys = (options: FilterOption[] | { key: string; label: string }[]) =>
     options.map((opt) => opt.label);
 

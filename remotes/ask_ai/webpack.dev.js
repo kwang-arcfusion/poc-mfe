@@ -1,4 +1,3 @@
-// remotes/ask_ai/webpack.dev.js
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common');
 
