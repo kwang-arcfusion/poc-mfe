@@ -1,7 +1,9 @@
 // hosts/knowesis/src/layouts/AppLayout.tsx
+
 import React from 'react';
 import { useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { useAuth0 } from '@auth0/auth0-react';
+// ✨ ลบ useAuth0 ออก
+// import { useAuth0 } from '@auth0/auth0-react';
 import {
   useGlobalStyles,
   AppShell,
@@ -41,23 +43,27 @@ export function AppLayout() {
   useGlobalStyles();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth0();
+  // ✨ ลบการเรียกใช้ useAuth0 ออก
+  // const { user, logout } = useAuth0();
   const { actions } = useTopbarStore();
 
-  // ✨ ================== START: CODE ที่แก้ไข ================== ✨
-  // Logic การหา pageTitle ที่รองรับ Dynamic Routes
-  // 1. รวมรายการเมนูทั้งหมดไว้ในที่เดียว
-  const allMenuItems = menuGroups.flatMap((g) => g.items);
+  // ✨ สร้างข้อมูลผู้ใช้จำลองและฟังก์ชัน logout จำลอง
+  const mockUser = {
+    name: 'Guest User',
+    email: 'guest@example.com',
+  };
+  const handleLogout = () => {
+    console.log('Logout action triggered.');
+    // ในอนาคตอาจจะ redirect ไปหน้าแรก
+    navigate('/', { replace: true });
+  };
 
-  // 2. ค้นหารายการที่ตรงกับ URL ปัจจุบันโดยใช้ startsWith
-  //    แล้วเรียงลำดับจาก URL ที่ยาวที่สุดไปสั้นที่สุด เพื่อให้ได้ค่าที่เจาะจงที่สุด (e.g., /stories/detail ตรงกับ /stories แต่เราจะเอาอันที่ยาวกว่า)
+  // Logic การหา pageTitle (ส่วนนี้ทำงานถูกต้องอยู่แล้ว)
+  const allMenuItems = menuGroups.flatMap((g) => g.items);
   const matchingPage = allMenuItems
     .filter((item) => location.pathname.startsWith(item.value))
     .sort((a, b) => b.value.length - a.value.length)[0];
-
-  // 3. กำหนด pageTitle จาก label ของรายการที่เจอ หรือถ้าไม่เจอก็เป็น 'Page Not Found'
   const pageTitle = matchingPage ? matchingPage.label : 'Page Not Found';
-  // ✨ =================== END: CODE ที่แก้ไข =================== ✨
 
   // Sidebar logic (ส่วนนี้ทำงานถูกต้องอยู่แล้ว)
   const selectedValue =
@@ -68,10 +74,6 @@ export function AppLayout() {
 
   const handleTabSelect = (value: string) => {
     navigate(value);
-  };
-
-  const handleLogout = () => {
-    logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
   return (
@@ -88,7 +90,8 @@ export function AppLayout() {
       topbar={
         <Topbar
           pageTitle={pageTitle}
-          user={user}
+          // ✨ ส่งข้อมูลจำลองเข้าไปแทน
+          user={mockUser}
           onLogout={handleLogout}
           methodsLeft={actions.left}
           methodsRight={actions.right}

@@ -1,9 +1,11 @@
 // hosts/knowesis/src/env.d.ts
+
 declare const process: {
-  env: {
-    NODE_ENV: 'development' | 'production' | 'test';
-    AUTH0_DOMAIN: string;
-    AUTH0_CLIENT_ID: string;
-    REACT_APP_API_BASE_URL: string;
-  };
+ env: {
+  NODE_ENV: 'development' | 'production' | 'test';
+  // ✨ ลบ 2 บรรทัดข้างล่างนี้ออก
+  // AUTH0_DOMAIN: string;
+  // AUTH0_CLIENT_ID: string;
+  REACT_APP_API_BASE_URL: string;
+ };
 };
