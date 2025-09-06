@@ -102,208 +102,220 @@ const initialPendingAssets = (): AssetGroup => ({
   charts: [],
 });
 
-export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
-  threadId: undefined,
-  streamingThreadId: undefined, // กำหนดค่าเริ่มต้น
-  blocks: [],
-  status: 'idle',
-  error: null,
-  activePrompt: null,
-  isLoadingHistory: false,
-  currentAiTask: null,
-  pendingAssets: initialPendingAssets(),
+export const createChatSessionStore = () =>
+  create<ChatSessionState>((set, get) => ({
+    threadId: undefined,
+    streamingThreadId: undefined,
+    blocks: [],
+    status: 'idle',
+    error: null,
+    activePrompt: null,
+    isLoadingHistory: false,
+    currentAiTask: null,
+    pendingAssets: initialPendingAssets(),
 
-  clearChat: () => {
-    set({
-      threadId: undefined,
-      blocks: [],
-      activePrompt: null,
-    });
-  },
-
-  loadConversation: async (threadId) => {
-    if (get().isLoadingHistory) return;
-    set({
-      isLoadingHistory: true,
-    });
-    try {
-      const conversationData = await getConversationByThreadId(threadId);
-      const loadedBlocks = transformConversationResponseToBlocks(conversationData);
+    clearChat: () => {
       set({
-        blocks: loadedBlocks,
-        activePrompt: conversationData.title || 'Conversation',
-        threadId: conversationData.thread_id,
-        isLoadingHistory: false,
-      });
-    } catch (err: any) {
-      console.error('Failed to load conversation:', err);
-      set({
-        error: err.message,
-        isLoadingHistory: false,
-        blocks: [],
         threadId: undefined,
-        activePrompt: 'Error Loading Chat',
+        blocks: [],
+        activePrompt: null,
       });
-    }
-  },
+    },
 
-  updateLastMessageWithData: async (threadId) => {
-    try {
-      const fullConversation = await getConversationByThreadId(threadId);
-      const lastBotMessageFromApi = fullConversation.messages.filter((m) => m.role === 'bot').pop();
-      if (!lastBotMessageFromApi || !(lastBotMessageFromApi as any).id) return;
-      const newMessageId = (lastBotMessageFromApi as any).id;
-      set((state) => {
-        const newBlocks = [...state.blocks];
-        let lastUserIndex = -1;
-        for (let i = newBlocks.length - 1; i >= 0; i--) {
-          const block = newBlocks[i];
-          if (block.kind === 'text' && block.sender === 'user') {
-            lastUserIndex = i;
-            break;
-          }
-        }
-        if (lastUserIndex !== -1) {
-          for (let i = lastUserIndex + 1; i < newBlocks.length; i++) {
-            newBlocks[i] = { ...newBlocks[i], messageId: newMessageId };
-          }
-        }
-        return { blocks: newBlocks };
+    loadConversation: async (threadId) => {
+      if (get().isLoadingHistory) return;
+      set({
+        isLoadingHistory: true,
       });
-    } catch (error) {
-      console.error('Failed to update last message with data:', error);
-    }
-  },
-
-  sendMessage: async (text, currentThreadId, storyId) => {
-    if (get().status === 'streaming') return currentThreadId || '';
-    const newThreadId = currentThreadId || uuidv4();
-    set((state) => ({
-      threadId: newThreadId,
-      streamingThreadId: newThreadId, // ตั้งค่า streamingThreadId เมื่อเริ่ม stream
-      status: 'streaming',
-      currentAiTask: 'thinking',
-      error: null,
-      activePrompt: state.activePrompt || text,
-      blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }],
-      pendingAssets: initialPendingAssets(),
-    }));
-
-    useChatHistoryStore.getState().addOptimisticConversation({
-      thread_id: newThreadId,
-      title: text,
-      story_id: storyId,
-    });
-
-    try {
-      const API_BASE_URL = getApiBaseUrl();
-      if (!API_BASE_URL) throw new Error('API Client not initialized.');
-      const requestBody: any = { query: text, thread_id: newThreadId };
-      if (storyId) {
-        requestBody.story_id = storyId;
+      try {
+        const conversationData = await getConversationByThreadId(threadId);
+        const loadedBlocks = transformConversationResponseToBlocks(conversationData);
+        set({
+          blocks: loadedBlocks,
+          activePrompt: conversationData.title || 'Conversation',
+          threadId: conversationData.thread_id,
+          isLoadingHistory: false,
+        });
+      } catch (err: any) {
+        console.error('Failed to load conversation:', err);
+        set({
+          error: err.message,
+          isLoadingHistory: false,
+          blocks: [],
+          threadId: undefined,
+          activePrompt: 'Error Loading Chat',
+        });
       }
-      const response = await fetch(`${API_BASE_URL}/v1/chat/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
-      if (!response.ok || !response.body)
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+    },
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split('data:');
-        buffer = parts.pop() || '';
-        for (const part of parts) {
-          if (part.trim() === '' || part.trim() === '[DONE]') continue;
-          try {
-            const eventData: StreamedEvent = JSON.parse(part.trim());
-            if ('answer_chunk' in eventData || 'answer' in eventData) {
-              const { pendingAssets } = get();
-              if (
-                pendingAssets.sqls.length > 0 ||
-                pendingAssets.dataframes.length > 0 ||
-                pendingAssets.charts.length > 0
-              ) {
-                set((state) => ({
-                  blocks: [
-                    ...state.blocks,
-                    { kind: 'assets', id: Date.now(), group: pendingAssets },
-                  ],
-                  pendingAssets: initialPendingAssets(),
-                }));
-              }
+    updateLastMessageWithData: async (threadId) => {
+      try {
+        const fullConversation = await getConversationByThreadId(threadId);
+        const lastBotMessageFromApi = fullConversation.messages.filter((m) => m.role === 'bot').pop();
+        if (!lastBotMessageFromApi || !(lastBotMessageFromApi as any).id) return;
+        const newMessageId = (lastBotMessageFromApi as any).id;
+        set((state) => {
+          const newBlocks = [...state.blocks];
+          let lastUserIndex = -1;
+          for (let i = newBlocks.length - 1; i >= 0; i--) {
+            const block = newBlocks[i];
+            if (block.kind === 'text' && block.sender === 'user') {
+              lastUserIndex = i;
+              break;
             }
-            set((state) => {
-              const newBlocks = [...state.blocks];
-              if ('sql_query' in eventData) {
-                const newPendingAssets = { ...state.pendingAssets };
-                newPendingAssets.sqls.push({
-                  id: `sql-${Date.now()}`,
-                  title: 'Generated SQL',
-                  sql: eventData.sql_query,
-                });
-                return { pendingAssets: newPendingAssets, currentAiTask: 'creating sql' };
-              }
-              if ('sql_query_result' in eventData) {
-                const newPendingAssets = { ...state.pendingAssets };
-                const df = eventData.sql_query_result;
-                if (df && df.length > 0) {
-                  newPendingAssets.dataframes.push({
-                    id: `df-${Date.now()}`,
-                    title: 'Query Result',
-                    columns: Object.keys(df[0]),
-                    rows: df.map((row) => Object.values(row)),
-                  });
-                }
-                return { pendingAssets: newPendingAssets, currentAiTask: 'creating table' };
-              }
-              if ('chart_builder_result' in eventData) {
-                const newPendingAssets = { ...state.pendingAssets };
-                const chartConfig = eventData.chart_builder_result;
-                if (chartConfig) {
-                  newPendingAssets.charts.push({
-                    id: `chart-${Date.now()}`,
-                    title: chartConfig.title?.text || 'Chart',
-                    config: chartConfig,
-                  });
-                }
-                return { pendingAssets: newPendingAssets, currentAiTask: 'creating chart' };
-              }
+          }
+          if (lastUserIndex !== -1) {
+            for (let i = lastUserIndex + 1; i < newBlocks.length; i++) {
+              newBlocks[i] = { ...newBlocks[i], messageId: newMessageId };
+            }
+          }
+          return { blocks: newBlocks };
+        });
+      } catch (error) {
+        console.error('Failed to update last message with data:', error);
+      }
+    },
+
+    sendMessage: async (text, currentThreadId, storyId) => {
+      if (get().status === 'streaming') return currentThreadId || '';
+      const newThreadId = currentThreadId || uuidv4();
+
+      set((state) => ({
+        threadId: newThreadId,
+        streamingThreadId: newThreadId,
+        status: 'streaming',
+        currentAiTask: 'thinking',
+        error: null,
+        activePrompt: state.activePrompt || text,
+        blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }],
+        pendingAssets: initialPendingAssets(),
+      }));
+
+      // บอก Global Store ว่าแชทนี้กำลังจะเริ่ม stream
+      useChatHistoryStore.getState().setStreamingThreadId(newThreadId);
+      useChatHistoryStore.getState().setStreamingTask('thinking');
+
+      useChatHistoryStore.getState().addOptimisticConversation({
+        thread_id: newThreadId,
+        title: text,
+        story_id: storyId,
+      });
+
+      try {
+        const API_BASE_URL = getApiBaseUrl();
+        if (!API_BASE_URL) throw new Error('API Client not initialized.');
+        const requestBody: any = { query: text, thread_id: newThreadId };
+        if (storyId) {
+          requestBody.story_id = storyId;
+        }
+        const response = await fetch(`${API_BASE_URL}/v1/chat/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
+        if (!response.ok || !response.body)
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split('data:');
+          buffer = parts.pop() || '';
+          for (const part of parts) {
+            if (part.trim() === '' || part.trim() === '[DONE]') continue;
+            try {
+              const eventData: StreamedEvent = JSON.parse(part.trim());
               if ('answer_chunk' in eventData || 'answer' in eventData) {
-                const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
-                const lastBlock = newBlocks[newBlocks.length - 1];
-                if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
-                  (lastBlock as TextBlock).content += textContent;
-                } else {
-                  newBlocks.push({
-                    kind: 'text',
-                    id: Date.now(),
-                    sender: 'ai',
-                    content: textContent,
-                  });
+                const { pendingAssets } = get();
+                if (
+                  pendingAssets.sqls.length > 0 ||
+                  pendingAssets.dataframes.length > 0 ||
+                  pendingAssets.charts.length > 0
+                ) {
+                  set((state) => ({
+                    blocks: [
+                      ...state.blocks,
+                      { kind: 'assets', id: Date.now(), group: pendingAssets },
+                    ],
+                    pendingAssets: initialPendingAssets(),
+                  }));
                 }
-                return { blocks: newBlocks, currentAiTask: 'answering' };
               }
-              return state;
-            });
-          } catch (e) {
-            console.warn('Could not parse SSE JSON part:', part);
+              set((state) => {
+                const newBlocks = [...state.blocks];
+                if ('sql_query' in eventData) {
+                  const newPendingAssets = { ...state.pendingAssets };
+                  newPendingAssets.sqls.push({
+                    id: `sql-${Date.now()}`,
+                    title: 'Generated SQL',
+                    sql: eventData.sql_query,
+                  });
+                  useChatHistoryStore.getState().setStreamingTask('creating sql');
+                  return { pendingAssets: newPendingAssets, currentAiTask: 'creating sql' };
+                }
+                if ('sql_query_result' in eventData) {
+                  const newPendingAssets = { ...state.pendingAssets };
+                  const df = eventData.sql_query_result;
+                  if (df && df.length > 0) {
+                    newPendingAssets.dataframes.push({
+                      id: `df-${Date.now()}`,
+                      title: 'Query Result',
+                      columns: Object.keys(df[0]),
+                      rows: df.map((row) => Object.values(row)),
+                    });
+                  }
+                  useChatHistoryStore.getState().setStreamingTask('creating table');
+                  return { pendingAssets: newPendingAssets, currentAiTask: 'creating table' };
+                }
+                if ('chart_builder_result' in eventData) {
+                  const newPendingAssets = { ...state.pendingAssets };
+                  const chartConfig = eventData.chart_builder_result;
+                  if (chartConfig) {
+                    newPendingAssets.charts.push({
+                      id: `chart-${Date.now()}`,
+                      title: chartConfig.title?.text || 'Chart',
+                      config: chartConfig,
+                    });
+                  }
+                  useChatHistoryStore.getState().setStreamingTask('creating chart');
+                  return { pendingAssets: newPendingAssets, currentAiTask: 'creating chart' };
+                }
+                if ('answer_chunk' in eventData || 'answer' in eventData) {
+                  const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
+                  const lastBlock = newBlocks[newBlocks.length - 1];
+                  if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
+                    (lastBlock as TextBlock).content += textContent;
+                  } else {
+                    newBlocks.push({
+                      kind: 'text',
+                      id: Date.now(),
+                      sender: 'ai',
+                      content: textContent,
+                    });
+                  }
+                  useChatHistoryStore.getState().setStreamingTask('answering');
+                  return { blocks: newBlocks, currentAiTask: 'answering' };
+                }
+                return state;
+              });
+            } catch (e) {
+              console.warn('Could not parse SSE JSON part:', part);
+            }
           }
         }
+      } catch (err: any) {
+        console.error('Streaming failed:', err);
+        set({ error: err.message, status: 'error' });
+      } finally {
+        set({ status: 'completed', currentAiTask: null, streamingThreadId: undefined });
+        // บอก Global Store ว่า stream จบแล้ว
+        useChatHistoryStore.getState().setStreamingThreadId(null);
+        useChatHistoryStore.getState().setStreamingTask(null);
       }
-    } catch (err: any) {
-      console.error('Streaming failed:', err);
-      set({ error: err.message, status: 'error' });
-    } finally {
-      // ล้างค่า streamingThreadId เมื่อ stream จบ
-      set({ status: 'completed', currentAiTask: null, streamingThreadId: undefined });
-    }
-    return newThreadId;
-  },
-}));
+      return newThreadId;
+    },
+  }));

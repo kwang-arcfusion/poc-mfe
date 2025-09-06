@@ -2,7 +2,11 @@
 import React, { useEffect } from 'react';
 import { makeStyles, tokens, shorthands, Button, Text } from '@fluentui/react-components';
 import { Dismiss24Regular, Sparkle24Filled } from '@fluentui/react-icons';
-import { useChatSessionStore, useChatHistoryStore } from '@arcfusion/store';
+import {
+  useChatSession,
+  useChatSessionStoreApi,
+  useChatHistoryStore,
+} from '@arcfusion/store';
 import type { Story } from '@arcfusion/types';
 import { ChatLog, ChatInputBar } from '@arcfusion/ui';
 
@@ -36,42 +40,37 @@ interface AskAiPanelProps {
   threadId?: string;
 }
 
-export function AskAiPanel({ story, onClose, threadId }: AskAiPanelProps) {
+export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiPanelProps) {
   const styles = useStyles();
-  const {
-    blocks,
-    status,
-    currentAiTask,
-    threadId: currentThreadId,
-    streamingThreadId,
-    sendMessage: sendMessageFromStore,
-    clearChat,
-    updateLastMessageWithData,
-    loadConversation,
-  } = useChatSessionStore();
+
+  const blocks = useChatSession((state) => state.blocks);
+  const status = useChatSession((state) => state.status);
+  const currentAiTask = useChatSession((state) => state.currentAiTask);
+  const currentThreadId = useChatSession((state) => state.threadId);
+  const streamingThreadId = useChatSession((state) => state.streamingThreadId);
+
+  const storeApi = useChatSessionStoreApi();
   const { fetchConversations: refreshHistory } = useChatHistoryStore();
-  
+
   useEffect(() => {
-    if (threadId) {
-      if (threadId !== currentThreadId) {
-        loadConversation(threadId);
+    const { loadConversation, clearChat } = storeApi.getState();
+    if (initialThreadId) {
+      if (initialThreadId !== currentThreadId) {
+        loadConversation(initialThreadId);
       }
     } else {
       if (status !== 'streaming') {
         clearChat();
       }
     }
-  }, [threadId, currentThreadId, status, loadConversation, clearChat]);
-  
-  // ✨ ================== START: แก้ไขส่วนนี้ ================== ✨
-  // ใช้ Logic เดียวกันกับหน้า AskAi
+  }, [initialThreadId, currentThreadId, status, storeApi]);
+
   const isCurrentChatStreaming = status === 'streaming' && currentThreadId === streamingThreadId;
-  // ✨ =================== END: แก้ไขส่วนนี้ =================== ✨
 
   const handleSendMessage = (text: string) => {
-    const conversationThreadId = currentThreadId;
+    const { sendMessage, updateLastMessageWithData, threadId: conversationThreadId } = storeApi.getState();
 
-    sendMessageFromStore(text, conversationThreadId, story.id).then((newThreadId) => {
+    sendMessage(text, conversationThreadId, story.id).then((newThreadId) => {
       if (!conversationThreadId && newThreadId) {
         refreshHistory();
       }

@@ -10,9 +10,8 @@ import {
   tokens,
   Spinner,
 } from '@fluentui/react-components';
-// ✨ 1. ลบการ import useSearchParams ออกไป
 import { Sparkle24Regular, TriangleDown16Filled } from '@fluentui/react-icons';
-import { useLayoutStore } from '@arcfusion/store';
+import { useLayoutStore, ChatSessionProvider } from '@arcfusion/store'; // Import Provider
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { getStoryById } from '@arcfusion/client';
 import type { Story } from '@arcfusion/types';
@@ -22,7 +21,6 @@ import { EvidenceSection } from './storyDetail/EvidenceSection';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
 import { TechnicalDetails } from './storyDetail/TechnicalDetails';
 
-// ... (โค้ด styles เหมือนเดิม) ...
 const useStyles = makeStyles({
   outer: {
     overflow: 'hidden',
@@ -128,7 +126,6 @@ const useStyles = makeStyles({
   },
 });
 
-// ✨ 2. แก้ไข Props ให้รับ threadId
 interface StoryDetailPageProps {
   storyId?: string;
   threadId?: string | null;
@@ -148,7 +145,7 @@ export default function StoryDetailPage({ storyId, threadId }: StoryDetailPagePr
     return () => {
       setMainOverflow('auto');
     };
-  }, [setMainOverflow]); // ✨ 3. แก้ไข useEffect ให้ขึ้นอยู่กับ threadId ที่มาจาก prop แทน
+  }, [setMainOverflow]);
 
   React.useEffect(() => {
     if (threadId && !isLoading) {
@@ -157,7 +154,6 @@ export default function StoryDetailPage({ storyId, threadId }: StoryDetailPagePr
   }, [threadId, isLoading]);
 
   React.useEffect(() => {
-    // ... (โค้ดส่วน fetchStory เหมือนเดิม ไม่ต้องแก้ไข) ...
     if (!storyId) {
       setError('Story ID not found.');
       setIsLoading(false);
@@ -182,7 +178,6 @@ export default function StoryDetailPage({ storyId, threadId }: StoryDetailPagePr
   }, [storyId]);
 
   const renderContent = () => {
-    // ... (โค้ดส่วน renderContent เหมือนเดิมทั้งหมด) ...
     if (isLoading) {
       return (
         <div className={s.centerContainer}>
@@ -245,7 +240,6 @@ export default function StoryDetailPage({ storyId, threadId }: StoryDetailPagePr
 
   return (
     <div className={s.outer}>
-      {/* ... (โค้ดปุ่ม Ask AI เหมือนเดิม) ... */}
       {!aiOpen && (
         <Button
           className={s.askAiButton}
@@ -266,13 +260,13 @@ export default function StoryDetailPage({ storyId, threadId }: StoryDetailPagePr
             <PanelResizeHandle className={s.resizeHandle} />
             <Panel defaultSize={30} minSize={20}>
               <aside className={s.rightPane} aria-label="AI Chat Panel">
-                {/* ✨ 4. ส่ง threadId ที่ได้รับจาก prop ลงไป */}
-
-                <AskAiPanel
-                  story={story!}
-                  threadId={threadId || undefined}
-                  onClose={() => setAiOpen(false)}
-                />
+                <ChatSessionProvider>
+                  <AskAiPanel
+                    story={story!}
+                    threadId={threadId || undefined}
+                    onClose={() => setAiOpen(false)}
+                  />
+                </ChatSessionProvider>
               </aside>
             </Panel>
           </PanelGroup>

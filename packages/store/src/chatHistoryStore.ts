@@ -12,10 +12,14 @@ export interface ChatHistoryState {
   isLoading: boolean;
   isPopoverOpen: boolean;
   activeTab: ChatHistoryTab;
+  streamingThreadId: string | null; // ID ของแชทที่กำลัง stream
+  streamingTask: string | null; // Task ปัจจุบันของแชทที่กำลัง stream
   fetchConversations: () => Promise<void>;
   togglePopover: () => void;
   closePopover: () => void;
   setActiveTab: (tab: ChatHistoryTab) => void;
+  setStreamingThreadId: (id: string | null) => void; // Action สำหรับอัปเดต ID
+  setStreamingTask: (task: string | null) => void; // Action สำหรับอัปเดต Task
   addOptimisticConversation: (
     newConvo: Partial<ConversationSummary> & { title: string; thread_id: string }
   ) => void;
@@ -28,6 +32,8 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   isLoading: false,
   isPopoverOpen: false,
   activeTab: 'ask',
+  streamingThreadId: null,
+  streamingTask: null,
 
   fetchConversations: async () => {
     if (get().isLoading) return;
@@ -61,6 +67,9 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
     set({ activeTab: tab });
   },
 
+  setStreamingThreadId: (id) => set({ streamingThreadId: id }),
+  setStreamingTask: (task) => set({ streamingTask: task }),
+
   addOptimisticConversation: (newConvo) =>
     set((state) => {
       const optimisticConvo: ConversationSummary = {
@@ -69,10 +78,10 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         ...newConvo,
-      }; // ✨ FIX: แก้ไขเงื่อนไขตรงนี้ จาก c.id เป็น c.thread_id
+      };
 
       if (state.conversations.some((c) => c.thread_id === optimisticConvo.thread_id)) {
-        return state; // ถ้ามี thread นี้อยู่แล้ว ไม่ต้องทำอะไร
+        return state;
       }
 
       const isStoryChat = !!newConvo.story_id;

@@ -14,7 +14,7 @@ import {
   Tab,
 } from '@fluentui/react-components';
 import { Chat24Regular, Chat24Filled } from '@fluentui/react-icons';
-import { useChatHistoryStore, useChatSessionStore, type ChatHistoryTab } from '@arcfusion/store';
+import { useChatHistoryStore, type ChatHistoryTab } from '@arcfusion/store';
 import type { ConversationSummary } from '@arcfusion/types';
 import { useNavigate } from 'react-router-dom';
 import { TASK_DISPLAY_TEXT } from '../Chat/AiStatusIndicator';
@@ -114,14 +114,13 @@ export const ChatHistoryPopover = () => {
     isLoading,
     isPopoverOpen,
     activeTab,
+    streamingThreadId,
+    streamingTask,
     fetchConversations,
     togglePopover,
     closePopover,
     setActiveTab,
   } = useChatHistoryStore();
-
-  // ดึง streamingThreadId มาใช้งานแทน threadId เดิม
-  const { status: activeStatus, currentAiTask, streamingThreadId } = useChatSessionStore();
 
   useEffect(() => {
     if (isPopoverOpen && conversations.length === 0) {
@@ -148,8 +147,7 @@ export const ChatHistoryPopover = () => {
     }
 
     return items.map((convo) => {
-      // เปลี่ยนเงื่อนไขไปเปรียบเทียบกับ streamingThreadId ที่ถูกต้อง
-      const isActiveStreaming = activeStatus === 'streaming' && convo.thread_id === streamingThreadId;
+      const isActiveStreaming = convo.thread_id === streamingThreadId;
 
       return (
         <div
@@ -164,9 +162,9 @@ export const ChatHistoryPopover = () => {
             <Text size={300} weight="semibold" className={styles.itemTitle}>
               {convo.title}
             </Text>
-            {isActiveStreaming && currentAiTask ? (
+            {isActiveStreaming && streamingTask ? (
               <Text size={200} className={styles.itemStatus}>
-                {TASK_DISPLAY_TEXT[currentAiTask] || 'Processing...'}
+                {TASK_DISPLAY_TEXT[streamingTask] || 'Processing...'}
               </Text>
             ) : (
               <Text size={200} className={styles.itemDate}>
