@@ -12,6 +12,7 @@ import {
   Text,
   TabList,
   Tab,
+  Badge,
 } from '@fluentui/react-components';
 import { Chat24Regular, Chat24Filled } from '@fluentui/react-icons';
 import { useChatHistoryStore, type ChatHistoryTab } from '@arcfusion/store';
@@ -90,6 +91,12 @@ const useStyles = makeStyles({
     height: '100%',
     padding: tokens.spacingVerticalL,
   },
+  badgeWrapper: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
 const formatDate = (dateString: string) => {
@@ -116,6 +123,7 @@ export const ChatHistoryPopover = () => {
     activeTab,
     streamingThreadId,
     streamingTask,
+    unreadResponseInfo, // ✨ เปลี่ยนมาใช้ตัวนี้
     fetchConversations,
     togglePopover,
     closePopover,
@@ -180,11 +188,27 @@ export const ChatHistoryPopover = () => {
   return (
     <Popover open={isPopoverOpen} onOpenChange={togglePopover} positioning="below-end">
       <PopoverTrigger>
-        <Button
-          appearance="transparent"
-          icon={isPopoverOpen ? <Chat24Filled /> : <Chat24Regular />}
-          aria-label="Chat History"
-        />
+        <div className={styles.badgeWrapper}>
+          <Button
+            appearance="transparent"
+            icon={isPopoverOpen ? <Chat24Filled /> : <Chat24Regular />}
+            aria-label="Chat History"
+          />
+          {/* ✨ เงื่อนไขการแสดง Badge */}
+          {unreadResponseInfo && (
+             <Badge
+              size="extra-small"
+              appearance="filled"
+              color="danger"
+              style={{
+                position: 'absolute',
+                top: '4px',
+                right: '4px',
+                pointerEvents: 'none', // เพื่อให้คลิกทะลุไปที่ปุ่มได้
+              }}
+            />
+          )}
+        </div>
       </PopoverTrigger>
       <PopoverSurface className={styles.popoverSurface}>
         <div className={styles.header}>

@@ -1,5 +1,5 @@
 // remotes/stories/src/askAiPanel/AskAiPanel.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { makeStyles, tokens, shorthands, Button, Text } from '@fluentui/react-components';
 import { Dismiss24Regular, Sparkle24Filled } from '@fluentui/react-icons';
 import {
@@ -42,6 +42,7 @@ interface AskAiPanelProps {
 
 export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiPanelProps) {
   const styles = useStyles();
+  const isMountedRef = useRef(true);
 
   const blocks = useChatSession((state) => state.blocks);
   const status = useChatSession((state) => state.status);
@@ -50,7 +51,14 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
   const streamingThreadId = useChatSession((state) => state.streamingThreadId);
 
   const storeApi = useChatSessionStoreApi();
-  const { fetchConversations: refreshHistory } = useChatHistoryStore();
+  const { fetchConversations: refreshHistory, setUnreadResponseInfo } = useChatHistoryStore();
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const { loadConversation, clearChat } = storeApi.getState();
@@ -76,6 +84,15 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
       }
       if (newThreadId) {
         updateLastMessageWithData(newThreadId);
+
+        // ✨ เปลี่ยนไปเรียก setUnreadResponseInfo แทน
+        if (!isMountedRef.current) {
+          setUnreadResponseInfo({
+            threadId: newThreadId,
+            title: text,
+            storyId: story.id, // ส่ง storyId ไปด้วย
+          });
+        }
       }
     });
   };

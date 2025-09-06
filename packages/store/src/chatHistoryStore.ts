@@ -5,6 +5,13 @@ import type { ConversationSummary } from '@arcfusion/types';
 
 export type ChatHistoryTab = 'ask' | 'story';
 
+// ✨ 1. สร้าง Type สำหรับข้อมูลการแจ้งเตือน
+export interface UnreadResponseInfo {
+  threadId: string;
+  storyId?: string | null;
+  title: string;
+}
+
 export interface ChatHistoryState {
   conversations: ConversationSummary[];
   askConversations: ConversationSummary[];
@@ -12,14 +19,16 @@ export interface ChatHistoryState {
   isLoading: boolean;
   isPopoverOpen: boolean;
   activeTab: ChatHistoryTab;
-  streamingThreadId: string | null; // ID ของแชทที่กำลัง stream
-  streamingTask: string | null; // Task ปัจจุบันของแชทที่กำลัง stream
+  streamingThreadId: string | null;
+  streamingTask: string | null;
+  unreadResponseInfo: UnreadResponseInfo | null; // ✨ 2. เปลี่ยน State จาก boolean เป็น object หรือ null
   fetchConversations: () => Promise<void>;
   togglePopover: () => void;
   closePopover: () => void;
   setActiveTab: (tab: ChatHistoryTab) => void;
-  setStreamingThreadId: (id: string | null) => void; // Action สำหรับอัปเดต ID
-  setStreamingTask: (task: string | null) => void; // Action สำหรับอัปเดต Task
+  setStreamingThreadId: (id: string | null) => void;
+  setStreamingTask: (task: string | null) => void;
+  setUnreadResponseInfo: (info: UnreadResponseInfo | null) => void; // ✨ 3. อัปเดต Action
   addOptimisticConversation: (
     newConvo: Partial<ConversationSummary> & { title: string; thread_id: string }
   ) => void;
@@ -34,6 +43,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   activeTab: 'ask',
   streamingThreadId: null,
   streamingTask: null,
+  unreadResponseInfo: null, // ✨ 4. กำหนดค่าเริ่มต้นเป็น null
 
   fetchConversations: async () => {
     if (get().isLoading) return;
@@ -56,7 +66,11 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   },
 
   togglePopover: () => {
-    set((state) => ({ isPopoverOpen: !state.isPopoverOpen }));
+    // เมื่อเปิด Popover ให้เคลียร์สถานะ unread
+    set((state) => ({
+      isPopoverOpen: !state.isPopoverOpen,
+      unreadResponseInfo: null,
+    }));
   },
 
   closePopover: () => {
@@ -69,6 +83,9 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
 
   setStreamingThreadId: (id) => set({ streamingThreadId: id }),
   setStreamingTask: (task) => set({ streamingTask: task }),
+
+  // ✨ 5. อัปเดต Action
+  setUnreadResponseInfo: (info) => set({ unreadResponseInfo: info }),
 
   addOptimisticConversation: (newConvo) =>
     set((state) => {
