@@ -51,7 +51,12 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
   const streamingThreadId = useChatSession((state) => state.streamingThreadId);
 
   const storeApi = useChatSessionStoreApi();
-  const { fetchConversations: refreshHistory, setUnreadResponseInfo } = useChatHistoryStore();
+  const { 
+    fetchConversations: refreshHistory, 
+    addUnreadResponse,
+    removeUnreadResponse,
+    unreadResponses
+  } = useChatHistoryStore();
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -59,6 +64,12 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
       isMountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (initialThreadId && unreadResponses.some(r => r.threadId === initialThreadId)) {
+      removeUnreadResponse(initialThreadId);
+    }
+  }, [initialThreadId, unreadResponses, removeUnreadResponse]);
 
   useEffect(() => {
     const { loadConversation, clearChat } = storeApi.getState();
@@ -85,12 +96,11 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
       if (newThreadId) {
         updateLastMessageWithData(newThreadId);
 
-        // ✨ เปลี่ยนไปเรียก setUnreadResponseInfo แทน
         if (!isMountedRef.current) {
-          setUnreadResponseInfo({
+          addUnreadResponse({
             threadId: newThreadId,
             title: text,
-            storyId: story.id, // ส่ง storyId ไปด้วย
+            storyId: story.id,
           });
         }
       }

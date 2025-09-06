@@ -97,6 +97,10 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  itemBadge: {
+    marginLeft: '6px',
+    marginRight: '6px',
+  },
 });
 
 const formatDate = (dateString: string) => {
@@ -123,7 +127,7 @@ export const ChatHistoryPopover = () => {
     activeTab,
     streamingThreadId,
     streamingTask,
-    unreadResponseInfo, // ✨ เปลี่ยนมาใช้ตัวนี้
+    unreadResponses,
     fetchConversations,
     togglePopover,
     closePopover,
@@ -156,6 +160,7 @@ export const ChatHistoryPopover = () => {
 
     return items.map((convo) => {
       const isActiveStreaming = convo.thread_id === streamingThreadId;
+      const isUnread = unreadResponses.some((r) => r.threadId === convo.thread_id);
 
       return (
         <div
@@ -164,8 +169,20 @@ export const ChatHistoryPopover = () => {
           onClick={() => handleSelectConversation(convo)}
         >
           <div className={styles.iconWrapper}>
-            {isActiveStreaming ? <Spinner size="tiny" /> : <Chat24Regular />}
+            {isActiveStreaming ? (
+              <Spinner size="tiny" />
+            ) : isUnread ? (
+              <Badge
+                className={styles.itemBadge}
+                size="extra-small"
+                appearance="filled"
+                color="danger"
+              />
+            ) : (
+              <Chat24Regular />
+            )}
           </div>
+
           <div className={styles.itemText}>
             <Text size={300} weight="semibold" className={styles.itemTitle}>
               {convo.title}
@@ -194,9 +211,8 @@ export const ChatHistoryPopover = () => {
             icon={isPopoverOpen ? <Chat24Filled /> : <Chat24Regular />}
             aria-label="Chat History"
           />
-          {/* ✨ เงื่อนไขการแสดง Badge */}
-          {unreadResponseInfo && (
-             <Badge
+          {unreadResponses.length > 0 && (
+            <Badge
               size="extra-small"
               appearance="filled"
               color="danger"
@@ -204,7 +220,7 @@ export const ChatHistoryPopover = () => {
                 position: 'absolute',
                 top: '4px',
                 right: '4px',
-                pointerEvents: 'none', // เพื่อให้คลิกทะลุไปที่ปุ่มได้
+                pointerEvents: 'none',
               }}
             />
           )}

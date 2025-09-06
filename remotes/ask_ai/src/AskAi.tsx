@@ -33,7 +33,12 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const streamingThreadId = useChatSession((state) => state.streamingThreadId);
 
   const storeApi = useChatSessionStoreApi();
-  const { fetchConversations: refreshHistory, setUnreadResponseInfo } = useChatHistoryStore();
+  const { 
+    fetchConversations: refreshHistory, 
+    addUnreadResponse, 
+    removeUnreadResponse,
+    unreadResponses 
+  } = useChatHistoryStore();
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -41,6 +46,12 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
       isMountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (chatId && unreadResponses.some(r => r.threadId === chatId)) {
+      removeUnreadResponse(chatId);
+    }
+  }, [chatId, unreadResponses, removeUnreadResponse]);
 
   useEffect(() => {
     const { loadConversation, clearChat } = storeApi.getState();
@@ -65,12 +76,11 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
       if (newThreadId) {
         updateLastMessageWithData(newThreadId);
         
-        // ✨ เปลี่ยนไปเรียก setUnreadResponseInfo แทน
         if (!isMountedRef.current) {
-          setUnreadResponseInfo({
+          addUnreadResponse({
             threadId: newThreadId,
-            title: text, // ส่ง title ไปด้วย
-            storyId: null // ไม่มี storyId ในหน้านี้
+            title: text,
+            storyId: null
           });
         }
       }

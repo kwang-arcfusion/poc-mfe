@@ -5,7 +5,6 @@ import type { ConversationSummary } from '@arcfusion/types';
 
 export type ChatHistoryTab = 'ask' | 'story';
 
-// ✨ 1. สร้าง Type สำหรับข้อมูลการแจ้งเตือน
 export interface UnreadResponseInfo {
   threadId: string;
   storyId?: string | null;
@@ -21,14 +20,15 @@ export interface ChatHistoryState {
   activeTab: ChatHistoryTab;
   streamingThreadId: string | null;
   streamingTask: string | null;
-  unreadResponseInfo: UnreadResponseInfo | null; // ✨ 2. เปลี่ยน State จาก boolean เป็น object หรือ null
+  unreadResponses: UnreadResponseInfo[];
   fetchConversations: () => Promise<void>;
   togglePopover: () => void;
   closePopover: () => void;
   setActiveTab: (tab: ChatHistoryTab) => void;
   setStreamingThreadId: (id: string | null) => void;
   setStreamingTask: (task: string | null) => void;
-  setUnreadResponseInfo: (info: UnreadResponseInfo | null) => void; // ✨ 3. อัปเดต Action
+  addUnreadResponse: (info: UnreadResponseInfo) => void;
+  removeUnreadResponse: (threadId: string) => void;
   addOptimisticConversation: (
     newConvo: Partial<ConversationSummary> & { title: string; thread_id: string }
   ) => void;
@@ -43,7 +43,7 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   activeTab: 'ask',
   streamingThreadId: null,
   streamingTask: null,
-  unreadResponseInfo: null, // ✨ 4. กำหนดค่าเริ่มต้นเป็น null
+  unreadResponses: [],
 
   fetchConversations: async () => {
     if (get().isLoading) return;
@@ -66,10 +66,8 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   },
 
   togglePopover: () => {
-    // เมื่อเปิด Popover ให้เคลียร์สถานะ unread
     set((state) => ({
       isPopoverOpen: !state.isPopoverOpen,
-      unreadResponseInfo: null,
     }));
   },
 
@@ -84,8 +82,18 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   setStreamingThreadId: (id) => set({ streamingThreadId: id }),
   setStreamingTask: (task) => set({ streamingTask: task }),
 
-  // ✨ 5. อัปเดต Action
-  setUnreadResponseInfo: (info) => set({ unreadResponseInfo: info }),
+  addUnreadResponse: (info) =>
+    set((state) => {
+      if (state.unreadResponses.some((r) => r.threadId === info.threadId)) {
+        return state;
+      }
+      return { unreadResponses: [...state.unreadResponses, info] };
+    }),
+
+  removeUnreadResponse: (threadId) =>
+    set((state) => ({
+      unreadResponses: state.unreadResponses.filter((r) => r.threadId !== threadId),
+    })),
 
   addOptimisticConversation: (newConvo) =>
     set((state) => {

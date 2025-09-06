@@ -1,5 +1,5 @@
 // hosts/knowesis/src/App.tsx
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react'; // ✨ 1. Import useRef
 import { Routes, Route, Navigate, BrowserRouter, useNavigate } from 'react-router-dom';
 import { withAuthenticationRequired } from '@auth0/auth0-react';
 import {
@@ -14,9 +14,9 @@ import {
   Button,
   ToastFooter,
   tokens,
-  ToastTrigger, // ✨ 1. Import ToastTrigger
+  ToastTrigger,
 } from '@fluentui/react-components';
-import { CheckmarkCircle24Filled, Dismiss24Regular } from '@fluentui/react-icons'; // ✨ 2. Import Dismiss24Regular
+import { CheckmarkCircle24Filled, Dismiss24Regular } from '@fluentui/react-icons';
 import { useThemeStore, useChatHistoryStore } from '@arcfusion/store';
 import { useGlobalStyles, arcusionLightTheme, arcusionDarkTheme, ASSETS } from '@arcfusion/ui';
 import { AppLayout } from './layouts/AppLayout';
@@ -53,14 +53,22 @@ function ThemedApp() {
   const { theme } = useThemeStore();
   const fluentTheme = theme === 'dark' ? arcusionDarkTheme : arcusionLightTheme;
 
-  // Logic for Toaster
   const toasterId = useId('toaster');
   const { dispatchToast } = useToastController(toasterId);
-  const { unreadResponseInfo, setUnreadResponseInfo } = useChatHistoryStore();
+  const { unreadResponses } = useChatHistoryStore();
+
+  // ✨ 2. ใช้ useRef เพื่อเก็บจำนวน unread ของ render ก่อนหน้า
+  const prevUnreadCountRef = useRef(unreadResponses.length);
 
   useEffect(() => {
-    if (unreadResponseInfo) {
-      const { threadId, storyId, title } = unreadResponseInfo;
+    const prevCount = prevUnreadCountRef.current;
+    const currentCount = unreadResponses.length;
+
+    // ✨ 3. เงื่อนไขใหม่: จะทำงานก็ต่อเมื่อมี unread item เพิ่มขึ้นมาเท่านั้น
+    if (currentCount > prevCount) {
+      // ดึง item ล่าสุดที่เพิ่มเข้ามา (จะอยู่ท้าย Array เสมอ)
+      const newNotification = unreadResponses[unreadResponses.length - 1];
+      const { threadId, storyId, title } = newNotification;
 
       const handleNavigate = () => {
         if (storyId) {
@@ -73,15 +81,12 @@ function ThemedApp() {
       dispatchToast(
         <Toast>
           <ToastTitle
-            media={<CheckmarkCircle24Filled style={{ color: tokens.colorStatusSuccessForeground2 }} />}
-            // ✨ 3. เพิ่ม action prop พร้อม ToastTrigger สำหรับปุ่มปิด
+            media={
+              <CheckmarkCircle24Filled style={{ color: tokens.colorStatusSuccessForeground2 }} />
+            }
             action={
               <ToastTrigger>
-                <Button
-                  appearance="transparent"
-                  icon={<Dismiss24Regular />}
-                  aria-label="Close"
-                />
+                <Button appearance="transparent" icon={<Dismiss24Regular />} aria-label="Close" />
               </ToastTrigger>
             }
           >
@@ -96,9 +101,12 @@ function ThemedApp() {
         </Toast>,
         { intent: 'success', position: 'bottom-end', timeout: 8000 }
       );
-      setUnreadResponseInfo(null);
+      // ❗ ไม่มีการเรียก removeUnreadResponse ที่นี่อีกต่อไป
     }
-  }, [unreadResponseInfo, dispatchToast, setUnreadResponseInfo, navigate]);
+
+    // ✨ 4. อัปเดตค่า ref ให้เป็นค่าปัจจุบันเสมอ เพื่อใช้ใน render ถัดไป
+    prevUnreadCountRef.current = unreadResponses.length;
+  }, [unreadResponses, dispatchToast, navigate]);
 
   return (
     <FluentProvider theme={fluentTheme}>
