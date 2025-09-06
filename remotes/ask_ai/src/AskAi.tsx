@@ -22,9 +22,10 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const styles = useStyles();
   const {
     blocks,
-    status, // <--- 1. ดึง status มาใช้งาน
+    status,
     currentAiTask,
     threadId,
+    streamingThreadId,
     loadConversation,
     sendMessage: sendMessageFromStore,
     clearChat,
@@ -32,24 +33,19 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   } = useChatSessionStore();
   const { fetchConversations: refreshHistory } = useChatHistoryStore();
 
-  const isStreaming = status === 'streaming';
-
-  // 👇 2. แก้ไข useEffect ทั้งหมดที่นี่
   useEffect(() => {
-    // ถ้ากำลัง stream อยู่ ไม่ต้องทำอะไรทั้งสิ้น ปล่อยให้ stream ทำงานไป
-    if (status === 'streaming') {
-      return;
-    }
-
-    // ถ้า URL มี chatId และไม่ตรงกับ threadId ใน store ให้โหลดข้อมูลแชทนั้น
     if (chatId && chatId !== threadId) {
       loadConversation(chatId);
-    }
-    // ถ้า URL ไม่มี chatId แต่ใน store ยังมี threadId ของแชทเก่าค้างอยู่ ให้ล้างข้อมูล
-    else if (!chatId && threadId) {
+    } else if (!chatId && threadId && status !== 'streaming') {
       clearChat();
     }
-  }, [chatId, threadId, status, loadConversation, clearChat]); // <--- 3. เพิ่ม status ใน dependency array
+  }, [chatId, threadId, status, loadConversation, clearChat]);
+
+  // ✨ ================== START: แก้ไขส่วนนี้ ================== ✨
+  // เปลี่ยนไปเปรียบเทียบ threadId จาก store กับ streamingThreadId โดยตรง
+  // เพราะ threadId ใน store คือ "สิ่งที่ UI กำลังแสดงผลอยู่" ที่ถูกต้องที่สุด
+  const isCurrentChatStreaming = status === 'streaming' && threadId === streamingThreadId;
+  // ✨ =================== END: แก้ไขส่วนนี้ =================== ✨
 
   const handleSendMessage = (text: string) => {
     const currentThreadId = useChatSessionStore.getState().threadId;
@@ -67,12 +63,16 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
 
   return (
     <div className={styles.root}>
-      {blocks.length === 0 && !isStreaming ? (
+      {blocks.length === 0 && !isCurrentChatStreaming ? (
         <InitialView onSuggestionClick={handleSendMessage} />
       ) : (
-        <ChatLog blocks={blocks} status={status} currentAiTask={currentAiTask} />
+        <ChatLog
+          blocks={blocks}
+          status={isCurrentChatStreaming ? 'streaming' : 'idle'}
+          currentAiTask={isCurrentChatStreaming ? currentAiTask : null}
+        />
       )}
-      <ChatInputBar onSendMessage={handleSendMessage} isStreaming={isStreaming} />
+      <ChatInputBar onSendMessage={handleSendMessage} isStreaming={isCurrentChatStreaming} />
     </div>
   );
 }

@@ -81,6 +81,7 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
 
 export interface ChatSessionState {
   threadId?: string;
+  streamingThreadId?: string; // State ใหม่สำหรับติดตาม stream โดยเฉพาะ
   blocks: Block[];
   status: StreamStatus;
   error: string | null;
@@ -103,6 +104,7 @@ const initialPendingAssets = (): AssetGroup => ({
 
 export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
   threadId: undefined,
+  streamingThreadId: undefined, // กำหนดค่าเริ่มต้น
   blocks: [],
   status: 'idle',
   error: null,
@@ -110,25 +112,19 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
   isLoadingHistory: false,
   currentAiTask: null,
   pendingAssets: initialPendingAssets(),
+
   clearChat: () => {
     set({
       threadId: undefined,
       blocks: [],
       activePrompt: null,
-      status: 'idle',
-      error: null,
-      currentAiTask: null,
-      pendingAssets: initialPendingAssets(),
     });
   },
+
   loadConversation: async (threadId) => {
     if (get().isLoadingHistory) return;
     set({
       isLoadingHistory: true,
-      status: 'idle',
-      error: null,
-      currentAiTask: null,
-      pendingAssets: initialPendingAssets(),
     });
     try {
       const conversationData = await getConversationByThreadId(threadId);
@@ -141,9 +137,16 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       });
     } catch (err: any) {
       console.error('Failed to load conversation:', err);
-      set({ error: err.message, isLoadingHistory: false });
+      set({
+        error: err.message,
+        isLoadingHistory: false,
+        blocks: [],
+        threadId: undefined,
+        activePrompt: 'Error Loading Chat',
+      });
     }
   },
+
   updateLastMessageWithData: async (threadId) => {
     try {
       const fullConversation = await getConversationByThreadId(threadId);
@@ -171,11 +174,13 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       console.error('Failed to update last message with data:', error);
     }
   },
+
   sendMessage: async (text, currentThreadId, storyId) => {
     if (get().status === 'streaming') return currentThreadId || '';
     const newThreadId = currentThreadId || uuidv4();
     set((state) => ({
       threadId: newThreadId,
+      streamingThreadId: newThreadId, // ตั้งค่า streamingThreadId เมื่อเริ่ม stream
       status: 'streaming',
       currentAiTask: 'thinking',
       error: null,
@@ -296,7 +301,8 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
       console.error('Streaming failed:', err);
       set({ error: err.message, status: 'error' });
     } finally {
-      set({ status: 'completed', currentAiTask: null });
+      // ล้างค่า streamingThreadId เมื่อ stream จบ
+      set({ status: 'completed', currentAiTask: null, streamingThreadId: undefined });
     }
     return newThreadId;
   },
