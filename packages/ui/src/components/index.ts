@@ -29,3 +29,4 @@ export * from './Chat/ChatLog';
 export * from './Chat/ChatMessage';
 export * from './Chat/InitialView';
 export * from './Chat/SqlTableTabs';
+export * from './Chat/FeedbackDialog';
