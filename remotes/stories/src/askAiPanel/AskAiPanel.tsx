@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { makeStyles, tokens, shorthands, Button, Text } from '@fluentui/react-components';
 import { Dismiss24Regular, Sparkle24Filled } from '@fluentui/react-icons';
+// ❌ ลบ import useNavigate ออก
 import {
   useChatSession,
   useChatSessionStoreApi,
@@ -11,6 +12,7 @@ import type { Story } from '@arcfusion/types';
 import { ChatLog, ChatInputBar } from '@arcfusion/ui';
 
 const useStyles = makeStyles({
+  // ... (styles ทั้งหมดเหมือนเดิม ไม่ต้องแก้ไข)
   panelRoot: {
     display: 'flex',
     flexDirection: 'column',
@@ -34,20 +36,23 @@ const useStyles = makeStyles({
   },
 });
 
+// ✨ 1. เพิ่ม navigate เข้าไปใน Props Interface
 interface AskAiPanelProps {
   story: Story;
   onClose: () => void;
   threadId?: string;
+  navigate: (path: string, options?: { replace?: boolean }) => void;
 }
 
-export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiPanelProps) {
+// ✨ 2. รับ navigate เข้ามาเป็น prop
+export function AskAiPanel({ story, onClose, threadId: initialThreadId, navigate }: AskAiPanelProps) {
   const styles = useStyles();
   const isMountedRef = useRef(true);
+  // ❌ ลบ const navigate = useNavigate() ออก
 
   const blocks = useChatSession((state) => state.blocks);
   const status = useChatSession((state) => state.status);
   const currentAiTask = useChatSession((state) => state.currentAiTask);
-  const currentThreadId = useChatSession((state) => state.threadId);
 
   const storeApi = useChatSessionStoreApi();
   const {
@@ -69,8 +74,7 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
       removeUnreadResponse(initialThreadId);
     }
   }, [initialThreadId, unreadResponses, removeUnreadResponse]);
-  
-  // ✨ [Best Practice] 6. ใช้ Logic เดียวกันกับ AskAiPage
+
   useEffect(() => {
     const { loadConversation, clearChat } = storeApi.getState();
     const currentStoreThreadId = storeApi.getState().threadId;
@@ -92,9 +96,12 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
     const { sendMessage, updateLastMessageWithData, threadId: conversationThreadId } = storeApi.getState();
 
     sendMessage(text, conversationThreadId, story.id).then((newThreadId) => {
-      if (!conversationThreadId && newThreadId) {
+      // ✨ 3. ใช้ navigate ที่รับมาจาก prop
+      if (isMountedRef.current && !conversationThreadId && newThreadId) {
+        navigate(`/stories/${story.id}?thread=${newThreadId}`, { replace: true });
         refreshHistory();
       }
+
       if (newThreadId) {
         updateLastMessageWithData(newThreadId);
 
@@ -115,7 +122,6 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
         <div className={styles.titleGroup}>
           <Sparkle24Filled /> <Text weight="semibold">Ask about this Story</Text>
         </div>
-
         <Button
           appearance="transparent"
           icon={<Dismiss24Regular />}

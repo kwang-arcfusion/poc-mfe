@@ -11,7 +11,7 @@ import {
   Spinner,
 } from '@fluentui/react-components';
 import { Sparkle24Regular, TriangleDown16Filled } from '@fluentui/react-icons';
-import { useLayoutStore, ChatSessionProvider } from '@arcfusion/store'; // Import Provider
+import { useLayoutStore, ChatSessionProvider } from '@arcfusion/store';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { getStoryById } from '@arcfusion/client';
 import type { Story } from '@arcfusion/types';
@@ -22,6 +22,7 @@ import { AskAiPanel } from './askAiPanel/AskAiPanel';
 import { TechnicalDetails } from './storyDetail/TechnicalDetails';
 
 const useStyles = makeStyles({
+  // ... (styles ทั้งหมดเหมือนเดิม ไม่ต้องแก้ไข)
   outer: {
     overflow: 'hidden',
     height: 'calc(100vh - 60px)',
@@ -29,7 +30,7 @@ const useStyles = makeStyles({
   },
   askAiButton: {
     position: 'fixed',
-    top: '72px',
+    top: '90px',
     right: '24px',
     zIndex: 10,
   },
@@ -126,12 +127,15 @@ const useStyles = makeStyles({
   },
 });
 
+// ✨ 1. เพิ่ม navigate เข้าไปใน Props Interface
 interface StoryDetailPageProps {
   storyId?: string;
   threadId?: string | null;
+  navigate: (path: string, options?: { replace?: boolean }) => void;
 }
 
-export default function StoryDetailPage({ storyId, threadId }: StoryDetailPageProps) {
+// ✨ 2. รับ navigate เข้ามาเป็น prop
+export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDetailPageProps) {
   const s = useStyles();
   const { setMainOverflow } = useLayoutStore();
 
@@ -214,19 +218,16 @@ export default function StoryDetailPage({ storyId, threadId }: StoryDetailPagePr
                   </Text>
                 </Badge>
               )}
-
               <div className={s.chips} role="toolbar" aria-label="page context">
                 <Badge appearance="tint">
                   <strong>{story.type.split('_')[0].toUpperCase()}</strong>
                 </Badge>
-
                 <Badge appearance="tint">
                   Period: {new Date(story.created_at).toLocaleDateString()}
                 </Badge>
               </div>
             </div>
           </div>
-
           <section className={s.mainGrid}>
             <NarrativeCard story={story} />
             <ActionsCard story={story} />
@@ -265,6 +266,7 @@ export default function StoryDetailPage({ storyId, threadId }: StoryDetailPagePr
                     story={story!}
                     threadId={threadId || undefined}
                     onClose={() => setAiOpen(false)}
+                    navigate={navigate} // 👈 3. ส่ง navigate ต่อไปให้ AskAiPanel
                   />
                 </ChatSessionProvider>
               </aside>

@@ -190,7 +190,9 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   return (
     <div className={styles.insightCard} onClick={onClick}>
       <header className={styles.cardHeader}>
-        <Badge appearance="tint">Channel</Badge>
+        <Badge appearance="tint">
+          <strong>{story.type.split('_')[0].toUpperCase()}</strong>
+        </Badge>
         <Text className={styles.timeAgo}>{timeAgo}</Text>
       </header>
 
