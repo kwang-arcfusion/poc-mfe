@@ -1,18 +1,12 @@
 // remotes/stories/src/askAiPanel/AskAiPanel.tsx
 import React, { useEffect, useRef } from 'react';
 import { makeStyles, tokens, shorthands, Button, Text } from '@fluentui/react-components';
-import { Dismiss24Regular, Sparkle24Filled } from '@fluentui/react-icons';
-// ❌ ลบ import useNavigate ออก
-import {
-  useChatSession,
-  useChatSessionStoreApi,
-  useChatHistoryStore,
-} from '@arcfusion/store';
+import { Dismiss24Regular, Sparkle24Filled, Sparkle48Filled } from '@fluentui/react-icons';
+import { useChatSession, useChatSessionStoreApi, useChatHistoryStore } from '@arcfusion/store';
 import type { Story } from '@arcfusion/types';
-import { ChatLog, ChatInputBar } from '@arcfusion/ui';
+import { ChatLog, ChatInputBar, InitialView } from '@arcfusion/ui';
 
 const useStyles = makeStyles({
-  // ... (styles ทั้งหมดเหมือนเดิม ไม่ต้องแก้ไข)
   panelRoot: {
     display: 'flex',
     flexDirection: 'column',
@@ -34,9 +28,15 @@ const useStyles = makeStyles({
     ...shorthands.gap(tokens.spacingHorizontalXS),
     color: tokens.colorBrandForeground1,
   },
+  contentArea: {
+    flexGrow: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    backgroundColor: tokens.colorNeutralBackground2,
+  },
 });
 
-// ✨ 1. เพิ่ม navigate เข้าไปใน Props Interface
 interface AskAiPanelProps {
   story: Story;
   onClose: () => void;
@@ -44,11 +44,19 @@ interface AskAiPanelProps {
   navigate: (path: string, options?: { replace?: boolean }) => void;
 }
 
-// ✨ 2. รับ navigate เข้ามาเป็น prop
-export function AskAiPanel({ story, onClose, threadId: initialThreadId, navigate }: AskAiPanelProps) {
+const STORY_CONVERSATION_STARTERS = [
+  'Summarize the key insight for me.',
+  'What are the recommended actions?',
+];
+
+export function AskAiPanel({
+  story,
+  onClose,
+  threadId: initialThreadId,
+  navigate,
+}: AskAiPanelProps) {
   const styles = useStyles();
   const isMountedRef = useRef(true);
-  // ❌ ลบ const navigate = useNavigate() ออก
 
   const blocks = useChatSession((state) => state.blocks);
   const status = useChatSession((state) => state.status);
@@ -93,10 +101,13 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId, navigate
   const isCurrentChatStreaming = status === 'streaming';
 
   const handleSendMessage = (text: string) => {
-    const { sendMessage, updateLastMessageWithData, threadId: conversationThreadId } = storeApi.getState();
+    const {
+      sendMessage,
+      updateLastMessageWithData,
+      threadId: conversationThreadId,
+    } = storeApi.getState();
 
     sendMessage(text, conversationThreadId, story.id).then((newThreadId) => {
-      // ✨ 3. ใช้ navigate ที่รับมาจาก prop
       if (isMountedRef.current && !conversationThreadId && newThreadId) {
         navigate(`/stories/${story.id}?thread=${newThreadId}`, { replace: true });
         refreshHistory();
@@ -104,7 +115,6 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId, navigate
 
       if (newThreadId) {
         updateLastMessageWithData(newThreadId);
-
         if (!isMountedRef.current) {
           addUnreadResponse({
             threadId: newThreadId,
@@ -120,7 +130,7 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId, navigate
     <div className={styles.panelRoot}>
       <div className={styles.header}>
         <div className={styles.titleGroup}>
-          <Sparkle24Filled /> <Text weight="semibold">Ask about this Story</Text>
+          <Sparkle24Filled /> <Text weight="semibold">Ask AI</Text>
         </div>
         <Button
           appearance="transparent"
@@ -129,12 +139,31 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId, navigate
           aria-label="Close"
         />
       </div>
-      <ChatLog
-        blocks={blocks}
-        status={isCurrentChatStreaming ? 'streaming' : 'idle'}
-        currentAiTask={isCurrentChatStreaming ? currentAiTask : null}
+
+      <div className={styles.contentArea}>
+        {blocks.length === 0 && !isCurrentChatStreaming ? (
+          <InitialView
+            icon={<Sparkle48Filled style={{ scale: 1.6 }} />}
+            title="Ask about this story"
+            starters={STORY_CONVERSATION_STARTERS}
+            onSuggestionClick={handleSendMessage}
+          />
+        ) : (
+          <ChatLog
+            blocks={blocks}
+            status={isCurrentChatStreaming ? 'streaming' : 'idle'}
+            currentAiTask={isCurrentChatStreaming ? currentAiTask : null}
+          />
+        )}
+      </div>
+
+      {/* 👈 เพิ่ม prop size เข้าไป */}
+      <ChatInputBar
+        onSendMessage={handleSendMessage}
+        isStreaming={isCurrentChatStreaming}
+        sourceInfoText="This chat follows this story."
+        size="medium"
       />
-      <ChatInputBar onSendMessage={handleSendMessage} isStreaming={isCurrentChatStreaming} />
     </div>
   );
 }

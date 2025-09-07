@@ -64,10 +64,6 @@ export const EvidenceSection: React.FC<EvidenceSectionProps> = ({ story }) => {
 
   return (
     <section>
-      <div className={s.titleWrap}>
-        <DataPie24Color />
-        <Text className={s.title}>Evidence</Text>
-      </div>
       <div className={s.grid}>
         <EChartRenderer config={chartOptions} />
       </div>

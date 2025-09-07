@@ -1,6 +1,7 @@
+// packages/ui/src/components/Chat/InitialView.tsx
 import * as React from 'react';
-import { makeStyles, Title3, Badge, tokens, shorthands, Button } from '@fluentui/react-components';
-import { SearchSparkle48Color } from '@fluentui/react-icons';
+import { makeStyles, Title3, Button, tokens, shorthands } from '@fluentui/react-components';
+// ❌ ลบการ import icon ที่เคย hardcode ออก
 
 const useStyles = makeStyles({
   initialViewContainer: {
@@ -12,8 +13,13 @@ const useStyles = makeStyles({
     ...shorthands.gap('24px'),
     height: '100%',
   },
-  icon: { color: tokens.colorBrandForeground1 },
-  title: { color: tokens.colorNeutralForeground1 },
+  // ✨ Style นี้จะถูกนำไปใช้กับ wrapper ของ icon ที่รับเข้ามา
+  iconContainer: {
+    color: tokens.colorBrandForeground1,
+  },
+  title: {
+    color: tokens.colorNeutralForeground1,
+  },
   suggestionsContainer: {
     display: 'flex',
     justifyContent: 'center',
@@ -22,40 +28,44 @@ const useStyles = makeStyles({
     maxWidth: '620px',
   },
   buttonStartConversation: {
-    // --- Normal state ---
-    // Text color
-    // Border color
-    // --- On hover ---
-    // Change text color for better readability
-    color: tokens.colorBrandForeground1, // Text color
+    color: tokens.colorBrandForeground1,
     fontSize: tokens.fontSizeBase200,
-    ...shorthands.borderColor(tokens.colorBrandStroke1), // Border color
-
-    // --- On hover ---
+    ...shorthands.borderColor(tokens.colorBrandStroke1),
     ':hover': {
-      color: tokens.colorBrandForeground1, // Change text color for better readability
+      color: tokens.colorBrandForeground1,
       backgroundColor: tokens.colorNeutralBackground4,
     },
   },
 });
 
-const conversationStarters = [
-  'What changed in CTR last week?',
-  'Which creatives drove conversions?',
-  'Highlight underperforming campaigns.',
-  'Summarize performance by channel.',
-];
+// 👈 1. กำหนดค่าเริ่มต้นสำหรับ Title (Starters จะไม่มี่ค่า default แล้ว)
+const DEFAULT_TITLE = 'Finding the fresh insights today?';
 
-export function InitialView({ onSuggestionClick }: { onSuggestionClick: (text: string) => void }) {
+// 👈 2. อัปเดต Interface สำหรับ Props ใหม่
+interface InitialViewProps {
+  icon: React.ReactNode; // บังคับให้ส่ง icon เข้ามา
+  starters: string[]; // บังคับให้ส่ง starters เข้ามา
+  title?: string; // title ยังคงเป็น optional
+  onSuggestionClick: (text: string) => void;
+}
+
+export function InitialView({
+  icon, // 👈 3. รับ icon และ starters เข้ามา
+  starters,
+  title = DEFAULT_TITLE,
+  onSuggestionClick,
+}: InitialViewProps) {
   const styles = useStyles();
   return (
     <div className={styles.initialViewContainer}>
-      <SearchSparkle48Color className={styles.icon} />
+      {/* 👈 4. แสดงผล icon ที่ได้รับมาจาก prop */}
+      <div className={styles.iconContainer}>{icon}</div>
+
       <Title3 as="h1" className={styles.title}>
-        Finding the fresh insights today?
+        {title}
       </Title3>
       <div className={styles.suggestionsContainer}>
-        {conversationStarters.map((text, index) => (
+        {starters.map((text, index) => (
           <Button
             className={styles.buttonStartConversation}
             key={index}

@@ -1,4 +1,4 @@
-// remotes/ask_ai/src/components/ChatInputBar.tsx
+// packages/ui/src/components/Chat/ChatInputBar.tsx
 import React, { useState } from 'react';
 import { makeStyles, tokens, Textarea, Button } from '@fluentui/react-components';
 import { Send24Regular } from '@fluentui/react-icons';
@@ -28,12 +28,20 @@ const useStyles = makeStyles({
   },
 });
 
+// 👈 1. เพิ่ม size เข้าไปใน Props Interface
 interface ChatInputBarProps {
   onSendMessage: (text: string) => void;
   isStreaming: boolean;
+  sourceInfoText?: string;
+  size?: 'small' | 'medium' | 'large'; // เพิ่ม type ของ size
 }
 
-export const ChatInputBar: React.FC<ChatInputBarProps> = ({ onSendMessage, isStreaming }) => {
+export const ChatInputBar: React.FC<ChatInputBarProps> = ({
+  onSendMessage,
+  isStreaming,
+  sourceInfoText,
+  size = 'large', // 👈 2. รับ prop และกำหนดค่า default เป็น 'large'
+}) => {
   const styles = useStyles();
   const [inputValue, setInputValue] = useState('');
 
@@ -51,7 +59,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({ onSendMessage, isStr
           resize="vertical"
           placeholder="Ask Anything..."
           className={styles.textarea}
-          size="large"
+          size={size} // 👈 3. ส่ง prop size ไปให้ Textarea
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {
@@ -70,9 +78,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({ onSendMessage, isStr
           disabled={!inputValue.trim() || isStreaming}
         />
       </div>
-      <div className={styles.sourceInfo}>
-        This conversation draws on information from multiple sources.
-      </div>
+      {sourceInfoText && <div className={styles.sourceInfo}>{sourceInfoText}</div>}
     </div>
   );
 };

@@ -204,7 +204,7 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
       <section className={s.leftPane}>
         <div className={s.page}>
           <div className={s.heroTitleRow}>
-            <Title1 style={{ paddingRight: '72px' }}>{story.title}</Title1>
+            <Title1 style={{ paddingRight: '90px' }}>{story.title}</Title1>
             <div className={s.detailRow}>
               {topMover && (
                 <Badge
