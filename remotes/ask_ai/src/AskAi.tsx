@@ -30,14 +30,13 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const status = useChatSession((state) => state.status);
   const currentAiTask = useChatSession((state) => state.currentAiTask);
   const threadId = useChatSession((state) => state.threadId);
-  const streamingThreadId = useChatSession((state) => state.streamingThreadId);
 
   const storeApi = useChatSessionStoreApi();
-  const { 
-    fetchConversations: refreshHistory, 
-    addUnreadResponse, 
+  const {
+    fetchConversations: refreshHistory,
+    addUnreadResponse,
     removeUnreadResponse,
-    unreadResponses 
+    unreadResponses,
   } = useChatHistoryStore();
 
   useEffect(() => {
@@ -48,21 +47,31 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   }, []);
 
   useEffect(() => {
-    if (chatId && unreadResponses.some(r => r.threadId === chatId)) {
+    if (chatId && unreadResponses.some((r) => r.threadId === chatId)) {
       removeUnreadResponse(chatId);
     }
   }, [chatId, unreadResponses, removeUnreadResponse]);
 
+  // ✨ [Best Practice] 5. ทำให้ useEffect ง่ายขึ้น โดยสั่งให้ Store จัดการตัวเอง
   useEffect(() => {
     const { loadConversation, clearChat } = storeApi.getState();
-    if (chatId && chatId !== threadId) {
-      loadConversation(chatId);
-    } else if (!chatId && threadId && status !== 'streaming') {
-      clearChat();
-    }
-  }, [chatId, threadId, status, storeApi]);
+    const currentStoreThreadId = storeApi.getState().threadId;
 
-  const isCurrentChatStreaming = status === 'streaming' && threadId === streamingThreadId;
+    if (chatId) {
+      // โหลดแชทใหม่เมื่อ chatId เปลี่ยนและไม่ตรงกับใน store
+      if (chatId !== currentStoreThreadId) {
+        loadConversation(chatId);
+      }
+    } else {
+      // เคลียร์แชทเมื่อไม่มี chatId (เช่น หน้า /ask_ai)
+      // และต้องมั่นใจว่าไม่มีการ stream ค้างอยู่
+      if (status !== 'streaming') {
+        clearChat();
+      }
+    }
+  }, [chatId, status, storeApi]);
+
+  const isCurrentChatStreaming = status === 'streaming';
 
   const handleSendMessage = (text: string) => {
     const { sendMessage, updateLastMessageWithData, threadId: currentThreadId } = storeApi.getState();
@@ -72,15 +81,15 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
         navigate(`/ask_ai/${newThreadId}`, { replace: true });
         refreshHistory();
       }
-      
+
       if (newThreadId) {
         updateLastMessageWithData(newThreadId);
-        
+
         if (!isMountedRef.current) {
           addUnreadResponse({
             threadId: newThreadId,
             title: text,
-            storyId: null
+            storyId: null,
           });
         }
       }

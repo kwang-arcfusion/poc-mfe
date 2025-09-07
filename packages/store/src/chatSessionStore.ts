@@ -20,6 +20,7 @@ type AiTask =
   | 'answering'
   | null;
 
+// (โค้ดส่วน transformConversationResponseToBlocks เหมือนเดิม)
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
   if (!response || !response.messages) {
     return [];
@@ -81,7 +82,7 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
 
 export interface ChatSessionState {
   threadId?: string;
-  streamingThreadId?: string; // State ใหม่สำหรับติดตาม stream โดยเฉพาะ
+  streamingThreadId?: string;
   blocks: Block[];
   status: StreamStatus;
   error: string | null;
@@ -102,31 +103,35 @@ const initialPendingAssets = (): AssetGroup => ({
   charts: [],
 });
 
+// ✨ [Best Practice] 1. สร้าง initialState object เพื่อใช้ในการรีเซ็ต
+const initialState: Omit<
+  ChatSessionState,
+  'loadConversation' | 'sendMessage' | 'clearChat' | 'updateLastMessageWithData'
+> = {
+  threadId: undefined,
+  streamingThreadId: undefined,
+  blocks: [],
+  status: 'idle',
+  error: null,
+  activePrompt: null,
+  isLoadingHistory: false,
+  currentAiTask: null,
+  pendingAssets: initialPendingAssets(),
+};
+
 export const createChatSessionStore = () =>
   create<ChatSessionState>((set, get) => ({
-    threadId: undefined,
-    streamingThreadId: undefined,
-    blocks: [],
-    status: 'idle',
-    error: null,
-    activePrompt: null,
-    isLoadingHistory: false,
-    currentAiTask: null,
-    pendingAssets: initialPendingAssets(),
+    ...initialState,
 
+    // ✨ [Best Practice] 2. แก้ไข clearChat ให้รีเซ็ต State ทั้งหมด
     clearChat: () => {
-      set({
-        threadId: undefined,
-        blocks: [],
-        activePrompt: null,
-      });
+      set(initialState);
     },
 
     loadConversation: async (threadId) => {
-      if (get().isLoadingHistory) return;
-      set({
-        isLoadingHistory: true,
-      });
+      // ✨ [Best Practice] 3. รีเซ็ต State เก่าก่อนโหลดข้อมูลใหม่เสมอ
+      set({ ...initialState, isLoadingHistory: true });
+
       try {
         const conversationData = await getConversationByThreadId(threadId);
         const loadedBlocks = transformConversationResponseToBlocks(conversationData);
@@ -139,10 +144,8 @@ export const createChatSessionStore = () =>
       } catch (err: any) {
         console.error('Failed to load conversation:', err);
         set({
+          ...initialState, // รีเซ็ตเมื่อเกิด Error
           error: err.message,
-          isLoadingHistory: false,
-          blocks: [],
-          threadId: undefined,
           activePrompt: 'Error Loading Chat',
         });
       }
@@ -178,6 +181,12 @@ export const createChatSessionStore = () =>
 
     sendMessage: async (text, currentThreadId, storyId) => {
       if (get().status === 'streaming') return currentThreadId || '';
+
+      // ✨ [Best Practice] 4. ถ้าเป็นการเริ่มแชทใหม่ ให้รีเซ็ต State ก่อน
+      if (!currentThreadId) {
+          set(initialState);
+      }
+      
       const newThreadId = currentThreadId || uuidv4();
 
       set((state) => ({
@@ -191,9 +200,7 @@ export const createChatSessionStore = () =>
         pendingAssets: initialPendingAssets(),
       }));
 
-      // บอก Global Store ว่าแชทนี้กำลังจะเริ่ม stream
-      useChatHistoryStore.getState().setStreamingThreadId(newThreadId);
-      useChatHistoryStore.getState().setStreamingTask('thinking');
+      useChatHistoryStore.getState().startStreaming(newThreadId, 'thinking');
 
       useChatHistoryStore.getState().addOptimisticConversation({
         thread_id: newThreadId,
@@ -254,7 +261,7 @@ export const createChatSessionStore = () =>
                     title: 'Generated SQL',
                     sql: eventData.sql_query,
                   });
-                  useChatHistoryStore.getState().setStreamingTask('creating sql');
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating sql');
                   return { pendingAssets: newPendingAssets, currentAiTask: 'creating sql' };
                 }
                 if ('sql_query_result' in eventData) {
@@ -268,7 +275,7 @@ export const createChatSessionStore = () =>
                       rows: df.map((row) => Object.values(row)),
                     });
                   }
-                  useChatHistoryStore.getState().setStreamingTask('creating table');
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating table');
                   return { pendingAssets: newPendingAssets, currentAiTask: 'creating table' };
                 }
                 if ('chart_builder_result' in eventData) {
@@ -281,7 +288,7 @@ export const createChatSessionStore = () =>
                       config: chartConfig,
                     });
                   }
-                  useChatHistoryStore.getState().setStreamingTask('creating chart');
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating chart');
                   return { pendingAssets: newPendingAssets, currentAiTask: 'creating chart' };
                 }
                 if ('answer_chunk' in eventData || 'answer' in eventData) {
@@ -297,7 +304,7 @@ export const createChatSessionStore = () =>
                       content: textContent,
                     });
                   }
-                  useChatHistoryStore.getState().setStreamingTask('answering');
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'answering');
                   return { blocks: newBlocks, currentAiTask: 'answering' };
                 }
                 return state;
@@ -312,9 +319,7 @@ export const createChatSessionStore = () =>
         set({ error: err.message, status: 'error' });
       } finally {
         set({ status: 'completed', currentAiTask: null, streamingThreadId: undefined });
-        // บอก Global Store ว่า stream จบแล้ว
-        useChatHistoryStore.getState().setStreamingThreadId(null);
-        useChatHistoryStore.getState().setStreamingTask(null);
+        useChatHistoryStore.getState().stopStreaming(newThreadId);
       }
       return newThreadId;
     },

@@ -48,14 +48,13 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
   const status = useChatSession((state) => state.status);
   const currentAiTask = useChatSession((state) => state.currentAiTask);
   const currentThreadId = useChatSession((state) => state.threadId);
-  const streamingThreadId = useChatSession((state) => state.streamingThreadId);
 
   const storeApi = useChatSessionStoreApi();
-  const { 
-    fetchConversations: refreshHistory, 
+  const {
+    fetchConversations: refreshHistory,
     addUnreadResponse,
     removeUnreadResponse,
-    unreadResponses
+    unreadResponses,
   } = useChatHistoryStore();
 
   useEffect(() => {
@@ -66,15 +65,18 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
   }, []);
 
   useEffect(() => {
-    if (initialThreadId && unreadResponses.some(r => r.threadId === initialThreadId)) {
+    if (initialThreadId && unreadResponses.some((r) => r.threadId === initialThreadId)) {
       removeUnreadResponse(initialThreadId);
     }
   }, [initialThreadId, unreadResponses, removeUnreadResponse]);
-
+  
+  // ✨ [Best Practice] 6. ใช้ Logic เดียวกันกับ AskAiPage
   useEffect(() => {
     const { loadConversation, clearChat } = storeApi.getState();
+    const currentStoreThreadId = storeApi.getState().threadId;
+
     if (initialThreadId) {
-      if (initialThreadId !== currentThreadId) {
+      if (initialThreadId !== currentStoreThreadId) {
         loadConversation(initialThreadId);
       }
     } else {
@@ -82,9 +84,9 @@ export function AskAiPanel({ story, onClose, threadId: initialThreadId }: AskAiP
         clearChat();
       }
     }
-  }, [initialThreadId, currentThreadId, status, storeApi]);
+  }, [initialThreadId, status, storeApi]);
 
-  const isCurrentChatStreaming = status === 'streaming' && currentThreadId === streamingThreadId;
+  const isCurrentChatStreaming = status === 'streaming';
 
   const handleSendMessage = (text: string) => {
     const { sendMessage, updateLastMessageWithData, threadId: conversationThreadId } = storeApi.getState();

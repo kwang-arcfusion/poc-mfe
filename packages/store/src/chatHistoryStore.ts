@@ -18,15 +18,16 @@ export interface ChatHistoryState {
   isLoading: boolean;
   isPopoverOpen: boolean;
   activeTab: ChatHistoryTab;
-  streamingThreadId: string | null;
-  streamingTask: string | null;
+  // ✨ [แก้ไข] เปลี่ยนจากตัวแปรเดี่ยวเป็น Object เพื่อเก็บสถานะของหลายแชท
+  streamingTasks: Record<string, string>; // e.g., { [threadId]: 'thinking' }
   unreadResponses: UnreadResponseInfo[];
   fetchConversations: () => Promise<void>;
   togglePopover: () => void;
   closePopover: () => void;
   setActiveTab: (tab: ChatHistoryTab) => void;
-  setStreamingThreadId: (id: string | null) => void;
-  setStreamingTask: (task: string | null) => void;
+  // ✨ [แก้ไข] สร้าง Actions ใหม่สำหรับจัดการสถานะ
+  startStreaming: (threadId: string, task: string) => void;
+  stopStreaming: (threadId: string) => void;
   addUnreadResponse: (info: UnreadResponseInfo) => void;
   removeUnreadResponse: (threadId: string) => void;
   addOptimisticConversation: (
@@ -41,8 +42,8 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
   isLoading: false,
   isPopoverOpen: false,
   activeTab: 'ask',
-  streamingThreadId: null,
-  streamingTask: null,
+  // ✨ [แก้ไข] ค่าเริ่มต้นเป็น Object ว่าง
+  streamingTasks: {},
   unreadResponses: [],
 
   fetchConversations: async () => {
@@ -79,8 +80,22 @@ export const useChatHistoryStore = create<ChatHistoryState>((set, get) => ({
     set({ activeTab: tab });
   },
 
-  setStreamingThreadId: (id) => set({ streamingThreadId: id }),
-  setStreamingTask: (task) => set({ streamingTask: task }),
+  // ✨ [แก้ไข] Action สำหรับเริ่มหรืออัปเดตสถานะของแชท
+  startStreaming: (threadId, task) =>
+    set((state) => ({
+      streamingTasks: {
+        ...state.streamingTasks,
+        [threadId]: task,
+      },
+    })),
+
+  // ✨ [แก้ไข] Action สำหรับลบสถานะของแชทเมื่อจบการทำงาน
+  stopStreaming: (threadId) =>
+    set((state) => {
+      const newStreamingTasks = { ...state.streamingTasks };
+      delete newStreamingTasks[threadId];
+      return { streamingTasks: newStreamingTasks };
+    }),
 
   addUnreadResponse: (info) =>
     set((state) => {

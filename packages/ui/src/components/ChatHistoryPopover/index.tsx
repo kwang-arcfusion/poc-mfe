@@ -125,8 +125,8 @@ export const ChatHistoryPopover = () => {
     isLoading,
     isPopoverOpen,
     activeTab,
-    streamingThreadId,
-    streamingTask,
+    // ✨ [แก้ไข] เปลี่ยนมาใช้ streamingTasks
+    streamingTasks,
     unreadResponses,
     fetchConversations,
     togglePopover,
@@ -159,7 +159,9 @@ export const ChatHistoryPopover = () => {
     }
 
     return items.map((convo) => {
-      const isActiveStreaming = convo.thread_id === streamingThreadId;
+      // ✨ [แก้ไข] Logic ใหม่: เช็คว่า threadId ของ chat นี้มีอยู่ใน streamingTasks หรือไม่
+      const isActiveStreaming = !!streamingTasks[convo.thread_id];
+      const streamingTask = streamingTasks[convo.thread_id] || null;
       const isUnread = unreadResponses.some((r) => r.threadId === convo.thread_id);
 
       return (
