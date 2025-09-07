@@ -1,21 +1,9 @@
 // packages/ui/src/components/Chat/AssetTabs.tsx
 import * as React from 'react';
-import { makeStyles, tokens, shorthands } from '@fluentui/react-components';
 import type { AssetGroup } from '@arcfusion/types';
 import { SqlTableTabs } from './SqlTableTabs';
 
-const useStyles = makeStyles({
-  assetGroup: {
-    ...shorthands.border('2px', 'solid', tokens.colorNeutralStroke2),
-    ...shorthands.borderRadius(tokens.borderRadiusLarge),
-    backgroundColor: tokens.colorNeutralBackground3,
-    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
-  },
-});
-
 export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?: string }) {
-  const styles = useStyles();
-
   const processedCharts = React.useMemo(() => {
     return group.charts.map((ch) => {
       const newConfig = JSON.parse(JSON.stringify(ch.config));
