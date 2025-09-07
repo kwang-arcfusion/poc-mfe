@@ -83,6 +83,7 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
 export interface ChatSessionState {
   threadId?: string;
   streamingThreadId?: string;
+  streamingMessageId?: string; // ✨ 1. เพิ่ม state สำหรับเก็บ messageId ที่กำลัง stream
   blocks: Block[];
   status: StreamStatus;
   error: string | null;
@@ -93,7 +94,6 @@ export interface ChatSessionState {
   loadConversation: (threadId: string) => Promise<void>;
   sendMessage: (text: string, currentThreadId?: string, storyId?: string) => Promise<string>;
   clearChat: () => void;
-  updateLastMessageWithData: (threadId: string) => Promise<void>;
 }
 
 const initialPendingAssets = (): AssetGroup => ({
@@ -103,13 +103,10 @@ const initialPendingAssets = (): AssetGroup => ({
   charts: [],
 });
 
-// ✨ [Best Practice] 1. สร้าง initialState object เพื่อใช้ในการรีเซ็ต
-const initialState: Omit<
-  ChatSessionState,
-  'loadConversation' | 'sendMessage' | 'clearChat' | 'updateLastMessageWithData'
-> = {
+const initialState: Omit<ChatSessionState, 'loadConversation' | 'sendMessage' | 'clearChat'> = {
   threadId: undefined,
   streamingThreadId: undefined,
+  streamingMessageId: undefined, // ✨ 2. เพิ่มค่าเริ่มต้น
   blocks: [],
   status: 'idle',
   error: null,
@@ -123,13 +120,11 @@ export const createChatSessionStore = () =>
   create<ChatSessionState>((set, get) => ({
     ...initialState,
 
-    // ✨ [Best Practice] 2. แก้ไข clearChat ให้รีเซ็ต State ทั้งหมด
     clearChat: () => {
       set(initialState);
     },
 
     loadConversation: async (threadId) => {
-      // ✨ [Best Practice] 3. รีเซ็ต State เก่าก่อนโหลดข้อมูลใหม่เสมอ
       set({ ...initialState, isLoadingHistory: true });
 
       try {
@@ -144,49 +139,20 @@ export const createChatSessionStore = () =>
       } catch (err: any) {
         console.error('Failed to load conversation:', err);
         set({
-          ...initialState, // รีเซ็ตเมื่อเกิด Error
+          ...initialState,
           error: err.message,
           activePrompt: 'Error Loading Chat',
         });
       }
     },
 
-    updateLastMessageWithData: async (threadId) => {
-      try {
-        const fullConversation = await getConversationByThreadId(threadId);
-        const lastBotMessageFromApi = fullConversation.messages.filter((m) => m.role === 'bot').pop();
-        if (!lastBotMessageFromApi || !(lastBotMessageFromApi as any).id) return;
-        const newMessageId = (lastBotMessageFromApi as any).id;
-        set((state) => {
-          const newBlocks = [...state.blocks];
-          let lastUserIndex = -1;
-          for (let i = newBlocks.length - 1; i >= 0; i--) {
-            const block = newBlocks[i];
-            if (block.kind === 'text' && block.sender === 'user') {
-              lastUserIndex = i;
-              break;
-            }
-          }
-          if (lastUserIndex !== -1) {
-            for (let i = lastUserIndex + 1; i < newBlocks.length; i++) {
-              newBlocks[i] = { ...newBlocks[i], messageId: newMessageId };
-            }
-          }
-          return { blocks: newBlocks };
-        });
-      } catch (error) {
-        console.error('Failed to update last message with data:', error);
-      }
-    },
-
     sendMessage: async (text, currentThreadId, storyId) => {
       if (get().status === 'streaming') return currentThreadId || '';
 
-      // ✨ [Best Practice] 4. ถ้าเป็นการเริ่มแชทใหม่ ให้รีเซ็ต State ก่อน
       if (!currentThreadId) {
-          set(initialState);
+        set(initialState);
       }
-      
+
       const newThreadId = currentThreadId || uuidv4();
 
       set((state) => ({
@@ -235,9 +201,16 @@ export const createChatSessionStore = () =>
           for (const part of parts) {
             if (part.trim() === '' || part.trim() === '[DONE]') continue;
             try {
-              const eventData: StreamedEvent = JSON.parse(part.trim());
+              const eventData: StreamedEvent & { message_id?: string } = JSON.parse(part.trim());
+
+              // ✨ 3. ดักจับ message_id จาก event แรกสุด
+              if (eventData.message_id) {
+                set({ streamingMessageId: eventData.message_id });
+                continue; // ไปยัง event ถัดไป
+              }
+
               if ('answer_chunk' in eventData || 'answer' in eventData) {
-                const { pendingAssets } = get();
+                const { pendingAssets, streamingMessageId } = get();
                 if (
                   pendingAssets.sqls.length > 0 ||
                   pendingAssets.dataframes.length > 0 ||
@@ -246,7 +219,12 @@ export const createChatSessionStore = () =>
                   set((state) => ({
                     blocks: [
                       ...state.blocks,
-                      { kind: 'assets', id: Date.now(), group: pendingAssets },
+                      {
+                        kind: 'assets',
+                        id: Date.now(),
+                        group: pendingAssets,
+                        messageId: streamingMessageId, // ✨ 4. ใส่ messageId ให้กับ AssetsBlock
+                      },
                     ],
                     pendingAssets: initialPendingAssets(),
                   }));
@@ -302,6 +280,7 @@ export const createChatSessionStore = () =>
                       id: Date.now(),
                       sender: 'ai',
                       content: textContent,
+                      messageId: get().streamingMessageId, // ✨ 5. ใส่ messageId ให้กับ TextBlock
                     });
                   }
                   useChatHistoryStore.getState().startStreaming(newThreadId, 'answering');
@@ -318,7 +297,13 @@ export const createChatSessionStore = () =>
         console.error('Streaming failed:', err);
         set({ error: err.message, status: 'error' });
       } finally {
-        set({ status: 'completed', currentAiTask: null, streamingThreadId: undefined });
+        // ✨ 6. เคลียร์ streamingMessageId เมื่อจบ
+        set({
+          status: 'completed',
+          currentAiTask: null,
+          streamingThreadId: undefined,
+          streamingMessageId: undefined,
+        });
         useChatHistoryStore.getState().stopStreaming(newThreadId);
       }
       return newThreadId;

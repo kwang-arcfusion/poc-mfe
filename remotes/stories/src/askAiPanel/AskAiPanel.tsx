@@ -101,27 +101,21 @@ export function AskAiPanel({
   const isCurrentChatStreaming = status === 'streaming';
 
   const handleSendMessage = (text: string) => {
-    const {
-      sendMessage,
-      updateLastMessageWithData,
-      threadId: conversationThreadId,
-    } = storeApi.getState();
+    const { sendMessage, threadId: conversationThreadId } = storeApi.getState();
 
+    // ✨ ลบ `.then()` ที่เรียก `updateLastMessageWithData` ออก
     sendMessage(text, conversationThreadId, story.id).then((newThreadId) => {
       if (isMountedRef.current && !conversationThreadId && newThreadId) {
         navigate(`/stories/${story.id}?thread=${newThreadId}`, { replace: true });
         refreshHistory();
       }
 
-      if (newThreadId) {
-        updateLastMessageWithData(newThreadId);
-        if (!isMountedRef.current) {
-          addUnreadResponse({
-            threadId: newThreadId,
-            title: text,
-            storyId: story.id,
-          });
-        }
+      if (newThreadId && !isMountedRef.current) {
+        addUnreadResponse({
+          threadId: newThreadId,
+          title: text,
+          storyId: story.id,
+        });
       }
     });
   };
@@ -157,7 +151,6 @@ export function AskAiPanel({
         )}
       </div>
 
-      {/* 👈 เพิ่ม prop size เข้าไป */}
       <ChatInputBar
         onSendMessage={handleSendMessage}
         isStreaming={isCurrentChatStreaming}
