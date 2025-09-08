@@ -24,7 +24,6 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    ...shorthands.gap(tokens.spacingVerticalL),
   },
 });
 

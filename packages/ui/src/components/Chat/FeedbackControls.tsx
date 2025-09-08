@@ -15,7 +15,7 @@ const useStyles = makeStyles({
   feedbackContainer: {
     display: 'flex',
     ...shorthands.gap(tokens.spacingHorizontalXS),
-    marginTop: tokens.spacingVerticalS,
+    marginTop: tokens.spacingVerticalL,
   },
 });
 
