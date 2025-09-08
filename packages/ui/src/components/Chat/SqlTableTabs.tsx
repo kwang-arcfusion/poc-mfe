@@ -35,7 +35,7 @@ const useStyles = makeStyles({
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
     backgroundColor: tokens.colorNeutralBackground3,
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
-    minWidth: '100%',
+    width: '100%',
     boxSizing: 'border-box',
   },
   expandView: {
