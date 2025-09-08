@@ -1,6 +1,7 @@
 // /configs/webpack.config.remote.js
 
 const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { container } = require('webpack');
 const { ModuleFederationPlugin } = container;
@@ -66,6 +67,15 @@ module.exports = function createRemoteConfig({
       ],
     },
     plugins: [
+      new CopyPlugin({
+        patterns: [
+          {
+            from: path.resolve(process.cwd(), 'public/_headers'),
+            to: path.resolve(process.cwd(), 'dist'),
+            noErrorOnMissing: true,
+          },
+        ],
+      }),
       new MiniCssExtractPlugin({
         filename: isProd ? '[name].[contenthash].css' : '[name].css',
       }),

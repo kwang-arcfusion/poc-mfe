@@ -7,6 +7,6 @@ module.exports = (env = {}) =>
     devtool: false,
     optimization: {
       splitChunks: { chunks: 'all' },
-      runtimeChunk: 'single',
+      runtimeChunk: false,
     },
   });
