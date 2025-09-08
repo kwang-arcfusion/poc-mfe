@@ -30,3 +30,4 @@ export * from './Chat/ChatMessage';
 export * from './Chat/InitialView';
 export * from './Chat/SqlTableTabs';
 export * from './Chat/FeedbackDialog';
+export * from './Chat/FeedbackControls';

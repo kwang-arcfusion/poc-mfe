@@ -1,11 +1,11 @@
 // packages/ui/src/components/Chat/ChatLog.tsx
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { makeStyles, shorthands, tokens } from '@fluentui/react-components';
-// ✨ 1. แก้ไข Path การ Import Type จาก '../types' เป็น '@arcfusion/types'
 import type { Block, TextBlock } from '@arcfusion/types';
 import { ChatMessage } from './ChatMessage';
 import { AssetTabs } from './AssetTabs';
 import { AiStatusIndicator } from './AiStatusIndicator';
+import { FeedbackControls } from './FeedbackControls';
 
 const useStyles = makeStyles({
   contentArea: { flexGrow: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' },
@@ -90,6 +90,13 @@ export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask 
               />
             );
           }
+
+          const lastBlockInTurn = turn.blocks[turn.blocks.length - 1];
+          const turnMessageId = lastBlockInTurn?.messageId;
+          const hasContent = turn.blocks.some(
+            (b) => (b.kind === 'text' && b.content) || b.kind === 'assets'
+          );
+
           return (
             <div key={turnIndex} className={styles.aiTurnWrapper}>
               {isStreaming && turnIndex === groupedTurns.length - 1 && (
@@ -106,6 +113,10 @@ export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask 
                 ) : (
                   <AssetTabs key={block.id} group={block.group} messageId={block.messageId} />
                 )
+              )}
+              {/* ✨ แก้ไขเงื่อนไขการแสดงผลที่นี่ */}
+              {!(isStreaming && turnIndex === groupedTurns.length - 1) && hasContent && (
+                <FeedbackControls messageId={turnMessageId} />
               )}
             </div>
           );

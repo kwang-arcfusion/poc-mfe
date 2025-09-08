@@ -9,6 +9,7 @@ import type {
   AssetGroup,
   Block,
   TextBlock,
+  AssetsBlock,
 } from '@arcfusion/types';
 
 type StreamStatus = 'idle' | 'streaming' | 'completed' | 'error';
@@ -20,7 +21,9 @@ type AiTask =
   | 'answering'
   | null;
 
-// (โค้ดส่วน transformConversationResponseToBlocks เหมือนเดิม)
+type StreamMode = 'default' | 'dynamic';
+
+// ✨ ================== START: CODE ที่แก้ไข ================== ✨
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
   if (!response || !response.messages) {
     return [];
@@ -29,6 +32,20 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
   let idCounter = Date.now();
   for (const message of response.messages) {
     if (message.role === 'system') continue;
+
+    // ✨ 1. ประมวลผลและเพิ่ม TextBlock (ข้อความ) ก่อนเสมอ
+    const textContent = typeof message.content === 'string' ? message.content : '';
+    if (textContent) {
+      blocks.push({
+        kind: 'text',
+        id: idCounter++,
+        messageId: (message as any).id,
+        sender: message.role === 'bot' ? 'ai' : 'user',
+        content: textContent,
+      });
+    }
+    
+    // ✨ 2. จากนั้นค่อยประมวลผลและเพิ่ม AssetsBlock (ตาราง/SQL/Chart)
     if (message.role === 'bot') {
       const assetGroup: AssetGroup = { id: uuidv4(), sqls: [], dataframes: [], charts: [] };
       let hasAssets = false;
@@ -66,24 +83,15 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
         });
       }
     }
-    const textContent = typeof message.content === 'string' ? message.content : '';
-    if (textContent) {
-      blocks.push({
-        kind: 'text',
-        id: idCounter++,
-        messageId: (message as any).id,
-        sender: message.role === 'bot' ? 'ai' : 'user',
-        content: textContent,
-      });
-    }
   }
   return blocks;
 }
+// ✨ =================== END: CODE ที่แก้ไข =================== ✨
 
 export interface ChatSessionState {
   threadId?: string;
   streamingThreadId?: string;
-  streamingMessageId?: string; // ✨ 1. เพิ่ม state สำหรับเก็บ messageId ที่กำลัง stream
+  streamingMessageId?: string;
   blocks: Block[];
   status: StreamStatus;
   error: string | null;
@@ -91,6 +99,7 @@ export interface ChatSessionState {
   isLoadingHistory: boolean;
   currentAiTask: AiTask;
   pendingAssets: AssetGroup;
+  streamMode: StreamMode;
   loadConversation: (threadId: string) => Promise<void>;
   sendMessage: (text: string, currentThreadId?: string, storyId?: string) => Promise<string>;
   clearChat: () => void;
@@ -106,7 +115,7 @@ const initialPendingAssets = (): AssetGroup => ({
 const initialState: Omit<ChatSessionState, 'loadConversation' | 'sendMessage' | 'clearChat'> = {
   threadId: undefined,
   streamingThreadId: undefined,
-  streamingMessageId: undefined, // ✨ 2. เพิ่มค่าเริ่มต้น
+  streamingMessageId: undefined,
   blocks: [],
   status: 'idle',
   error: null,
@@ -114,6 +123,7 @@ const initialState: Omit<ChatSessionState, 'loadConversation' | 'sendMessage' | 
   isLoadingHistory: false,
   currentAiTask: null,
   pendingAssets: initialPendingAssets(),
+  streamMode: 'default',
 };
 
 export const createChatSessionStore = () =>
@@ -126,7 +136,6 @@ export const createChatSessionStore = () =>
 
     loadConversation: async (threadId) => {
       set({ ...initialState, isLoadingHistory: true });
-
       try {
         const conversationData = await getConversationByThreadId(threadId);
         const loadedBlocks = transformConversationResponseToBlocks(conversationData);
@@ -164,10 +173,10 @@ export const createChatSessionStore = () =>
         activePrompt: state.activePrompt || text,
         blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }],
         pendingAssets: initialPendingAssets(),
+        streamMode: 'default',
       }));
 
       useChatHistoryStore.getState().startStreaming(newThreadId, 'thinking');
-
       useChatHistoryStore.getState().addOptimisticConversation({
         thread_id: newThreadId,
         title: text,
@@ -201,20 +210,82 @@ export const createChatSessionStore = () =>
           for (const part of parts) {
             if (part.trim() === '' || part.trim() === '[DONE]') continue;
             try {
-              const eventData: StreamedEvent & { message_id?: string } = JSON.parse(part.trim());
+              const eventData: StreamedEvent & {
+                message_id?: string;
+                response_type?: string;
+              } = JSON.parse(part.trim());
 
-              // ✨ 3. ดักจับ message_id จาก event แรกสุด
               if (eventData.message_id) {
                 set({ streamingMessageId: eventData.message_id });
-                continue; // ไปยัง event ถัดไป
+                continue;
+              }
+
+              if (eventData.response_type === 'dynamic_response') {
+                set({ streamMode: 'dynamic' });
+                continue;
+              }
+
+              if ('sql_query' in eventData) {
+                set((state) => ({
+                  pendingAssets: {
+                    ...state.pendingAssets,
+                    sqls: [
+                      ...state.pendingAssets.sqls,
+                      { id: `sql-${Date.now()}`, title: 'Generated SQL', sql: eventData.sql_query },
+                    ],
+                  },
+                  currentAiTask: 'creating sql',
+                }));
+                useChatHistoryStore.getState().startStreaming(newThreadId, 'creating sql');
+              } else if ('sql_query_result' in eventData) {
+                const df = eventData.sql_query_result;
+                if (df && df.length > 0) {
+                  set((state) => ({
+                    pendingAssets: {
+                      ...state.pendingAssets,
+                      dataframes: [
+                        ...state.pendingAssets.dataframes,
+                        {
+                          id: `df-${Date.now()}`,
+                          title: 'Query Result',
+                          columns: Object.keys(df[0]),
+                          rows: df.map((row) => Object.values(row)),
+                        },
+                      ],
+                    },
+                    currentAiTask: 'creating table',
+                  }));
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating table');
+                }
+              } else if ('chart_builder_result' in eventData) {
+                const chartConfig = eventData.chart_builder_result;
+                if (chartConfig) {
+                  set((state) => ({
+                    pendingAssets: {
+                      ...state.pendingAssets,
+                      charts: [
+                        ...state.pendingAssets.charts,
+                        {
+                          id: `chart-${Date.now()}`,
+                          title: chartConfig.title?.text || 'Chart',
+                          config: chartConfig,
+                        },
+                      ],
+                    },
+                    currentAiTask: 'creating chart',
+                  }));
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating chart');
+                }
               }
 
               if ('answer_chunk' in eventData || 'answer' in eventData) {
-                const { pendingAssets, streamingMessageId } = get();
+                const { streamMode, pendingAssets, streamingMessageId } = get();
+
                 if (
-                  pendingAssets.sqls.length > 0 ||
-                  pendingAssets.dataframes.length > 0 ||
-                  pendingAssets.charts.length > 0
+                  streamMode === 'dynamic' &&
+                  (pendingAssets.sqls.length > 0 ||
+                    pendingAssets.dataframes.length > 0 ||
+                    pendingAssets.charts.length > 0)
                 ) {
                   set((state) => ({
                     blocks: [
@@ -223,55 +294,18 @@ export const createChatSessionStore = () =>
                         kind: 'assets',
                         id: Date.now(),
                         group: pendingAssets,
-                        messageId: streamingMessageId, // ✨ 4. ใส่ messageId ให้กับ AssetsBlock
+                        messageId: streamingMessageId,
                       },
                     ],
                     pendingAssets: initialPendingAssets(),
                   }));
                 }
-              }
-              set((state) => {
-                const newBlocks = [...state.blocks];
-                if ('sql_query' in eventData) {
-                  const newPendingAssets = { ...state.pendingAssets };
-                  newPendingAssets.sqls.push({
-                    id: `sql-${Date.now()}`,
-                    title: 'Generated SQL',
-                    sql: eventData.sql_query,
-                  });
-                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating sql');
-                  return { pendingAssets: newPendingAssets, currentAiTask: 'creating sql' };
-                }
-                if ('sql_query_result' in eventData) {
-                  const newPendingAssets = { ...state.pendingAssets };
-                  const df = eventData.sql_query_result;
-                  if (df && df.length > 0) {
-                    newPendingAssets.dataframes.push({
-                      id: `df-${Date.now()}`,
-                      title: 'Query Result',
-                      columns: Object.keys(df[0]),
-                      rows: df.map((row) => Object.values(row)),
-                    });
-                  }
-                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating table');
-                  return { pendingAssets: newPendingAssets, currentAiTask: 'creating table' };
-                }
-                if ('chart_builder_result' in eventData) {
-                  const newPendingAssets = { ...state.pendingAssets };
-                  const chartConfig = eventData.chart_builder_result;
-                  if (chartConfig) {
-                    newPendingAssets.charts.push({
-                      id: `chart-${Date.now()}`,
-                      title: chartConfig.title?.text || 'Chart',
-                      config: chartConfig,
-                    });
-                  }
-                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating chart');
-                  return { pendingAssets: newPendingAssets, currentAiTask: 'creating chart' };
-                }
-                if ('answer_chunk' in eventData || 'answer' in eventData) {
-                  const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
+
+                set((state) => {
+                  const newBlocks = [...state.blocks];
                   const lastBlock = newBlocks[newBlocks.length - 1];
+                  const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
+
                   if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
                     (lastBlock as TextBlock).content += textContent;
                   } else {
@@ -280,14 +314,13 @@ export const createChatSessionStore = () =>
                       id: Date.now(),
                       sender: 'ai',
                       content: textContent,
-                      messageId: get().streamingMessageId, // ✨ 5. ใส่ messageId ให้กับ TextBlock
+                      messageId: streamingMessageId,
                     });
                   }
                   useChatHistoryStore.getState().startStreaming(newThreadId, 'answering');
                   return { blocks: newBlocks, currentAiTask: 'answering' };
-                }
-                return state;
-              });
+                });
+              }
             } catch (e) {
               console.warn('Could not parse SSE JSON part:', part);
             }
@@ -297,7 +330,23 @@ export const createChatSessionStore = () =>
         console.error('Streaming failed:', err);
         set({ error: err.message, status: 'error' });
       } finally {
-        // ✨ 6. เคลียร์ streamingMessageId เมื่อจบ
+        const { pendingAssets, blocks, streamMode, streamingMessageId } = get();
+
+        if (
+          streamMode === 'default' &&
+          (pendingAssets.sqls.length > 0 ||
+            pendingAssets.dataframes.length > 0 ||
+            pendingAssets.charts.length > 0)
+        ) {
+          const newAssetsBlock: AssetsBlock = {
+            kind: 'assets',
+            id: Date.now(),
+            group: pendingAssets,
+            messageId: streamingMessageId,
+          };
+          set({ blocks: [...blocks, newAssetsBlock] });
+        }
+
         set({
           status: 'completed',
           currentAiTask: null,
