@@ -1,24 +1,10 @@
 // remotes/stories/src/askAiPanel/AskAiPanel.tsx
-import React from 'react';
-import { useState, useEffect, useRef } from 'react';
-import {
-  makeStyles,
-  tokens,
-  shorthands,
-  Textarea,
-  Button,
-  Text, // ✨ 1. Import Text component
-} from '@fluentui/react-components';
-import {
-  Send24Regular,
-  Dismiss24Regular,
-  Sparkle24Filled, // ✨ 2. Import ไอคอน Sparkle
-} from '@fluentui/react-icons';
-import { useJsonEventStreaming } from './hooks/useSimulatedStreaming';
-import { ChatMessage } from './components/ChatMessage';
-import { InitialView } from './components/InitialView';
-import type { Block, TextBlock } from './helpers/blocks';
-import { findLastAiTextIndex } from './helpers/blocks';
+import React, { useEffect, useRef } from 'react';
+import { makeStyles, tokens, shorthands, Button, Text } from '@fluentui/react-components';
+import { Dismiss24Regular, Sparkle24Filled, Sparkle48Filled } from '@fluentui/react-icons';
+import { useChatSession, useChatSessionStoreApi, useChatHistoryStore } from '@arcfusion/store';
+import type { Story } from '@arcfusion/types';
+import { ChatLog, ChatInputBar, InitialView } from '@arcfusion/ui';
 
 const useStyles = makeStyles({
   panelRoot: {
@@ -28,112 +14,117 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     overflow: 'hidden',
   },
-  // ✨ 3. ปรับแก้ Style ของ Header และเพิ่ม titleGroup
   header: {
     display: 'flex',
-    justifyContent: 'space-between', // จัดให้ Title อยู่ซ้าย ปุ่มอยู่ขวา
+    justifyContent: 'space-between',
     alignItems: 'center',
-    ...shorthands.padding(tokens.spacingVerticalXS, tokens.spacingHorizontalM), // เพิ่ม padding ซ้ายขวา
+    ...shorthands.padding(tokens.spacingVerticalXS, tokens.spacingHorizontalM),
+    ...shorthands.borderBottom('1px', 'solid', tokens.colorNeutralStroke2),
     flexShrink: 0,
   },
   titleGroup: {
     display: 'flex',
     alignItems: 'center',
     ...shorthands.gap(tokens.spacingHorizontalXS),
-    color: tokens.colorBrandForeground1, // ใช้สี Brand
+    color: tokens.colorBrandForeground1,
   },
   contentArea: {
     flexGrow: 1,
-    overflowY: 'auto',
-    ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
-  },
-  chatContainer: {
     display: 'flex',
     flexDirection: 'column',
-    ...shorthands.gap(tokens.spacingVerticalL),
-  },
-  bottomBar: {
-    flexShrink: 0,
-    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
-    ...shorthands.borderTop('1px', 'solid', tokens.colorNeutralStroke2),
-    backgroundColor: tokens.colorNeutralBackground1,
-  },
-  inputContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    ...shorthands.gap('8px'),
-    position: 'relative',
-  },
-  textarea: {
-    width: '100%',
-    paddingRight: '40px',
-  },
-  sendButton: {
-    position: 'absolute',
-    right: '4px',
-    top: '50%',
-    transform: 'translateY(-50%)',
+    overflow: 'hidden',
+    backgroundColor: tokens.colorNeutralBackground2,
   },
 });
 
 interface AskAiPanelProps {
+  story: Story;
   onClose: () => void;
+  threadId?: string;
+  navigate: (path: string, options?: { replace?: boolean }) => void;
 }
 
-export function AskAiPanel({ onClose }: AskAiPanelProps) {
+const STORY_CONVERSATION_STARTERS = [
+  'Summarize the key insight for me.',
+  'What are the recommended actions?',
+];
+
+export function AskAiPanel({
+  story,
+  onClose,
+  threadId: initialThreadId,
+  navigate,
+}: AskAiPanelProps) {
   const styles = useStyles();
-  const [inputValue, setInputValue] = useState('');
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const { status, startStreaming, lastEvent } = useJsonEventStreaming();
-  const isStreaming = status === 'streaming';
-  const contentAreaRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef(true);
 
-  // ... (ส่วน Logic ทั้งหมดเหมือนเดิม ไม่มีการเปลี่ยนแปลง) ...
+  const blocks = useChatSession((state) => state.blocks);
+  const status = useChatSession((state) => state.status);
+  const currentAiTask = useChatSession((state) => state.currentAiTask);
+
+  const storeApi = useChatSessionStoreApi();
+  const {
+    fetchConversations: refreshHistory,
+    addUnreadResponse,
+    removeUnreadResponse,
+    unreadResponses,
+  } = useChatHistoryStore();
+
   useEffect(() => {
-    if (contentAreaRef.current) {
-      contentAreaRef.current.scrollTop = contentAreaRef.current.scrollHeight;
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (initialThreadId && unreadResponses.some((r) => r.threadId === initialThreadId)) {
+      removeUnreadResponse(initialThreadId);
     }
-  }, [blocks]);
-
-  const lastAiIndex = findLastAiTextIndex(blocks);
-
-  const sendMessage = (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
-    const t = Date.now();
-    setBlocks((prev) => [
-      ...prev,
-      { kind: 'text', id: t, sender: 'user', content: trimmed },
-      { kind: 'text', id: t + 1, sender: 'ai', content: '' },
-    ]);
-    startStreaming();
-    setInputValue('');
-  };
+  }, [initialThreadId, unreadResponses, removeUnreadResponse]);
 
   useEffect(() => {
-    if (!lastEvent) return;
-    setBlocks((prev) => {
-      const next = [...prev];
-      if (lastEvent.type === 'answer.delta') {
-        const text = lastEvent.payload?.text || '';
-        const tail = next[next.length - 1];
-        if (tail?.kind === 'text' && tail.sender === 'ai') {
-          next[next.length - 1] = { ...tail, content: tail.content + text } as TextBlock;
-        } else {
-          next.push({ kind: 'text', id: Date.now(), sender: 'ai', content: text });
-        }
+    const { loadConversation, clearChat } = storeApi.getState();
+    const currentStoreThreadId = storeApi.getState().threadId;
+
+    if (initialThreadId) {
+      if (initialThreadId !== currentStoreThreadId) {
+        loadConversation(initialThreadId);
       }
-      return next;
+    } else {
+      if (status !== 'streaming') {
+        clearChat();
+      }
+    }
+  }, [initialThreadId, status, storeApi]);
+
+  const isCurrentChatStreaming = status === 'streaming';
+
+  const handleSendMessage = (text: string) => {
+    const { sendMessage, threadId: conversationThreadId } = storeApi.getState();
+
+    // ✨ ลบ `.then()` ที่เรียก `updateLastMessageWithData` ออก
+    sendMessage(text, conversationThreadId, story.id).then((newThreadId) => {
+      if (isMountedRef.current && !conversationThreadId && newThreadId) {
+        navigate(`/stories/${story.id}?thread=${newThreadId}`, { replace: true });
+        refreshHistory();
+      }
+
+      if (newThreadId && !isMountedRef.current) {
+        addUnreadResponse({
+          threadId: newThreadId,
+          title: text,
+          storyId: story.id,
+        });
+      }
     });
-  }, [lastEvent?.seq]);
+  };
 
   return (
     <div className={styles.panelRoot}>
-      {/* ✨ 4. อัปเดต JSX ในส่วนของ Header */}
       <div className={styles.header}>
         <div className={styles.titleGroup}>
-          <Sparkle24Filled />
-          <Text weight="semibold">Ask AI</Text>
+          <Sparkle24Filled /> <Text weight="semibold">Ask AI</Text>
         </div>
         <Button
           appearance="transparent"
@@ -143,51 +134,29 @@ export function AskAiPanel({ onClose }: AskAiPanelProps) {
         />
       </div>
 
-      <div className={styles.contentArea} ref={contentAreaRef}>
-        {blocks.length > 0 ? (
-          <div className={styles.chatContainer}>
-            {blocks.map((b, i) =>
-              b.kind === 'text' ? (
-                <ChatMessage
-                  key={b.id}
-                  sender={b.sender}
-                  content={b.content}
-                  isStreaming={isStreaming && i === lastAiIndex}
-                />
-              ) : null
-            )}
-          </div>
+      <div className={styles.contentArea}>
+        {blocks.length === 0 && !isCurrentChatStreaming ? (
+          <InitialView
+            icon={<Sparkle48Filled style={{ scale: 1.6 }} />}
+            title="Ask about this story"
+            starters={STORY_CONVERSATION_STARTERS}
+            onSuggestionClick={handleSendMessage}
+          />
         ) : (
-          <InitialView onSuggestionClick={sendMessage} />
+          <ChatLog
+            blocks={blocks}
+            status={isCurrentChatStreaming ? 'streaming' : 'idle'}
+            currentAiTask={isCurrentChatStreaming ? currentAiTask : null}
+          />
         )}
       </div>
 
-      <div className={styles.bottomBar}>
-        <div className={styles.inputContainer}>
-          <Textarea
-            resize="vertical"
-            placeholder="Ask anything..."
-            size="small"
-            className={styles.textarea}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage(inputValue);
-              }
-            }}
-          />
-          <Button
-            appearance="transparent"
-            icon={<Send24Regular />}
-            className={styles.sendButton}
-            aria-label="Send"
-            onClick={() => sendMessage(inputValue)}
-            disabled={!inputValue.trim()}
-          />
-        </div>
-      </div>
+      <ChatInputBar
+        onSendMessage={handleSendMessage}
+        isStreaming={isCurrentChatStreaming}
+        sourceInfoText="This chat follows this story."
+        size="medium"
+      />
     </div>
   );
 }

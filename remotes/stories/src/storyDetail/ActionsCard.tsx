@@ -48,11 +48,6 @@ const useStyles = makeStyles({
     rowGap: '6px',
     width: '100%',
   },
-  row: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'start',
-  },
   sub: {
     color: tokens.colorNeutralForeground3,
     fontSize: tokens.fontSizeBase200,
@@ -82,18 +77,16 @@ export const ActionsCard: React.FC<ActionsCardProps> = ({ story }) => {
           <div key={index} className={s.item}>
             <span className={s.dot} />
             <div className={s.itemContent}>
-              <div className={s.row}>
-                <Body1>
-                  <strong>{action.description}</strong>
-                </Body1>
-                <Badge
-                  appearance="tint"
-                  color={action.type === 'investigate' ? 'danger' : 'brand'}
-                  style={{ whiteSpace: 'nowrap' }}
-                >
-                  {action.type}
-                </Badge>
-              </div>
+              <Body1>
+                <strong>{action.description}</strong>
+              </Body1>
+              <Badge
+                appearance="tint"
+                color={action.type === 'investigate' ? 'danger' : 'brand'}
+                style={{ whiteSpace: 'nowrap', width: 'fit-content' }}
+              >
+                {action.type}
+              </Badge>
             </div>
           </div>
         ))}

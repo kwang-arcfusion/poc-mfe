@@ -1,252 +1,125 @@
 // remotes/ask_ai/src/AskAi.tsx
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { makeStyles } from '@fluentui/react-components';
+import { SearchSparkle48Color } from '@fluentui/react-icons';
 import {
-  makeStyles,
-  tokens,
-  shorthands,
-  Textarea,
-  Button,
-  Spinner,
-  Body1,
-} from '@fluentui/react-components';
-import { Send24Regular } from '@fluentui/react-icons';
-import { useChatHistoryStore, useChatSessionStore } from '@arcfusion/store';
-import { ChatMessage } from './components/ChatMessage';
-import { InitialView } from './components/InitialView';
-import { AssetTabs } from './components/AssetTabs';
-import type { Block, TextBlock } from './types';
-
-const useStatusStyles = makeStyles({
-  statusContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    ...shorthands.gap(tokens.spacingHorizontalS),
-    color: tokens.colorNeutralForeground3,
-  },
-});
-const TASK_DISPLAY_TEXT: Record<string, string> = {
-  thinking: 'Thinking',
-  'creating sql': 'Creating SQL',
-  'creating table': 'Creating Table',
-  answering: 'Answering',
-};
-const AiStatusIndicator = ({ task }: { task: string | null }) => {
-  const styles = useStatusStyles();
-  if (!task) return null;
-  const displayText = TASK_DISPLAY_TEXT[task] || 'Processing';
-  return (
-    <div className={styles.statusContainer}>
-      <Spinner size="tiny" />
-      <Body1>{displayText}...</Body1>
-    </div>
-  );
-};
-
-interface AskAiProps {
-  navigate: (path: string, options?: { replace?: boolean }) => void;
-  chatId?: string;
-}
+ useChatSession,
+ useChatSessionStoreApi,
+ useChatHistoryStore,
+} from '@arcfusion/store';
+import { InitialView, ChatLog, ChatInputBar } from '@arcfusion/ui';
 
 const useStyles = makeStyles({
-  root: { display: 'flex', flexDirection: 'column', width: '100%', height: '100%' },
-  contentArea: { flexGrow: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' },
-  chatContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    ...shorthands.gap(tokens.spacingVerticalL),
-    ...shorthands.padding(tokens.spacingVerticalL, tokens.spacingHorizontalXXXL),
-    width: '100%',
-    maxWidth: '900px',
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    boxSizing: 'border-box',
-  },
-  aiTurnWrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    ...shorthands.gap(tokens.spacingVerticalL),
-  },
-  bottomBar: {
-    flexShrink: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    paddingBottom: tokens.spacingVerticalS,
-  },
-  inputContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    ...shorthands.gap('12px'),
-    width: '100%',
-    maxWidth: '820px',
-    position: 'relative',
-  },
-  textarea: { width: '100%', paddingRight: '50px' },
-  sendButton: { position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)' },
-  sourceInfo: {
-    color: tokens.colorNeutralForeground3,
-    fontSize: tokens.fontSizeBase200,
-    ...shorthands.padding(tokens.spacingVerticalS, 0),
-  },
+ root: {
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  height: '100%',
+ },
 });
 
+interface AskAiProps {
+ navigate: (path: string, options?: { replace?: boolean }) => void;
+ chatId?: string;
+}
+
+const ASK_AI_CONVERSATION_STARTERS = [
+ 'What changed in CTR last week?',
+ 'Which creatives drove conversions?',
+ 'Highlight underperforming campaigns.',
+ 'Summarize performance by channel.',
+];
+
 export default function AskAi({ navigate, chatId }: AskAiProps) {
-  const styles = useStyles();
-  const {
-    blocks,
-    status,
-    currentAiTask,
-    loadConversation,
-    sendMessage: sendMessageFromStore,
-    clearChat,
-    updateLastMessageWithData,
-  } = useChatSessionStore();
-  const { fetchConversations: refreshHistory } = useChatHistoryStore();
-  const [inputValue, setInputValue] = React.useState('');
-  const isStreaming = status === 'streaming';
-  const [isStopAutoScrollDown, setIsStopAutoScrollDown] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+ const styles = useStyles();
+ const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    if (isStopAutoScrollDown) return;
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [blocks, isStopAutoScrollDown]);
+ const blocks = useChatSession((state) => state.blocks);
+ const status = useChatSession((state) => state.status);
+ const currentAiTask = useChatSession((state) => state.currentAiTask);
 
-  useEffect(() => {
-    if (chatId) {
-      if (useChatSessionStore.getState().threadId !== chatId) loadConversation(chatId);
-    } else {
-      clearChat();
-    }
-  }, [chatId, loadConversation, clearChat]);
+ const storeApi = useChatSessionStoreApi();
+ const {
+  fetchConversations: refreshHistory,
+  addUnreadResponse,
+  removeUnreadResponse,
+  unreadResponses,
+ } = useChatHistoryStore();
 
-  const handleScroll = useCallback(() => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 5;
-      setIsStopAutoScrollDown(!isAtBottom);
-    }
-  }, []);
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    container?.addEventListener('scroll', handleScroll);
-    return () => container?.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
-
-  const handleSendMessage = async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed || isStreaming) return;
-    setInputValue('');
-    setIsStopAutoScrollDown(false);
-
-    const currentThreadId = useChatSessionStore.getState().threadId;
-    const newThreadId = await sendMessageFromStore(trimmed, currentThreadId);
-    if (!currentThreadId && newThreadId) {
-      navigate(`/ask_ai/${newThreadId}`, { replace: true });
-      refreshHistory();
-    }
-
-    if (newThreadId) {
-      await updateLastMessageWithData(newThreadId);
-    }
+ useEffect(() => {
+  isMountedRef.current = true;
+  return () => {
+   isMountedRef.current = false;
   };
+ }, []);
 
-  const groupedTurns = React.useMemo(() => {
-    if (!blocks.length) return [];
-    const turns: { sender: 'user' | 'ai'; blocks: Block[] }[] = [];
-    blocks.forEach((block) => {
-      const lastTurn = turns[turns.length - 1];
-      const currentSender = block.kind === 'text' ? block.sender : 'ai';
-      if (lastTurn && lastTurn.sender === currentSender) {
-        lastTurn.blocks.push(block);
-      } else {
-        turns.push({ sender: currentSender, blocks: [block] });
-      }
+ useEffect(() => {
+  if (chatId && unreadResponses.some((r) => r.threadId === chatId)) {
+   removeUnreadResponse(chatId);
+  }
+ }, [chatId, unreadResponses, removeUnreadResponse]);
+
+ useEffect(() => {
+  const { loadConversation, clearChat } = storeApi.getState();
+  const currentStoreThreadId = storeApi.getState().threadId;
+
+  if (chatId) {
+   if (chatId !== currentStoreThreadId) {
+    loadConversation(chatId);
+   }
+  } else {
+   if (status !== 'streaming') {
+    clearChat();
+   }
+  }
+ }, [chatId, status, storeApi]);
+
+ const isCurrentChatStreaming = status === 'streaming';
+
+ const handleSendMessage = (text: string) => {
+  const { sendMessage, threadId: currentThreadId } = storeApi.getState();
+
+  // ✨ ลบ `.then()` ที่เรียก `updateLastMessageWithData` ออก
+  sendMessage(text, currentThreadId).then((newThreadId) => {
+   // Logic ส่วนนี้ยังคงเดิม เพื่อเปลี่ยน URL เมื่อเริ่มแชทใหม่
+   // และ refresh history
+   if (isMountedRef.current && !currentThreadId && newThreadId) {
+    navigate(`/ask_ai/${newThreadId}`, { replace: true });
+    refreshHistory();
+   }
+
+   // Logic สำหรับ Notification เมื่อ User ไม่ได้อยู่หน้านี้
+   if (newThreadId && !isMountedRef.current) {
+    addUnreadResponse({
+     threadId: newThreadId,
+     title: text,
+     storyId: null,
     });
-    return turns;
-  }, [blocks]);
+   }
+  });
+ };
 
-  return (
-    <div className={styles.root}>
-      <div className={styles.contentArea} ref={scrollContainerRef}>
-        {blocks.length === 0 && !isStreaming ? (
-          <InitialView onSuggestionClick={handleSendMessage} />
-        ) : (
-          <div className={styles.chatContainer}>
-            {groupedTurns.map((turn, turnIndex) => {
-              if (turn.sender === 'user') {
-                const userBlock = turn.blocks[0] as TextBlock;
-                return (
-                  <ChatMessage
-                    key={userBlock.id || turnIndex}
-                    sender="user"
-                    content={userBlock.content}
-                  />
-                );
-              }
-              return (
-                <div key={turnIndex} className={styles.aiTurnWrapper}>
-                  {isStreaming && turnIndex === groupedTurns.length - 1 && (
-                    <AiStatusIndicator task={currentAiTask} />
-                  )}
-                  {turn.blocks.map((block) =>
-                    block.kind === 'text' ? (
-                      <ChatMessage
-                        key={block.id}
-                        sender="ai"
-                        content={block.content}
-                        messageId={block.messageId}
-                      />
-                    ) : (
-                      <AssetTabs key={block.id} group={block.group} messageId={block.messageId} />
-                    )
-                  )}
-                </div>
-              );
-            })}
-            {isStreaming &&
-              (groupedTurns[groupedTurns.length - 1]?.sender === 'user' ||
-                groupedTurns.length === 0) && (
-                <div className={styles.aiTurnWrapper}>
-                  <AiStatusIndicator task={currentAiTask} />
-                </div>
-              )}
-            <div ref={messagesEndRef} />
-          </div>
-        )}
-      </div>
-      <div className={styles.bottomBar}>
-        <div className={styles.inputContainer}>
-          <Textarea
-            resize="vertical"
-            placeholder="Ask Anything..."
-            className={styles.textarea}
-            size="large"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(inputValue);
-              }
-            }}
-          />
-          <Button
-            appearance="transparent"
-            icon={<Send24Regular />}
-            className={styles.sendButton}
-            aria-label="Send message"
-            onClick={() => handleSendMessage(inputValue)}
-            disabled={!inputValue.trim() || isStreaming}
-          />
-        </div>
-        <div className={styles.sourceInfo}>
-          This conversation draws on information from multiple sources.
-        </div>
-      </div>
-    </div>
-  );
+ return (
+  <div className={styles.root}>
+   {blocks.length === 0 && !isCurrentChatStreaming ? (
+    <InitialView
+     icon={<SearchSparkle48Color />}
+     starters={ASK_AI_CONVERSATION_STARTERS}
+     onSuggestionClick={handleSendMessage}
+    />
+   ) : (
+    <ChatLog
+     blocks={blocks}
+     status={isCurrentChatStreaming ? 'streaming' : 'idle'}
+     currentAiTask={isCurrentChatStreaming ? currentAiTask : null}
+    />
+   )}
+   <ChatInputBar
+    onSendMessage={handleSendMessage}
+    isStreaming={isCurrentChatStreaming}
+    sourceInfoText="This conversation is based on multiple sources."
+    size="large"
+   />
+  </div>
+ );
 }

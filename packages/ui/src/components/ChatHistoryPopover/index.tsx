@@ -10,10 +10,15 @@ import {
   PopoverSurface,
   Spinner,
   Text,
+  TabList,
+  Tab,
+  Badge,
 } from '@fluentui/react-components';
 import { Chat24Regular, Chat24Filled } from '@fluentui/react-icons';
-import { useChatHistoryStore } from '@arcfusion/store';
-import { useNavigate } from 'react-router-dom'; // ✨ 1. Import useNavigate
+import { useChatHistoryStore, type ChatHistoryTab } from '@arcfusion/store';
+import type { ConversationSummary } from '@arcfusion/types';
+import { useNavigate } from 'react-router-dom';
+import { TASK_DISPLAY_TEXT } from '../Chat/AiStatusIndicator';
 
 const useStyles = makeStyles({
   popoverSurface: {
@@ -28,11 +33,20 @@ const useStyles = makeStyles({
     boxShadow: tokens.shadow16,
   },
   header: {
-    ...shorthands.padding(tokens.spacingVerticalL, tokens.spacingHorizontalL),
+    ...shorthands.padding(
+      tokens.spacingVerticalL,
+      tokens.spacingHorizontalL,
+      tokens.spacingVerticalS
+    ),
     ...shorthands.borderBottom('1px', 'solid', tokens.colorNeutralStroke2),
     top: 0,
     backgroundColor: tokens.colorNeutralBackground1,
     zIndex: 1,
+  },
+  tabContainer: {
+    paddingLeft: '6px',
+    paddingRight: '6px',
+    boxSizing: 'border-box',
   },
   listContainer: {
     overflowY: 'auto',
@@ -66,12 +80,26 @@ const useStyles = makeStyles({
   itemDate: {
     color: tokens.colorNeutralForeground4,
   },
+  itemStatus: {
+    color: tokens.colorNeutralForeground3,
+    fontStyle: 'italic',
+  },
   center: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
     padding: tokens.spacingVerticalL,
+  },
+  badgeWrapper: {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  itemBadge: {
+    marginLeft: '6px',
+    marginRight: '6px',
   },
 });
 
@@ -88,74 +116,142 @@ const formatDate = (dateString: string) => {
 
 export const ChatHistoryPopover = () => {
   const styles = useStyles();
-  const navigate = useNavigate(); // ✨ 2. Initialize navigate
+  const navigate = useNavigate();
+
   const {
     conversations,
+    askConversations,
+    storyConversations,
     isLoading,
     isPopoverOpen,
+    activeTab,
+    // ✨ [แก้ไข] เปลี่ยนมาใช้ streamingTasks
+    streamingTasks,
+    unreadResponses,
     fetchConversations,
     togglePopover,
     closePopover,
+    setActiveTab,
   } = useChatHistoryStore();
 
   useEffect(() => {
-    // Fetch conversations only when popover opens and the list is empty
     if (isPopoverOpen && conversations.length === 0) {
       fetchConversations();
     }
   }, [isPopoverOpen, conversations.length, fetchConversations]);
 
-  // ✨ 3. Implement the navigation logic
-  const handleSelectConversation = (thread_id: string) => {
-    navigate(`/ask_ai/${thread_id}`);
-    closePopover(); // Close the popover after selection
+  const handleSelectConversation = (convo: ConversationSummary) => {
+    if (convo.story_id) {
+      navigate(`/stories/${convo.story_id}?thread=${convo.thread_id}`);
+    } else {
+      navigate(`/ask_ai/${convo.thread_id}`);
+    }
+    closePopover();
+  };
+
+  const renderList = (items: ConversationSummary[]) => {
+    if (items.length === 0) {
+      return (
+        <div className={styles.center}>
+          <Text>No history yet</Text>
+        </div>
+      );
+    }
+
+    return items.map((convo) => {
+      // ✨ [แก้ไข] Logic ใหม่: เช็คว่า threadId ของ chat นี้มีอยู่ใน streamingTasks หรือไม่
+      const isActiveStreaming = !!streamingTasks[convo.thread_id];
+      const streamingTask = streamingTasks[convo.thread_id] || null;
+      const isUnread = unreadResponses.some((r) => r.threadId === convo.thread_id);
+
+      return (
+        <div
+          key={convo.id}
+          className={styles.listItem}
+          onClick={() => handleSelectConversation(convo)}
+        >
+          <div className={styles.iconWrapper}>
+            {isActiveStreaming ? (
+              <Spinner size="tiny" />
+            ) : isUnread ? (
+              <Badge
+                className={styles.itemBadge}
+                size="extra-small"
+                appearance="filled"
+                color="danger"
+              />
+            ) : (
+              <Chat24Regular />
+            )}
+          </div>
+
+          <div className={styles.itemText}>
+            <Text size={300} weight="semibold" className={styles.itemTitle}>
+              {convo.title}
+            </Text>
+            {isActiveStreaming && streamingTask ? (
+              <Text size={200} className={styles.itemStatus}>
+                {TASK_DISPLAY_TEXT[streamingTask] || 'Processing...'}
+              </Text>
+            ) : (
+              <Text size={200} className={styles.itemDate}>
+                {formatDate(convo.updated_at)}
+              </Text>
+            )}
+          </div>
+        </div>
+      );
+    });
   };
 
   return (
     <Popover open={isPopoverOpen} onOpenChange={togglePopover} positioning="below-end">
       <PopoverTrigger>
-        <Button
-          appearance="transparent"
-          icon={isPopoverOpen ? <Chat24Filled /> : <Chat24Regular />}
-          aria-label="Chat History"
-        />
+        <div className={styles.badgeWrapper}>
+          <Button
+            appearance="transparent"
+            icon={isPopoverOpen ? <Chat24Filled /> : <Chat24Regular />}
+            aria-label="Chat History"
+          />
+          {unreadResponses.length > 0 && (
+            <Badge
+              size="extra-small"
+              appearance="filled"
+              color="danger"
+              style={{
+                position: 'absolute',
+                top: '4px',
+                right: '4px',
+                pointerEvents: 'none',
+              }}
+            />
+          )}
+        </div>
       </PopoverTrigger>
-
       <PopoverSurface className={styles.popoverSurface}>
         <div className={styles.header}>
-          <Text as="h2" size={500} weight="semibold">
+          <Text as="h2" size={400} weight="semibold">
             Chat History
           </Text>
+        </div>
+        <div className={styles.tabContainer}>
+          <TabList
+            selectedValue={activeTab}
+            onTabSelect={(_, data) => setActiveTab(data.value as ChatHistoryTab)}
+          >
+            <Tab value="ask">Ask</Tab>
+            <Tab value="story">Story</Tab>
+          </TabList>
         </div>
         <div className={styles.listContainer}>
           {isLoading ? (
             <div className={styles.center}>
               <Spinner />
             </div>
-          ) : conversations.length > 0 ? (
-            conversations.map((convo) => (
-              <div
-                key={convo.id}
-                className={styles.listItem}
-                onClick={() => handleSelectConversation(convo.thread_id)}
-              >
-                <div className={styles.iconWrapper}>
-                  <Chat24Regular />
-                </div>
-                <div className={styles.itemText}>
-                  <Text size={300} weight="semibold" className={styles.itemTitle}>
-                    {convo.title}
-                  </Text>
-                  <Text size={200} className={styles.itemDate}>
-                    {formatDate(convo.updated_at)}
-                  </Text>
-                </div>
-              </div>
-            ))
+          ) : activeTab === 'ask' ? (
+            renderList(askConversations)
           ) : (
-            <div className={styles.center}>
-              <Text>No history yet</Text>
-            </div>
+            renderList(storyConversations)
           )}
         </div>
       </PopoverSurface>

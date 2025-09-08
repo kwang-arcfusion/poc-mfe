@@ -1,9 +1,9 @@
 // remotes/overview/src/Overview.tsx
-import React, { useState, useEffect } from 'react';
-import { makeStyles, shorthands, Spinner, tokens } from '@fluentui/react-components';
+import React, { useState, useEffect, useMemo, useRef } from 'react'; // 1. Import useRef
+import { makeStyles, shorthands, Spinner, tokens, Text } from '@fluentui/react-components';
 
-import { OverviewData, FilterValues } from './types';
-import { fetchOverviewData } from './services/api';
+import { OverviewApiResponse, FilterValues, AnalyticsOptions, FilterOption } from './types';
+import { fetchOverviewData, fetchAnalyticsOptions } from './services/api';
 
 import { OverallPerformance } from './components/OverallPerformance';
 import { DailyPerformanceChart } from './components/DailyPerformanceChart';
@@ -39,49 +39,107 @@ const useStyles = makeStyles({
   },
 });
 
-// --- [1] Add Ads and Metrics back to options ---
-const allFilterOptions = {
-  channels: ['Facebook', 'Google', 'TikTok', 'Instagram'],
-  campaigns: ['Campaign Alpha', 'Campaign Beta', 'Campaign Charlie', 'Summer Sale'],
-  groupBy: ['Day', 'Week', 'Campaign', 'Ad Set'],
-  ads: ['Ad Creative 1', 'Ad Creative 2', 'Video Ad A', 'Carousel Ad B'],
-  metrics: ['Impressions', 'Clicks', 'CTR', 'Conversions'],
-};
-
-// --- [2] Add Ads and Metrics back to the initial values ---
+// Default initial state for filters, based on the options API response
 const initialFilters: FilterValues = {
-  channels: ['Facebook', 'Google', 'TikTok'],
-  campaigns: [],
-  groupBy: ['Day'],
-  ads: [],
-  metrics: [],
+  channels: ['SMS', 'Email'],
+  metrics: ['conversions_rate', 'impression_rate'],
 };
 
-interface OverviewProps {
-  navigate: (path: string) => void;
-}
-
-export default function Overview({ navigate }: OverviewProps) {
+export default function Overview() {
   const styles = useStyles();
-  const [data, setData] = useState<OverviewData | null>(null);
+  const isInitialMount = useRef(true); // 2. สร้าง ref เพื่อเช็คการ render ครั้งแรก
+
+  // State for data, loading states, and errors
+  const [data, setData] = useState<OverviewApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState<FilterValues>(initialFilters);
+  const [error, setError] = useState<string | null>(null);
+
+  // State for filter options fetched from the API
+  const [filterOptions, setFilterOptions] = useState<AnalyticsOptions | null>(null);
+
+  // State for user's selected filters
+  const [selectedFilters, setSelectedFilters] = useState<FilterValues>(initialFilters);
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
 
+  // 3. useEffect สำหรับการโหลดข้อมูลครั้งแรก (Initial Load)
   useEffect(() => {
-    setIsLoading(true);
-    fetchOverviewData(filters).then((fetchedData) => {
-      setData(fetchedData);
-      setIsLoading(false);
-    });
-  }, [filters]);
+    // ฟังก์ชันสำหรับโหลดข้อมูลเริ่มต้นทั้งหมด
+    const loadInitialData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        // ดึงทั้ง Options และ Overview Data พร้อมกัน
+        const [options, overviewData] = await Promise.all([
+          fetchAnalyticsOptions(),
+          fetchOverviewData({ start: null, end: null }, initialFilters), // ส่งค่าว่างเพื่อให้ API ใช้ default
+        ]);
 
+        setFilterOptions(options);
+        setData(overviewData);
+
+        // --- ✨ จุดสำคัญ: ตั้งค่า Date Range จาก Response ของ API ---
+        const { start, end } = overviewData.meta.filters;
+        if (start && end) {
+          // แปลง string 'YYYY-MM-DD' เป็น Date object
+          setDateRange({ start: new Date(start), end: new Date(end) });
+        }
+        // --------------------------------------------------------
+
+      } catch (err: any) {
+        console.error('Failed to load initial data:', err);
+        setError(err.message || 'Could not load dashboard data.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInitialData();
+  }, []); // Dependency array เป็นค่าว่างเพื่อให้ทำงานแค่ครั้งเดียว
+
+  // 4. useEffect สำหรับติดตามการเปลี่ยนแปลงจากผู้ใช้ (User-driven updates)
+  useEffect(() => {
+    // เช็ค ref เพื่อไม่ให้ effect นี้ทำงานในครั้งแรกที่ component โหลด
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    const fetchDataOnUpdate = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const fetchedData = await fetchOverviewData(dateRange, selectedFilters);
+            setData(fetchedData);
+        } catch (err: any) {
+            console.error('Data fetching error:', err);
+            setError(err.message || 'An unexpected error occurred.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    fetchDataOnUpdate();
+  }, [selectedFilters, dateRange]); // Effect นี้จะทำงานเมื่อ filter หรือ dateRange เปลี่ยน
+
+
+  // Memoized values for filter options to avoid re-computation
+  const channelOptions = useMemo(
+    () => filterOptions?.dimensions.find((d) => d.key === 'channel')?.options || [],
+    [filterOptions]
+  );
+  const metricOptions = useMemo(() => filterOptions?.metrics || [], [filterOptions]);
+
+  // Handler for updating filter state
   const handleFilterChange = (category: keyof FilterValues, selection: string[]) => {
-    setFilters((prevFilters) => ({
+    setSelectedFilters((prevFilters) => ({
       ...prevFilters,
       [category]: selection,
     }));
   };
+
+  // Helper to get labels from keys for the MultiSelect components
+  const getOptionsFromKeys = (options: FilterOption[] | { key: string; label: string }[]) =>
+    options.map((opt) => opt.label);
 
   if (isLoading && !data) {
     return (
@@ -91,51 +149,59 @@ export default function Overview({ navigate }: OverviewProps) {
     );
   }
 
-  if (!data) {
-    return <h3>Error loading data.</h3>;
-  }
-
   return (
     <div className={styles.root}>
       <header className={styles.header}>
         <Filter28Filled />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
-        <MultiSelect
-          label="Channels"
-          options={allFilterOptions.channels}
-          selectedOptions={filters.channels || []}
-          onSelectionChange={(selection) => handleFilterChange('channels', selection)}
-        />
-        <MultiSelect
-          label="Campaigns"
-          options={allFilterOptions.campaigns}
-          selectedOptions={filters.campaigns || []}
-          onSelectionChange={(selection) => handleFilterChange('campaigns', selection)}
-        />
-        <MultiSelect
-          label="Group By"
-          options={allFilterOptions.groupBy}
-          selectedOptions={filters.groupBy || []}
-          onSelectionChange={(selection) => handleFilterChange('groupBy', selection)}
-        />
-        {/* --- [3] Add Components for Ads and Metrics --- */}
-        <MultiSelect
-          label="Ads"
-          options={allFilterOptions.ads}
-          selectedOptions={filters.ads || []}
-          onSelectionChange={(selection) => handleFilterChange('ads', selection)}
-        />
-        <MultiSelect
-          label="Metrics"
-          options={allFilterOptions.metrics}
-          selectedOptions={filters.metrics || []}
-          onSelectionChange={(selection) => handleFilterChange('metrics', selection)}
-        />
+        {channelOptions.length > 0 && (
+            <MultiSelect
+            label="Channels"
+            options={getOptionsFromKeys(channelOptions)}
+            selectedOptions={selectedFilters.channels.map(
+                (key) => channelOptions.find((opt) => opt.key === key)?.label || key
+            )}
+            onSelectionChange={(selectedLabels) => {
+                const selectedKeys = selectedLabels.map(
+                (label) => channelOptions.find((opt) => opt.label === label)?.key || ''
+                );
+                handleFilterChange(
+                'channels',
+                selectedKeys.filter((k) => k)
+                );
+            }}
+            />
+        )}
+        {metricOptions.length > 0 && (
+            <MultiSelect
+            label="Metrics"
+            options={getOptionsFromKeys(metricOptions)}
+            selectedOptions={selectedFilters.metrics.map(
+                (key) => metricOptions.find((opt) => opt.key === key)?.label || key
+            )}
+            onSelectionChange={(selectedLabels) => {
+                const selectedKeys = selectedLabels.map(
+                (label) => metricOptions.find((opt) => opt.label === label)?.key || ''
+                );
+                handleFilterChange(
+                'metrics',
+                selectedKeys.filter((k) => k)
+                );
+            }}
+            />
+        )}
       </header>
 
-      <OverallPerformance metrics={data.metrics} />
-      <DailyPerformanceChart data={data.dailyPerformance} />
-      <ByChannelTable items={data.channelPerformance} />
+      {isLoading && <Spinner label="Loading new data..." />}
+      {error && !isLoading && <Text weight="semibold" style={{ color: tokens.colorPaletteRedForeground1 }}>{error}</Text>}
+
+      {data && !error && (
+        <>
+          <OverallPerformance cards={data.cards} />
+          <DailyPerformanceChart data={data.series} />
+          {data.tables[0] && <ByChannelTable items={data.tables[0]} />}
+        </>
+      )}
     </div>
   );
 }

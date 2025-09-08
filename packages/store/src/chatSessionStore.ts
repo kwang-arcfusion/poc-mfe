@@ -2,18 +2,28 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { getApiBaseUrl, getConversationByThreadId } from '@arcfusion/client';
+import { useChatHistoryStore } from './chatHistoryStore';
 import type {
   ConversationResponse,
   StreamedEvent,
-  ChatMessage as ApiChatMessage,
   AssetGroup,
   Block,
   TextBlock,
+  AssetsBlock,
 } from '@arcfusion/types';
 
 type StreamStatus = 'idle' | 'streaming' | 'completed' | 'error';
-type AiTask = 'thinking' | 'creating sql' | 'creating table' | 'answering' | null;
+type AiTask =
+  | 'thinking'
+  | 'creating sql'
+  | 'creating table'
+  | 'creating chart'
+  | 'answering'
+  | null;
 
+type StreamMode = 'default' | 'dynamic';
+
+// ✨ ================== START: CODE ที่แก้ไข ================== ✨
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
   if (!response || !response.messages) {
     return [];
@@ -22,6 +32,20 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
   let idCounter = Date.now();
   for (const message of response.messages) {
     if (message.role === 'system') continue;
+
+    // ✨ 1. ประมวลผลและเพิ่ม TextBlock (ข้อความ) ก่อนเสมอ
+    const textContent = typeof message.content === 'string' ? message.content : '';
+    if (textContent) {
+      blocks.push({
+        kind: 'text',
+        id: idCounter++,
+        messageId: (message as any).id,
+        sender: message.role === 'bot' ? 'ai' : 'user',
+        content: textContent,
+      });
+    }
+    
+    // ✨ 2. จากนั้นค่อยประมวลผลและเพิ่ม AssetsBlock (ตาราง/SQL/Chart)
     if (message.role === 'bot') {
       const assetGroup: AssetGroup = { id: uuidv4(), sqls: [], dataframes: [], charts: [] };
       let hasAssets = false;
@@ -42,6 +66,14 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
         });
         hasAssets = true;
       }
+      if (message.chart_config) {
+        assetGroup.charts.push({
+          id: `chart-${idCounter}`,
+          title: message.chart_config.title?.text || 'Chart',
+          config: message.chart_config,
+        });
+        hasAssets = true;
+      }
       if (hasAssets) {
         blocks.push({
           kind: 'assets',
@@ -51,22 +83,15 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
         });
       }
     }
-    const textContent = typeof message.content === 'string' ? message.content : '';
-    if (textContent) {
-      blocks.push({
-        kind: 'text',
-        id: idCounter++,
-        messageId: (message as any).id,
-        sender: message.role === 'bot' ? 'ai' : 'user',
-        content: textContent,
-      });
-    }
   }
   return blocks;
 }
+// ✨ =================== END: CODE ที่แก้ไข =================== ✨
 
 export interface ChatSessionState {
   threadId?: string;
+  streamingThreadId?: string;
+  streamingMessageId?: string;
   blocks: Block[];
   status: StreamStatus;
   error: string | null;
@@ -74,10 +99,10 @@ export interface ChatSessionState {
   isLoadingHistory: boolean;
   currentAiTask: AiTask;
   pendingAssets: AssetGroup;
+  streamMode: StreamMode;
   loadConversation: (threadId: string) => Promise<void>;
-  sendMessage: (text: string, currentThreadId?: string) => Promise<string>;
+  sendMessage: (text: string, currentThreadId?: string, storyId?: string) => Promise<string>;
   clearChat: () => void;
-  updateLastMessageWithData: (threadId: string) => Promise<void>;
 }
 
 const initialPendingAssets = (): AssetGroup => ({
@@ -87,8 +112,10 @@ const initialPendingAssets = (): AssetGroup => ({
   charts: [],
 });
 
-export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
+const initialState: Omit<ChatSessionState, 'loadConversation' | 'sendMessage' | 'clearChat'> = {
   threadId: undefined,
+  streamingThreadId: undefined,
+  streamingMessageId: undefined,
   blocks: [],
   status: 'idle',
   error: null,
@@ -96,175 +123,238 @@ export const useChatSessionStore = create<ChatSessionState>((set, get) => ({
   isLoadingHistory: false,
   currentAiTask: null,
   pendingAssets: initialPendingAssets(),
-  clearChat: () => {
-    set({
-      threadId: undefined,
-      blocks: [],
-      activePrompt: null,
-      status: 'idle',
-      error: null,
-      currentAiTask: null,
-      pendingAssets: initialPendingAssets(),
-    });
-  },
-  loadConversation: async (threadId) => {
-    if (get().isLoadingHistory) return;
-    set({
-      isLoadingHistory: true,
-      status: 'idle',
-      error: null,
-      currentAiTask: null,
-      pendingAssets: initialPendingAssets(),
-    });
-    try {
-      const conversationData = await getConversationByThreadId(threadId);
-      const loadedBlocks = transformConversationResponseToBlocks(conversationData);
-      set({
-        blocks: loadedBlocks,
-        activePrompt: conversationData.title || 'Conversation',
-        threadId: conversationData.thread_id,
-        isLoadingHistory: false,
+  streamMode: 'default',
+};
+
+export const createChatSessionStore = () =>
+  create<ChatSessionState>((set, get) => ({
+    ...initialState,
+
+    clearChat: () => {
+      set(initialState);
+    },
+
+    loadConversation: async (threadId) => {
+      set({ ...initialState, isLoadingHistory: true });
+      try {
+        const conversationData = await getConversationByThreadId(threadId);
+        const loadedBlocks = transformConversationResponseToBlocks(conversationData);
+        set({
+          blocks: loadedBlocks,
+          activePrompt: conversationData.title || 'Conversation',
+          threadId: conversationData.thread_id,
+          isLoadingHistory: false,
+        });
+      } catch (err: any) {
+        console.error('Failed to load conversation:', err);
+        set({
+          ...initialState,
+          error: err.message,
+          activePrompt: 'Error Loading Chat',
+        });
+      }
+    },
+
+    sendMessage: async (text, currentThreadId, storyId) => {
+      if (get().status === 'streaming') return currentThreadId || '';
+
+      if (!currentThreadId) {
+        set(initialState);
+      }
+
+      const newThreadId = currentThreadId || uuidv4();
+
+      set((state) => ({
+        threadId: newThreadId,
+        streamingThreadId: newThreadId,
+        status: 'streaming',
+        currentAiTask: 'thinking',
+        error: null,
+        activePrompt: state.activePrompt || text,
+        blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }],
+        pendingAssets: initialPendingAssets(),
+        streamMode: 'default',
+      }));
+
+      useChatHistoryStore.getState().startStreaming(newThreadId, 'thinking');
+      useChatHistoryStore.getState().addOptimisticConversation({
+        thread_id: newThreadId,
+        title: text,
+        story_id: storyId,
       });
-    } catch (err: any) {
-      console.error('Failed to load conversation:', err);
-      set({ error: err.message, isLoadingHistory: false });
-    }
-  },
-  updateLastMessageWithData: async (threadId) => {
-    try {
-      const fullConversation = await getConversationByThreadId(threadId);
-      const lastBotMessageFromApi = fullConversation.messages.filter((m) => m.role === 'bot').pop();
 
-      if (!lastBotMessageFromApi || !(lastBotMessageFromApi as any).id) return;
-
-      const newMessageId = (lastBotMessageFromApi as any).id;
-
-      set((state) => {
-        const newBlocks = [...state.blocks];
-        let lastUserIndex = -1;
-        for (let i = newBlocks.length - 1; i >= 0; i--) {
-          const block = newBlocks[i];
-          if (block.kind === 'text' && block.sender === 'user') {
-            lastUserIndex = i;
-            break;
-          }
+      try {
+        const API_BASE_URL = getApiBaseUrl();
+        if (!API_BASE_URL) throw new Error('API Client not initialized.');
+        const requestBody: any = { query: text, thread_id: newThreadId };
+        if (storyId) {
+          requestBody.story_id = storyId;
         }
+        const response = await fetch(`${API_BASE_URL}/v1/chat/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
+        if (!response.ok || !response.body)
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
 
-        if (lastUserIndex !== -1) {
-          for (let i = lastUserIndex + 1; i < newBlocks.length; i++) {
-            newBlocks[i] = { ...newBlocks[i], messageId: newMessageId };
-          }
-        }
-        return { blocks: newBlocks };
-      });
-    } catch (error) {
-      console.error('Failed to update last message with data:', error);
-    }
-  },
-  sendMessage: async (text, currentThreadId) => {
-    if (get().status === 'streaming') return currentThreadId || '';
-    const newThreadId = currentThreadId || uuidv4();
-    set((state) => ({
-      threadId: newThreadId,
-      status: 'streaming',
-      currentAiTask: 'thinking',
-      error: null,
-      activePrompt: state.activePrompt || text,
-      blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }],
-      pendingAssets: initialPendingAssets(),
-    }));
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split('data:');
+          buffer = parts.pop() || '';
+          for (const part of parts) {
+            if (part.trim() === '' || part.trim() === '[DONE]') continue;
+            try {
+              const eventData: StreamedEvent & {
+                message_id?: string;
+                response_type?: string;
+              } = JSON.parse(part.trim());
 
-    try {
-      const API_BASE_URL = getApiBaseUrl();
-      if (!API_BASE_URL) throw new Error('API Client not initialized.');
-      const response = await fetch(`${API_BASE_URL}/v1/chat/ask`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: text, thread_id: newThreadId }),
-      });
-      if (!response.ok || !response.body)
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split('data:');
-        buffer = parts.pop() || '';
-        for (const part of parts) {
-          if (part.trim() === '' || part.trim() === '[DONE]') continue;
-          try {
-            const eventData: StreamedEvent = JSON.parse(part.trim());
-            if ('answer_chunk' in eventData || 'answer' in eventData) {
-              const { pendingAssets } = get();
-              if (
-                pendingAssets.sqls.length > 0 ||
-                pendingAssets.dataframes.length > 0 ||
-                pendingAssets.charts.length > 0
-              ) {
-                set((state) => ({
-                  blocks: [
-                    ...state.blocks,
-                    { kind: 'assets', id: Date.now(), group: pendingAssets },
-                  ],
-                  pendingAssets: initialPendingAssets(),
-                }));
+              if (eventData.message_id) {
+                set({ streamingMessageId: eventData.message_id });
+                continue;
               }
-            }
-            set((state) => {
-              let newPendingAssets = { ...state.pendingAssets };
-              let updatedBlocks = [...state.blocks];
+
+              if (eventData.response_type === 'dynamic_response') {
+                set({ streamMode: 'dynamic' });
+                continue;
+              }
+
               if ('sql_query' in eventData) {
-                newPendingAssets.sqls.push({
-                  id: `sql-${Date.now()}`,
-                  title: 'Generated SQL',
-                  sql: eventData.sql_query,
-                });
-                return { pendingAssets: newPendingAssets, currentAiTask: 'creating sql' };
-              }
-              if ('sql_query_result' in eventData) {
+                set((state) => ({
+                  pendingAssets: {
+                    ...state.pendingAssets,
+                    sqls: [
+                      ...state.pendingAssets.sqls,
+                      { id: `sql-${Date.now()}`, title: 'Generated SQL', sql: eventData.sql_query },
+                    ],
+                  },
+                  currentAiTask: 'creating sql',
+                }));
+                useChatHistoryStore.getState().startStreaming(newThreadId, 'creating sql');
+              } else if ('sql_query_result' in eventData) {
                 const df = eventData.sql_query_result;
                 if (df && df.length > 0) {
-                  newPendingAssets.dataframes.push({
-                    id: `df-${Date.now()}`,
-                    title: 'Query Result',
-                    columns: Object.keys(df[0]),
-                    rows: df.map((row) => Object.values(row)),
-                  });
+                  set((state) => ({
+                    pendingAssets: {
+                      ...state.pendingAssets,
+                      dataframes: [
+                        ...state.pendingAssets.dataframes,
+                        {
+                          id: `df-${Date.now()}`,
+                          title: 'Query Result',
+                          columns: Object.keys(df[0]),
+                          rows: df.map((row) => Object.values(row)),
+                        },
+                      ],
+                    },
+                    currentAiTask: 'creating table',
+                  }));
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating table');
                 }
-                return { pendingAssets: newPendingAssets, currentAiTask: 'creating table' };
+              } else if ('chart_builder_result' in eventData) {
+                const chartConfig = eventData.chart_builder_result;
+                if (chartConfig) {
+                  set((state) => ({
+                    pendingAssets: {
+                      ...state.pendingAssets,
+                      charts: [
+                        ...state.pendingAssets.charts,
+                        {
+                          id: `chart-${Date.now()}`,
+                          title: chartConfig.title?.text || 'Chart',
+                          config: chartConfig,
+                        },
+                      ],
+                    },
+                    currentAiTask: 'creating chart',
+                  }));
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating chart');
+                }
               }
+
               if ('answer_chunk' in eventData || 'answer' in eventData) {
-                const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
-                const lastBlock = updatedBlocks[updatedBlocks.length - 1];
-                if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
-                  (lastBlock as TextBlock).content += textContent;
-                } else {
-                  updatedBlocks.push({
-                    kind: 'text',
-                    id: Date.now(),
-                    sender: 'ai',
-                    content: textContent,
-                  });
+                const { streamMode, pendingAssets, streamingMessageId } = get();
+
+                if (
+                  streamMode === 'dynamic' &&
+                  (pendingAssets.sqls.length > 0 ||
+                    pendingAssets.dataframes.length > 0 ||
+                    pendingAssets.charts.length > 0)
+                ) {
+                  set((state) => ({
+                    blocks: [
+                      ...state.blocks,
+                      {
+                        kind: 'assets',
+                        id: Date.now(),
+                        group: pendingAssets,
+                        messageId: streamingMessageId,
+                      },
+                    ],
+                    pendingAssets: initialPendingAssets(),
+                  }));
                 }
-                return { blocks: updatedBlocks, currentAiTask: 'answering' };
+
+                set((state) => {
+                  const newBlocks = [...state.blocks];
+                  const lastBlock = newBlocks[newBlocks.length - 1];
+                  const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
+
+                  if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
+                    (lastBlock as TextBlock).content += textContent;
+                  } else {
+                    newBlocks.push({
+                      kind: 'text',
+                      id: Date.now(),
+                      sender: 'ai',
+                      content: textContent,
+                      messageId: streamingMessageId,
+                    });
+                  }
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'answering');
+                  return { blocks: newBlocks, currentAiTask: 'answering' };
+                });
               }
-              return {};
-            });
-          } catch (e) {
-            console.warn('Could not parse SSE JSON part:', part);
+            } catch (e) {
+              console.warn('Could not parse SSE JSON part:', part);
+            }
           }
         }
+      } catch (err: any) {
+        console.error('Streaming failed:', err);
+        set({ error: err.message, status: 'error' });
+      } finally {
+        const { pendingAssets, blocks, streamMode, streamingMessageId } = get();
+
+        if (
+          streamMode === 'default' &&
+          (pendingAssets.sqls.length > 0 ||
+            pendingAssets.dataframes.length > 0 ||
+            pendingAssets.charts.length > 0)
+        ) {
+          const newAssetsBlock: AssetsBlock = {
+            kind: 'assets',
+            id: Date.now(),
+            group: pendingAssets,
+            messageId: streamingMessageId,
+          };
+          set({ blocks: [...blocks, newAssetsBlock] });
+        }
+
+        set({
+          status: 'completed',
+          currentAiTask: null,
+          streamingThreadId: undefined,
+          streamingMessageId: undefined,
+        });
+        useChatHistoryStore.getState().stopStreaming(newThreadId);
       }
-    } catch (err: any) {
-      console.error('Streaming failed:', err);
-      set({ error: err.message, status: 'error' });
-    } finally {
-      set({ status: 'completed', currentAiTask: null });
-    }
-    return newThreadId;
-  },
-}));
+      return newThreadId;
+    },
+  }));

@@ -1,128 +1,63 @@
 // remotes/overview/src/services/api.ts
-import { OverviewData } from '../types';
+import { AnalyticsOptions, OverviewApiResponse, FilterValues } from '../types';
+import type { DateRange } from '@arcfusion/ui';
 
-// --- ⬇️ [1] Create a function to generate small sparkline data ⬇️ ---
-const generateSparkline = () => Array.from({ length: 12 }, () => Math.random() * 100 + 50);
+// Base URL for the analytics API
+const API_BASE_URL = 'https://chat-with-data-336404645436.asia-southeast1.run.app/api/v1';
 
-// --- ⬇️ [2] Add `sparklineData` to each metric ⬇️ ---
-const mockData: OverviewData = {
-  metrics: [
-    {
-      id: 'impr',
-      title: 'Impressions',
-      value: 302000,
-      change: 4.6,
-      sparklineData: generateSparkline(),
-    },
-    { id: 'reach', title: 'Reach', value: 200000, change: 4.6, sparklineData: generateSparkline() },
-    { id: 'clicks', title: 'Clicks', value: 7250, change: 4.6, sparklineData: generateSparkline() },
-    { id: 'leads', title: 'Leads', value: 960, change: 4.6, sparklineData: generateSparkline() },
-    {
-      id: 'purch',
-      title: 'Purchases',
-      value: 302,
-      change: 1.2,
-      sparklineData: generateSparkline(),
-    },
-    {
-      id: 'conv',
-      title: 'Conversions',
-      value: 200,
-      change: -0.5,
-      sparklineData: generateSparkline(),
-    },
-    {
-      id: 'cvr',
-      title: 'Conversion Rate (CVR)',
-      value: 72.5,
-      change: 2.1,
-      sparklineData: generateSparkline(),
-    },
-    {
-      id: 'ctr',
-      title: 'Click-Through Rate (CTR)',
-      value: 2.4,
-      change: 0.1,
-      sparklineData: generateSparkline(),
-    },
-    {
-      id: 'cpc',
-      title: 'Cost per Click',
-      value: 1.2,
-      change: -3.0,
-      isCurrency: true,
-      sparklineData: generateSparkline(),
-    },
-    {
-      id: 'installs',
-      title: 'App Installs',
-      value: 1500,
-      change: 5.0,
-      sparklineData: generateSparkline(),
-    },
-    {
-      id: 'cost',
-      title: 'Cost',
-      value: 8700,
-      change: 10.3,
-      isCurrency: true,
-      sparklineData: generateSparkline(),
-    },
-  ],
-  dailyPerformance: Array.from({ length: 30 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (30 - i));
-    return {
-      date: date.toISOString().split('T')[0],
-      value: 5000 + Math.sin(i / 3) * 2000 + Math.random() * 1000,
-    };
-  }),
-  channelPerformance: [
-    {
-      channel: 'Facebook',
-      impr: 120000,
-      reach: 90000,
-      clicks: 3200,
-      ctr: 2.7,
-      cost: 2300,
-      leads: 300,
-      purch: 120,
-      conv: 180,
-      cvr: 5.6,
-    },
-    {
-      channel: 'Google',
-      impr: 90000,
-      reach: 76000,
-      clicks: 2100,
-      ctr: 2.3,
-      cost: 2600,
-      leads: 400,
-      purch: 160,
-      conv: 140,
-      cvr: 4.9,
-    },
-    {
-      channel: 'TikTok',
-      impr: 60000,
-      reach: 44000,
-      clicks: 1500,
-      ctr: 2.5,
-      cost: 1200,
-      leads: 260,
-      purch: 100,
-      conv: 90,
-      cvr: 4.2,
-    },
-  ],
+/**
+ * Fetches the available filter options (dimensions and metrics) for the dashboard.
+ * @returns {Promise<AnalyticsOptions>} A promise that resolves to the filter options.
+ */
+export const fetchAnalyticsOptions = async (): Promise<AnalyticsOptions> => {
+  const response = await fetch(`${API_BASE_URL}/analytics/options`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch analytics options');
+  }
+  return response.json();
 };
 
-// Simulate fetching data
-export const fetchOverviewData = (filters?: any): Promise<OverviewData> => {
-  console.log('Fetching data with filters:', filters);
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(mockData);
-    }, 800);
-  });
+/**
+ * Fetches the main overview data based on selected filters and date range.
+ * @param {DateRange} dateRange - The selected start and end dates.
+ * @param {FilterValues} filters - The selected channel and metric filters.
+ * @returns {Promise<OverviewApiResponse>} A promise that resolves to the dashboard data.
+ */
+export const fetchOverviewData = async (
+  dateRange: DateRange,
+  filters: FilterValues
+): Promise<OverviewApiResponse> => {
+  // Create a URLSearchParams object to build the query string
+  const params = new URLSearchParams();
+
+  // Set default dates if not provided
+  const startDate = dateRange.start
+    ? dateRange.start.toISOString().split('T')[0]
+    : '2025-07-15';
+  const endDate = dateRange.end ? dateRange.end.toISOString().split('T')[0] : '2025-07-30';
+
+  params.append('start', startDate);
+  params.append('end', endDate);
+
+  // Append channels and metrics if they are not empty
+  if (filters.channels.length > 0) {
+    params.append('channels', filters.channels.join(','));
+  }
+  if (filters.metrics.length > 0) {
+    params.append('metrics', filters.metrics.join(','));
+  }
+
+  // Add comparison parameter
+  params.append('compare', 'prev_period');
+
+  const url = `${API_BASE_URL}/analytics/overview?${params.toString()}`;
+  console.log('Fetching data from URL:', url); // For debugging
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    // Attempt to parse error message from API response
+    const errorData = await response.json().catch(() => ({ detail: 'Unknown API error' }));
+    throw new Error(`Failed to fetch overview data: ${errorData.detail || response.statusText}`);
+  }
+  return response.json();
 };

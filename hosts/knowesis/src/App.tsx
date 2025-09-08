@@ -1,9 +1,23 @@
 // hosts/knowesis/src/App.tsx
-import React, { Suspense } from 'react';
-import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
+import React, { Suspense, useEffect, useRef } from 'react'; // ✨ 1. Import useRef
+import { Routes, Route, Navigate, BrowserRouter, useNavigate } from 'react-router-dom';
 import { withAuthenticationRequired } from '@auth0/auth0-react';
-import { FluentProvider, Spinner } from '@fluentui/react-components';
-import { useThemeStore } from '@arcfusion/store';
+import {
+  FluentProvider,
+  Spinner,
+  Toaster,
+  useId,
+  useToastController,
+  Toast,
+  ToastTitle,
+  ToastBody,
+  Button,
+  ToastFooter,
+  tokens,
+  ToastTrigger,
+} from '@fluentui/react-components';
+import { CheckmarkCircle24Filled, Dismiss24Regular } from '@fluentui/react-icons';
+import { useThemeStore, useChatHistoryStore } from '@arcfusion/store';
 import { useGlobalStyles, arcusionLightTheme, arcusionDarkTheme, ASSETS } from '@arcfusion/ui';
 import { AppLayout } from './layouts/AppLayout';
 
@@ -12,9 +26,8 @@ import { HomePage } from './pages/HomePage';
 import { AskAiPage } from './pages/AskAiPage';
 import { StoriesPage } from './pages/StoriesPage';
 import { OverviewPage } from './pages/OverviewPage';
-import { StoryDetailPage } from './pages/StoryDetailPage'; // <-- Import the new page wrapper
+import { StoryDetailPage } from './pages/StoryDetailPage';
 
-// "Guard" component for the app
 const ProtectedApp = withAuthenticationRequired(AppLayout, {
   onRedirecting: () => (
     <div
@@ -36,18 +49,73 @@ const ProtectedApp = withAuthenticationRequired(AppLayout, {
 // Central component that assembles everything together
 function ThemedApp() {
   useGlobalStyles();
+  const navigate = useNavigate();
   const { theme } = useThemeStore();
   const fluentTheme = theme === 'dark' ? arcusionDarkTheme : arcusionLightTheme;
 
+  const toasterId = useId('toaster');
+  const { dispatchToast } = useToastController(toasterId);
+  const { unreadResponses } = useChatHistoryStore();
+
+  // ✨ 2. ใช้ useRef เพื่อเก็บจำนวน unread ของ render ก่อนหน้า
+  const prevUnreadCountRef = useRef(unreadResponses.length);
+
+  useEffect(() => {
+    const prevCount = prevUnreadCountRef.current;
+    const currentCount = unreadResponses.length;
+
+    // ✨ 3. เงื่อนไขใหม่: จะทำงานก็ต่อเมื่อมี unread item เพิ่มขึ้นมาเท่านั้น
+    if (currentCount > prevCount) {
+      // ดึง item ล่าสุดที่เพิ่มเข้ามา (จะอยู่ท้าย Array เสมอ)
+      const newNotification = unreadResponses[unreadResponses.length - 1];
+      const { threadId, storyId, title } = newNotification;
+
+      const handleNavigate = () => {
+        if (storyId) {
+          navigate(`/stories/${storyId}?thread=${threadId}`);
+        } else {
+          navigate(`/ask_ai/${threadId}`);
+        }
+      };
+
+      dispatchToast(
+        <Toast>
+          <ToastTitle
+            media={
+              <CheckmarkCircle24Filled style={{ color: tokens.colorStatusSuccessForeground2 }} />
+            }
+            action={
+              <ToastTrigger>
+                <Button appearance="transparent" icon={<Dismiss24Regular />} aria-label="Close" />
+              </ToastTrigger>
+            }
+          >
+            New Response Received
+          </ToastTitle>
+          <ToastBody subtitle={`Your question has been answered.`}></ToastBody>
+          <ToastFooter>
+            <Button size="small" appearance="secondary" onClick={handleNavigate}>
+              View Chat
+            </Button>
+          </ToastFooter>
+        </Toast>,
+        { intent: 'success', position: 'bottom-end', timeout: 8000 }
+      );
+      // ❗ ไม่มีการเรียก removeUnreadResponse ที่นี่อีกต่อไป
+    }
+
+    // ✨ 4. อัปเดตค่า ref ให้เป็นค่าปัจจุบันเสมอ เพื่อใช้ใน render ถัดไป
+    prevUnreadCountRef.current = unreadResponses.length;
+  }, [unreadResponses, dispatchToast, navigate]);
+
   return (
     <FluentProvider theme={fluentTheme}>
+      <Toaster toasterId={toasterId} />
       <Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
         <Routes>
           <Route element={<ProtectedApp />}>
             <Route path="/" element={<HomePage />} />
-            {/* ✨ START: EDIT THIS LINE ✨ */}
             <Route path="/ask_ai/:chatId?" element={<AskAiPage />} />
-            {/* ✨ END: EDIT THIS LINE ✨ */}
             <Route path="/stories" element={<StoriesPage />} />
             <Route path="/stories/:storyId" element={<StoryDetailPage />} />
             <Route path="/overview" element={<OverviewPage />} />

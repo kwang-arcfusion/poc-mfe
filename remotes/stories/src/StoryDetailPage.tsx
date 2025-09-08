@@ -11,7 +11,7 @@ import {
   Spinner,
 } from '@fluentui/react-components';
 import { Sparkle24Regular, TriangleDown16Filled } from '@fluentui/react-icons';
-import { useLayoutStore } from '@arcfusion/store';
+import { useLayoutStore, ChatSessionProvider } from '@arcfusion/store';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { getStoryById } from '@arcfusion/client';
 import type { Story } from '@arcfusion/types';
@@ -19,10 +19,10 @@ import { NarrativeCard } from './storyDetail/NarrativeCard';
 import { ActionsCard } from './storyDetail/ActionsCard';
 import { EvidenceSection } from './storyDetail/EvidenceSection';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
-// ✨ 1. Import component ใหม่ที่เราสร้างขึ้น
 import { TechnicalDetails } from './storyDetail/TechnicalDetails';
 
 const useStyles = makeStyles({
+  // ... (styles ทั้งหมดเหมือนเดิม ไม่ต้องแก้ไข)
   outer: {
     overflow: 'hidden',
     height: 'calc(100vh - 60px)',
@@ -30,7 +30,7 @@ const useStyles = makeStyles({
   },
   askAiButton: {
     position: 'fixed',
-    top: '72px',
+    top: '90px',
     right: '24px',
     zIndex: 10,
   },
@@ -127,11 +127,15 @@ const useStyles = makeStyles({
   },
 });
 
+// ✨ 1. เพิ่ม navigate เข้าไปใน Props Interface
 interface StoryDetailPageProps {
   storyId?: string;
+  threadId?: string | null;
+  navigate: (path: string, options?: { replace?: boolean }) => void;
 }
 
-export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
+// ✨ 2. รับ navigate เข้ามาเป็น prop
+export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDetailPageProps) {
   const s = useStyles();
   const { setMainOverflow } = useLayoutStore();
 
@@ -146,6 +150,12 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
       setMainOverflow('auto');
     };
   }, [setMainOverflow]);
+
+  React.useEffect(() => {
+    if (threadId && !isLoading) {
+      setAiOpen(true);
+    }
+  }, [threadId, isLoading]);
 
   React.useEffect(() => {
     if (!storyId) {
@@ -194,7 +204,7 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
       <section className={s.leftPane}>
         <div className={s.page}>
           <div className={s.heroTitleRow}>
-            <Title1>{story.title}</Title1>
+            <Title1 style={{ paddingRight: '90px' }}>{story.title}</Title1>
             <div className={s.detailRow}>
               {topMover && (
                 <Badge
@@ -223,7 +233,6 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
             <ActionsCard story={story} />
           </section>
           <EvidenceSection story={story} />
-          {/* ✨ 2. เพิ่ม Component ใหม่เข้ามาในหน้า */}
           <TechnicalDetails story={story} />
         </div>
       </section>
@@ -252,7 +261,14 @@ export default function StoryDetailPage({ storyId }: StoryDetailPageProps) {
             <PanelResizeHandle className={s.resizeHandle} />
             <Panel defaultSize={30} minSize={20}>
               <aside className={s.rightPane} aria-label="AI Chat Panel">
-                <AskAiPanel onClose={() => setAiOpen(false)} />
+                <ChatSessionProvider>
+                  <AskAiPanel
+                    story={story!}
+                    threadId={threadId || undefined}
+                    onClose={() => setAiOpen(false)}
+                    navigate={navigate} // 👈 3. ส่ง navigate ต่อไปให้ AskAiPanel
+                  />
+                </ChatSessionProvider>
               </aside>
             </Panel>
           </PanelGroup>
