@@ -31,7 +31,7 @@ const useStyles = makeStyles({
   askAiButton: {
     position: 'fixed',
     top: '90px',
-    right: '24px',
+    right: '38px',
     zIndex: 10,
   },
   singleGrid: {
