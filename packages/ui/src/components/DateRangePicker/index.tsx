@@ -1,14 +1,24 @@
 // packages/ui/src/components/DateRangePicker/index.tsx
-
 import * as React from 'react';
-import { makeStyles, tokens, shorthands, Button, mergeClasses } from '@fluentui/react-components';
-// <-- [1] Import new icons and remove unused ones
+import {
+  makeStyles,
+  tokens,
+  shorthands,
+  Button,
+  mergeClasses,
+  Menu,
+  MenuTrigger,
+  MenuPopover,
+  MenuList,
+  MenuItem,
+} from '@fluentui/react-components';
 import {
   ArrowRight16Regular,
   DismissCircle20Regular,
-  CalendarMonth20Regular,
+  ChevronDown20Regular,
 } from '@fluentui/react-icons';
 import { DatePicker } from '@fluentui/react-datepicker-compat';
+import { getDatePresets, getModeFromValue, type Mode } from './dateUtils';
 
 type DateOrNull = Date | null;
 
@@ -23,8 +33,6 @@ export type DateRangePickerProps = {
   onChange?: (next: DateRange) => void;
   minDate?: Date;
   maxDate?: Date;
-  startLabel?: string; // not used by compat DatePicker
-  endLabel?: string; // not used by compat DatePicker
   startPlaceholder?: string;
   endPlaceholder?: string;
   disabled?: boolean;
@@ -32,7 +40,17 @@ export type DateRangePickerProps = {
   className?: string;
 };
 
-// <-- [2] Edit all styles
+const MODE_LABELS: Record<Mode, string> = {
+  dateRange: 'Date Range',
+  selectDate: 'Select Date',
+  today: 'Today',
+  yesterday: 'Yesterday',
+  thisWeek: 'This Week',
+  lastWeek: 'Last Week',
+  thisMonth: 'This Month',
+  lastMonth: 'Last Month',
+};
+
 const useStyles = makeStyles({
   root: {
     display: 'flex',
@@ -59,8 +77,8 @@ const useStyles = makeStyles({
     flexShrink: 0,
     paddingLeft: '12px',
     paddingRight: '12px',
-    // paddingLeft: '22px',
-    // paddingRight: '12px',
+    position: 'relative',
+    top: '4px',
   },
   clearBtn: {
     flexShrink: 0,
@@ -131,28 +149,22 @@ function useControllable<T>(controlled: T | undefined, defaultValue: T, onChange
     },
     [isCtrl, onChange, value]
   );
-
   return [value, set] as const;
 }
 
 function patchDatePickerPopupTheme(rootEl: HTMLElement | null) {
   if (!rootEl || !rootEl.ownerDocument) return;
-
   const provider = rootEl.closest<HTMLElement>('.fui-FluentProvider');
   if (!provider) return;
-
   const providerClasses = Array.from(provider.classList).filter((c) => c.startsWith('fui-'));
-
   const applyTo = (el: HTMLElement) => {
     if (!el || el.dataset.themePatched === 'true') return;
     providerClasses.forEach((c) => el.classList.add(c));
     el.dataset.themePatched = 'true';
   };
-
   rootEl.ownerDocument
     .querySelectorAll<HTMLElement>('[id^="datePicker-popupSurface"]')
     .forEach(applyTo);
-
   const obs = new MutationObserver((mutations) => {
     for (const m of mutations) {
       m.addedNodes.forEach((n) => {
@@ -164,13 +176,12 @@ function patchDatePickerPopupTheme(rootEl: HTMLElement | null) {
       });
     }
   });
-
   obs.observe(rootEl.ownerDocument.body, { childList: true, subtree: true });
   window.setTimeout(() => obs.disconnect(), 1500);
 }
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
-  value,
+  value: valueProp,
   defaultValue = { start: null, end: null },
   onChange,
   minDate,
@@ -183,35 +194,85 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 }) => {
   const styles = useStyles();
   const rootRef = React.useRef<HTMLDivElement>(null);
-  const [range, setRange] = useControllable<DateRange>(value, defaultValue, onChange);
+  const [range, setRange] = useControllable<DateRange>(valueProp, defaultValue, onChange);
 
+  const [mode, setMode] = React.useState<Mode>(() => getModeFromValue(range));
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [openStart, setOpenStart] = React.useState(false);
   const [openEnd, setOpenEnd] = React.useState(false);
 
+  const dateStartRef = React.useRef<HTMLDivElement>(null);
+
   React.useEffect(() => {
-    if (range.start && range.end && startOfDay(range.end) < startOfDay(range.start)) {
-      setRange({ start: range.start, end: null });
-    }
-  }, [range.start]); // eslint-disable-line react-hooks/exhaustive-deps
+    setMode(getModeFromValue(range));
+  }, [range]);
 
   const endMinDate = React.useMemo(
     () => (range.start ? maxDate(minDate, startOfDay(range.start)) : minDate),
     [minDate, range.start]
   );
-
   const formatDate = React.useCallback((d?: Date) => {
     if (!d) return '';
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return d.toISOString().split('T')[0];
   }, []);
 
-  const handleSelectStart = (d: Date | null | undefined) => {
+  const handleMenuSelect = (selectedMode: Mode) => {
+    const presets = getDatePresets();
+    setIsMenuOpen(false);
+
+    switch (selectedMode) {
+      case 'today':
+        setRange(presets.today);
+        break;
+      case 'yesterday':
+        setRange(presets.yesterday);
+        break;
+      case 'thisWeek':
+        setRange(presets.thisWeek);
+        break;
+      case 'lastWeek':
+        setRange(presets.lastWeek);
+        break;
+      case 'thisMonth':
+        setRange(presets.thisMonth);
+        break;
+      case 'lastMonth':
+        setRange(presets.lastMonth);
+        break;
+
+      case 'selectDate':
+      case 'dateRange':
+        setMode(selectedMode);
+
+        requestAnimationFrame(() => {
+          if (dateStartRef.current) {
+            const dateStartInput = dateStartRef.current.querySelector(
+              "[placeholder='Start date']"
+            ) as HTMLElement;
+            dateStartInput.click();
+          }
+        });
+
+        break;
+    }
+  };
+
+  // Handler for range selection (opens end date picker)
+  const handleSelectStartForRange = (d: Date | null | undefined) => {
     const start = d ? startOfDay(d) : null;
-    setRange({ start, end: null });
+    const isEndInvalid = range.end && start && range.end < start;
+    setRange({ start, end: isEndInvalid ? null : range.end });
     setOpenStart(false);
-    if (start) setTimeout(() => setOpenEnd(true), 0);
+    if (start) {
+      setTimeout(() => setOpenEnd(true), 0);
+    }
+  };
+
+  // Handler for single date selection (does NOT open end date picker)
+  const handleSelectSingleDate = (d: Date | null | undefined) => {
+    const date = d ? startOfDay(d) : null;
+    setRange({ start: date, end: date });
+    setOpenStart(false);
   };
 
   const handleSelectEnd = (d: Date | null | undefined) => {
@@ -233,7 +294,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
       patchDatePickerPopupTheme(rootRef.current);
     }
   };
-
   const onEndOpenChange = (open: boolean) => {
     if (open && !range.start) {
       setOpenEnd(false);
@@ -253,22 +313,48 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setOpenEnd(false);
   };
 
-  React.useEffect(() => {
-    if (openStart || openEnd) patchDatePickerPopupTheme(rootRef.current);
-  }, [openStart, openEnd]);
+  const isDateRangeMode = mode !== 'selectDate' && mode !== 'today' && mode !== 'yesterday';
 
   return (
     <div ref={rootRef} className={mergeClasses(styles.root, className)}>
-      {/* <-- [3] Edit the entire JSX structure --> */}
-      <div className={styles.group} aria-label="Date range" role="group">
-        <div className={styles.field}>
+      <div className={styles.group} aria-label="Date range filter" role="group">
+        <Menu open={isMenuOpen} onOpenChange={(_, data) => setIsMenuOpen(data.open)}>
+          <MenuTrigger>
+            <Button
+              appearance="transparent"
+              size="small"
+              iconPosition="after"
+              icon={<ChevronDown20Regular />}
+              disabled={disabled}
+            >
+              {MODE_LABELS[mode]}
+            </Button>
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem onClick={() => handleMenuSelect('dateRange')}>Date Range</MenuItem>
+              <MenuItem onClick={() => handleMenuSelect('selectDate')}>Select Date</MenuItem>
+              <MenuItem onClick={() => handleMenuSelect('today')}>Today</MenuItem>
+              <MenuItem onClick={() => handleMenuSelect('yesterday')}>Yesterday</MenuItem>
+              <MenuItem onClick={() => handleMenuSelect('thisWeek')}>This Week</MenuItem>
+              <MenuItem onClick={() => handleMenuSelect('lastWeek')}>Last Week</MenuItem>
+              <MenuItem onClick={() => handleMenuSelect('thisMonth')}>This Month</MenuItem>
+              <MenuItem onClick={() => handleMenuSelect('lastMonth')}>Last Month</MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+
+        <div />
+
+        <div ref={dateStartRef}>
           <DatePicker
             className={styles.pickerStart}
             disabled={disabled}
             size={size}
             placeholder={startPlaceholder}
             value={range.start ?? undefined}
-            onSelectDate={handleSelectStart}
+            // *** CRITICAL LOGIC CHANGE HERE ***
+            onSelectDate={isDateRangeMode ? handleSelectStartForRange : handleSelectSingleDate}
             formatDate={formatDate}
             allowTextInput={false}
             minDate={minDate}
@@ -276,26 +362,27 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             open={openStart}
             onOpenChange={onStartOpenChange}
           />
+          {isDateRangeMode && (
+            <>
+              <ArrowRight16Regular className={styles.arrowRight} aria-hidden />
+              <DatePicker
+                className={styles.pickerEnd}
+                disabled={disabled}
+                size={size}
+                placeholder={endPlaceholder}
+                value={range.end ?? undefined}
+                onSelectDate={handleSelectEnd}
+                formatDate={formatDate}
+                allowTextInput={false}
+                minDate={endMinDate}
+                maxDate={maxDateProp}
+                open={openEnd}
+                onOpenChange={onEndOpenChange}
+              />
+            </>
+          )}
         </div>
 
-        <ArrowRight16Regular className={styles.arrowRight} aria-hidden />
-
-        <div className={styles.field}>
-          <DatePicker
-            className={styles.pickerEnd}
-            disabled={disabled}
-            size={size}
-            placeholder={endPlaceholder}
-            value={range.end ?? undefined}
-            onSelectDate={handleSelectEnd}
-            formatDate={formatDate}
-            allowTextInput={false}
-            minDate={endMinDate}
-            maxDate={maxDateProp}
-            open={openEnd}
-            onOpenChange={onEndOpenChange}
-          />
-        </div>
         {range.start && (
           <Button
             className={styles.clearBtn}
@@ -305,7 +392,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             aria-label="Clear date range"
             title="Clear"
             onClick={clearAll}
-            disabled={disabled || (!range.start && !range.end)}
+            disabled={disabled}
           />
         )}
       </div>
