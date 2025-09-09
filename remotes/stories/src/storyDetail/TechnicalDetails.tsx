@@ -29,8 +29,6 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground1,
     fontFamily: 'monospace',
     fontSize: '13px',
-    maxHeight: '400px',
-    overflow: 'auto',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-all',
   },
