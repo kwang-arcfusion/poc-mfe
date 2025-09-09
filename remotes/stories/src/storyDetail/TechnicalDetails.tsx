@@ -1,12 +1,25 @@
 // remotes/stories/src/storyDetail/TechnicalDetails.tsx
 import * as React from 'react';
-import { makeStyles, shorthands, tokens, Tab, TabList, Text } from '@fluentui/react-components';
-import { Code24Filled, DataUsage24Filled } from '@fluentui/react-icons';
+// ✨ 1. เพิ่ม import ที่จำเป็นสำหรับฟังก์ชัน Copy
+import { useState, useRef, useEffect } from 'react';
+import {
+  makeStyles,
+  shorthands,
+  tokens,
+  Tab,
+  TabList,
+  Text,
+  Button, // ✨ เพิ่ม Button
+} from '@fluentui/react-components';
+import { Copy24Regular, Checkmark24Regular, CalendarDataBar24Color } from '@fluentui/react-icons';
 import type { Story } from '@arcfusion/types';
 
 const useStyles = makeStyles({
   root: {
-    paddingTop: '20px',
+    padding: '20px',
+    borderRadius: tokens.borderRadiusXLarge,
+    backgroundColor: tokens.colorNeutralBackground3,
+    boxShadow: tokens.shadow4,
   },
   titleWrap: {
     display: 'flex',
@@ -22,13 +35,21 @@ const useStyles = makeStyles({
   tabPanel: {
     ...shorthands.padding(tokens.spacingVerticalM, 0),
   },
+  codeContainer: {
+    position: 'relative',
+  },
+  copyButton: {
+    position: 'absolute',
+    right: '12px',
+    top: '12px',
+  },
   codeBox: {
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalM),
     backgroundColor: tokens.colorNeutralBackground1,
     fontFamily: 'monospace',
-    fontSize: '13px',
+    fontSize: '14px',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-all',
   },
@@ -47,24 +68,65 @@ interface TechnicalDetailsProps {
 
 export const TechnicalDetails: React.FC<TechnicalDetailsProps> = ({ story }) => {
   const s = useStyles();
-  const [selectedValue, setSelectedValue] = React.useState('notes');
+  const [selectedValue, setSelectedValue] = React.useState('notes'); // ✨ 4. เพิ่ม State และ Logic สำหรับการ Copy (เหมือนใน SqlTableTabs)
+
+  const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
+  const timeoutRef = useRef<number | null>(null);
+
+  const handleCopy = async (textToCopy: string) => {
+    if (copyState === 'copied') return;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setCopyState('copied');
+      timeoutRef.current = window.setTimeout(() => {
+        setCopyState('idle');
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  }; // Cleanup timeout เมื่อ component unmount
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []); // ✨ 5. สร้างฟังก์ชัน handler สำหรับการเปลี่ยน Tab เพื่อ reset สถานะปุ่ม
+
+  const handleTabSelect = (_: any, data: { value: string }) => {
+    setSelectedValue(data.value);
+    setCopyState('idle'); // Reset copy state เมื่อเปลี่ยน tab
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  }; // ✨ 6. เตรียมข้อมูล Metadata ที่จะแสดงผลและ Copy
+
+  const metadataString = React.useMemo(
+    () =>
+      JSON.stringify(
+        {
+          trigger_point: story.trigger_point,
+          metadata_info: story.metadata_info,
+        },
+        null,
+        2
+      ),
+    [story.trigger_point, story.metadata_info]
+  );
 
   return (
     <section className={s.root}>
       <div className={s.titleWrap}>
-        <DataUsage24Filled />
-        <Text className={s.title}>Technical Details</Text>
+        <CalendarDataBar24Color /> <Text className={s.title}>Technical Details</Text>
       </div>
-
       <TabList
         selectedValue={selectedValue}
         onTabSelect={(_, data) => setSelectedValue(data.value as string)}
       >
-        <Tab value="notes">Notes</Tab>
-        <Tab value="sql">SQL Query</Tab>
+        <Tab value="notes">Notes</Tab> <Tab value="sql">SQL Query</Tab>
         <Tab value="metadata">Metadata</Tab>
       </TabList>
-
       <div className={s.tabPanel}>
         {selectedValue === 'notes' && (
           <ul className={s.notesList}>
@@ -73,18 +135,34 @@ export const TechnicalDetails: React.FC<TechnicalDetailsProps> = ({ story }) => 
             ))}
           </ul>
         )}
-        {selectedValue === 'sql' && <pre className={s.codeBox}>{story.sql_query}</pre>}
+        {/* ✨ 8. ปรับปรุง JSX ของ Tab SQL และ Metadata ให้มีปุ่ม Copy */}
+        {selectedValue === 'sql' && (
+          <div className={s.codeContainer}>
+            <Button
+              appearance="subtle"
+              className={s.copyButton}
+              size="small"
+              icon={copyState === 'idle' ? <Copy24Regular /> : <Checkmark24Regular />}
+              onClick={() => handleCopy(story.sql_query)}
+            >
+              {copyState === 'idle' ? 'Copy SQL' : 'Copied!'}
+            </Button>
+            <pre className={s.codeBox}>{story.sql_query}</pre>
+          </div>
+        )}
         {selectedValue === 'metadata' && (
-          <pre className={s.codeBox}>
-            {JSON.stringify(
-              {
-                trigger_point: story.trigger_point,
-                metadata_info: story.metadata_info,
-              },
-              null,
-              2
-            )}
-          </pre>
+          <div className={s.codeContainer}>
+            <Button
+              className={s.copyButton}
+              appearance="subtle"
+              size="small"
+              icon={copyState === 'idle' ? <Copy24Regular /> : <Checkmark24Regular />}
+              onClick={() => handleCopy(metadataString)}
+            >
+              {copyState === 'idle' ? 'Copy JSON' : 'Copied!'}
+            </Button>
+            <pre className={s.codeBox}>{metadataString}</pre>
+          </div>
         )}
       </div>
     </section>

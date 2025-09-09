@@ -7,12 +7,6 @@ import type { Story } from '@arcfusion/types';
 import { EChartRenderer } from './EChartRenderer';
 
 const useStyles = makeStyles({
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    gap: '16px',
-    '@media (min-width: 900px)': { gridTemplateColumns: '1fr' },
-  },
   titleWrap: { display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' },
   title: {
     fontWeight: tokens.fontWeightSemibold,
@@ -26,27 +20,21 @@ interface EvidenceSectionProps {
 }
 
 export const EvidenceSection: React.FC<EvidenceSectionProps> = ({ story }) => {
-  const s = useStyles();
-
   const chartOptions = useMemo(() => {
     if (!story.echart_config) return null;
 
     const newConfig = JSON.parse(JSON.stringify(story.echart_config));
 
-    // 👇 1. ปรับแก้ Config ของ ECharts ให้สมบูรณ์ขึ้น
     return {
       ...newConfig,
-      // ซ่อน Title ของตัวกราฟเอง เพื่อไม่ให้ซ้ำซ้อน
       title: {
         ...newConfig.title,
         show: false,
       },
-      // ซ่อน Legend ของกราฟ (ซึ่งเป็นสาเหตุหลักที่ข้อความซ้อนกัน)
       legend: {
         ...newConfig.legend,
         show: false,
       },
-      // ปรับแก้ระยะห่างภายในกราฟให้สวยงาม
       grid: {
         ...newConfig.grid,
         left: '50px',
@@ -54,7 +42,12 @@ export const EvidenceSection: React.FC<EvidenceSectionProps> = ({ story }) => {
         top: '30px',
         bottom: '30px',
       },
-      // (Optional) ปรับแก้ให้แท่ง Bar ไม่ดูกว้างเกินไป
+      yAxis: {
+        ...newConfig.yAxis,
+        nameTextStyle: {
+          align: 'left', // ให้ชิดซ้าย
+        },
+      },
       series: (newConfig.series || []).map((s: any) => ({
         ...s,
         barWidth: '40%',
@@ -64,9 +57,7 @@ export const EvidenceSection: React.FC<EvidenceSectionProps> = ({ story }) => {
 
   return (
     <section>
-      <div className={s.grid}>
-        <EChartRenderer config={chartOptions} />
-      </div>
+      <EChartRenderer config={chartOptions} />{' '}
     </section>
   );
 };

@@ -115,7 +115,10 @@ const useStyles = makeStyles({
       gridTemplateColumns: '1fr 1fr',
       columnGap: '20px',
     },
-    paddingBottom: '16px',
+    padding: '20px',
+    backgroundColor: tokens.colorNeutralBackground3,
+    borderRadius: tokens.borderRadiusXLarge,
+    boxShadow: tokens.shadow4,
   },
   centerContainer: {
     display: 'flex',

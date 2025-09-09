@@ -30,7 +30,7 @@ const useStyles = makeStyles({
     display: 'flex',
     columnGap: '10px',
     ...shorthands.padding('10px', '12px'),
-    backgroundColor: tokens.colorNeutralBackground3,
+    backgroundColor: tokens.colorNeutralBackground2,
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusXLarge),
   },

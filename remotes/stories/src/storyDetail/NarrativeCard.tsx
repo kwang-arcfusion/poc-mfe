@@ -26,14 +26,14 @@ const useStyles = makeStyles({
   narrativeText: {
     '& p': { margin: 0 },
     '& strong': { color: tokens.colorNeutralForeground1 },
-    '& ul, & ol': { 
-        ...shorthands.margin(0), 
-        paddingLeft: tokens.spacingHorizontalL 
+    '& ul, & ol': {
+      ...shorthands.margin(0),
+      paddingLeft: tokens.spacingHorizontalL,
     },
   },
   tldr: {
     ...shorthands.borderLeft('4px', 'solid', tokens.colorBrandBackground),
-    backgroundColor: tokens.colorNeutralBackground3,
+    backgroundColor: tokens.colorNeutralBackground2,
     ...shorthands.padding('10px', '14px'),
     ...shorthands.borderRadius(tokens.borderRadiusXLarge),
     lineHeight: 1.6,
@@ -41,7 +41,7 @@ const useStyles = makeStyles({
 });
 
 interface NarrativeCardProps {
-    story: Story;
+  story: Story;
 }
 
 export const NarrativeCard: React.FC<NarrativeCardProps> = ({ story }) => {
@@ -52,14 +52,12 @@ export const NarrativeCard: React.FC<NarrativeCardProps> = ({ story }) => {
         <Document24Color />
         <Text className={s.title}>Narrative</Text>
       </div>
-      
+
       {story.narrative_markdown && (
         <div className={s.tldr}>
-            <div className={s.narrativeText}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {story.narrative_markdown}
-                </ReactMarkdown>
-            </div>
+          <div className={s.narrativeText}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{story.narrative_markdown}</ReactMarkdown>
+          </div>
         </div>
       )}
     </div>
