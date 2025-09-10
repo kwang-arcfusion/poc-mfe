@@ -5,6 +5,7 @@ import {
   Button,
   Input,
   Menu,
+  MenuItem,
   MenuItemCheckbox,
   MenuList,
   MenuPopover,
@@ -58,7 +59,6 @@ const useStyles = makeStyles({
     fontWeight: tokens.fontWeightSemibold,
     fontSize: tokens.fontSizeBase200,
   },
-  // ✨ FIX: 1. สร้าง Style สำหรับ "MenuItem ปลอม" ของเรา
   nonClosingMenuItem: {
     display: 'flex',
     alignItems: 'center',
@@ -136,6 +136,15 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     if (allVisibleOptionIds.length === 0) return false;
     return allVisibleOptionIds.every(id => selectedOptions.includes(id));
   }, [allVisibleOptionIds, selectedOptions]);
+
+  const uniqueMatchingNames = useMemo(() => {
+    if (!searchTerm) {
+        return [];
+    }
+    const allMatchingChildren = filteredGroups.flatMap(group => group.children);
+    const uniqueNames = [...new Set(allMatchingChildren.map(child => child.name))];
+    return uniqueNames;
+  }, [searchTerm, filteredGroups]);
   
   const handleSelectAllToggle = () => {
     if (isAllSelected) {
@@ -146,6 +155,24 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     }
   };
 
+  const handleSelectAllByName = (name: string) => {
+    const idsToToggle = allChildren
+        .filter(child => child.name === name)
+        .map(child => child.id);
+
+    if (idsToToggle.length === 0) return;
+
+    const areAllSelectedForThisName = idsToToggle.every(id => selectedOptions.includes(id));
+
+    if (areAllSelectedForThisName) {
+        const newSelection = selectedOptions.filter(id => !idsToToggle.includes(id));
+        onSelectionChange(newSelection);
+    } else {
+        const newSelection = [...new Set([...selectedOptions, ...idsToToggle])];
+        onSelectionChange(newSelection);
+    }
+  };
+
   const handleCheckedValueChange = (
     _ev: MenuCheckedValueChangeEvent,
     data: MenuCheckedValueChangeData
@@ -153,15 +180,20 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     onSelectionChange(data.checkedItems);
   };
   
+  // ✨ FIX: ปรับปรุง Logic การแสดงผลบนปุ่มให้เหมือนกันทั้งหมด
   const triggerContent = useMemo(() => {
     const count = selectedOptions.length;
     let selectionText = 'Select';
-    if (count === 1) {
-        const selectedChild = allChildren.find(c => c.id === selectedOptions[0]);
-        selectionText = selectedChild ? selectedChild.name : '1 selected';
-    } else if (count > 1) {
-        const firstSelectedChild = allChildren.find(c => c.id === selectedOptions[0]);
-        selectionText = firstSelectedChild ? `${firstSelectedChild.name}, +${count - 1}` : `${count} selected`;
+
+    if (count > 0) {
+      const firstSelectedId = selectedOptions[0];
+      const firstSelectedChild = allChildren.find(c => c.id === firstSelectedId);
+      
+      // ถ้าหาชื่อเจอ ให้ใช้ชื่อนั้น ถ้าหาไม่เจอ (ซึ่งไม่ควรจะเกิดขึ้น) ให้ใช้ ID แทนไปเลย
+      // แต่จะไม่มีการแสดง "X selected" อีกต่อไป
+      const displayName = firstSelectedChild ? firstSelectedChild.name : firstSelectedId;
+
+      selectionText = count === 1 ? displayName : `${displayName}, +${count - 1}`;
     }
 
     return (
@@ -210,7 +242,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         >
           {allVisibleOptionIds.length > 0 && (
              <>
-                {/* ✨ FIX: 2. ใช้ <div> ที่เราสร้าง Style เองแทน <MenuItem> */}
                 <div
                     role="menuitem"
                     tabIndex={0}
@@ -230,6 +261,39 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                 </div>
                 <MenuDivider />
              </>
+          )}
+
+          {uniqueMatchingNames.length > 0 && (
+            <>
+                {uniqueMatchingNames.map(name => {
+                    const idsForThisName = allChildren
+                        .filter(child => child.name === name)
+                        .map(child => child.id);
+                    const isChecked = idsForThisName.length > 0 && idsForThisName.every(id => selectedOptions.includes(id));
+
+                    return (
+                        <div
+                            key={name}
+                            role="menuitem"
+                            tabIndex={0}
+                            className={styles.nonClosingMenuItem}
+                            onClick={() => handleSelectAllByName(name)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    handleSelectAllByName(name);
+                                }
+                            }}
+                        >
+                            <span className={styles.menuIcon}>
+                                {isChecked ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
+                            </span>
+                            {name}
+                        </div>
+                    );
+                })}
+                <MenuDivider />
+            </>
           )}
 
           {filteredGroups.map((group, index) => (

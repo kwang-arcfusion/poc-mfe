@@ -45,20 +45,27 @@ const initialFilters: FilterValues = {
   metrics: ['conversions_rate', 'impression_rate'],
 };
 
-// ✨ FIX: แก้ไขข้อมูล mock ให้ตรงตาม interface OptionGroup[] (ลบ type และ id ที่ไม่จำเป็นออก)
+// ✨ UPDATE: 1. อัปเดตข้อมูล mock ตามที่คุณให้มาล่าสุด
 const mockCampaignData: OptionGroup[] = [
   {
     name: 'holiday',
     children: [
-      { id: '456', name: 'Happy Songkran Day' },
-      { id: '789', name: 'Happy New Year' },
+      { id: '1', name: 'Happy Songkran Day' },
+      { id: '2', name: 'Happy New Year' },
     ],
   },
   {
     name: 'holiday-2',
     children: [
-      { id: '457', name: 'Songkran Day 2' },
-      { id: '790', name: 'Happy Chinese Day' },
+      { id: '3', name: 'Songkran Day 2' },
+      { id: '4', name: 'Happy Chinese Day' },
+    ],
+  },
+  {
+    name: 'holiday-3',
+    children: [
+      { id: '5', name: 'Happy Songkran Day' },
+      { id: '6', name: 'Happy Chinese Day 3' },
     ],
   },
 ];
@@ -76,7 +83,8 @@ export default function Overview() {
   const [selectedFilters, setSelectedFilters] = useState<FilterValues>(initialFilters);
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
 
-  const [selectedCampaignOffers, setSelectedCampaignOffers] = useState<string[]>(['456']);
+  // ✨ FIX: 2. แก้ไขค่าเริ่มต้นให้เป็น Array ว่าง
+  const [selectedCampaignOffers, setSelectedCampaignOffers] = useState<string[]>([]);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -179,6 +187,12 @@ export default function Overview() {
       <header className={styles.header}>
         <Filter28Filled />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
+        <MultiSelect
+          label="Offers"
+          options={mockCampaignData}
+          selectedOptions={selectedCampaignOffers}
+          onSelectionChange={setSelectedCampaignOffers}
+        />
         {channelOptions.length > 0 && (
           <MultiSelect
             label="Channels"
@@ -199,12 +213,6 @@ export default function Overview() {
             }}
           />
         )}
-        <MultiSelect
-          label="Campaigns"
-          options={mockCampaignData}
-          selectedOptions={selectedCampaignOffers}
-          onSelectionChange={setSelectedCampaignOffers}
-        />
       </header>
 
       {isLoading && <Spinner label="Updating data..." />}
