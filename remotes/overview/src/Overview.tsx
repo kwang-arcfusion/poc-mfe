@@ -9,7 +9,7 @@ import { OverallPerformance } from './components/OverallPerformance';
 import { DailyPerformanceChart } from './components/DailyPerformanceChart';
 import { ByChannelTable } from './components/ByChannelTable';
 import { Filter28Filled } from '@fluentui/react-icons';
-import { DateRangePicker, type DateRange, MultiSelect } from '@arcfusion/ui'; // The import remains simple!
+import { DateRangePicker, type DateRange, MultiSelect, type OptionGroup } from '@arcfusion/ui';
 
 const useStyles = makeStyles({
   root: {
@@ -45,6 +45,24 @@ const initialFilters: FilterValues = {
   metrics: ['conversions_rate', 'impression_rate'],
 };
 
+// ✨ FIX: แก้ไขข้อมูล mock ให้ตรงตาม interface OptionGroup[] (ลบ type และ id ที่ไม่จำเป็นออก)
+const mockCampaignData: OptionGroup[] = [
+  {
+    name: 'holiday',
+    children: [
+      { id: '456', name: 'Happy Songkran Day' },
+      { id: '789', name: 'Happy New Year' },
+    ],
+  },
+  {
+    name: 'holiday-2',
+    children: [
+      { id: '457', name: 'Songkran Day 2' },
+      { id: '790', name: 'Happy Chinese Day' },
+    ],
+  },
+];
+
 export default function Overview() {
   const styles = useStyles();
   const isInitialMount = useRef(true);
@@ -57,6 +75,8 @@ export default function Overview() {
 
   const [selectedFilters, setSelectedFilters] = useState<FilterValues>(initialFilters);
   const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
+
+  const [selectedCampaignOffers, setSelectedCampaignOffers] = useState<string[]>(['456']);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -73,7 +93,6 @@ export default function Overview() {
 
         const { start, end } = overviewData.meta.filters;
         if (start && end) {
-          // API returns 'YYYY-MM-DD', new Date() will handle it correctly.
           setDateRange({ start: new Date(start), end: new Date(end) });
         }
       } catch (err: any) {
@@ -109,7 +128,7 @@ export default function Overview() {
 
     const timer = setTimeout(() => {
       fetchDataOnUpdate();
-    }, 500); // Debounce API calls
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [selectedFilters, dateRange]);
@@ -127,8 +146,25 @@ export default function Overview() {
     }));
   };
 
-  const getOptionsFromKeys = (options: FilterOption[] | { key: string; label: string }[]) =>
-    options.map((opt) => opt.label);
+  const channelOptionGroups: OptionGroup[] = useMemo(
+    () => [
+      {
+        name: '',
+        children: channelOptions.map((opt) => ({ id: opt.key, name: opt.label })),
+      },
+    ],
+    [channelOptions]
+  );
+
+  const metricOptionGroups: OptionGroup[] = useMemo(
+    () => [
+      {
+        name: '',
+        children: metricOptions.map((opt) => ({ id: opt.key, name: opt.label })),
+      },
+    ],
+    [metricOptions]
+  );
 
   if (isLoading && !data) {
     return (
@@ -146,39 +182,29 @@ export default function Overview() {
         {channelOptions.length > 0 && (
           <MultiSelect
             label="Channels"
-            options={getOptionsFromKeys(channelOptions)}
-            selectedOptions={selectedFilters.channels.map(
-              (key) => channelOptions.find((opt) => opt.key === key)?.label || key
-            )}
-            onSelectionChange={(selectedLabels) => {
-              const selectedKeys = selectedLabels.map(
-                (label) => channelOptions.find((opt) => opt.label === label)?.key || ''
-              );
-              handleFilterChange(
-                'channels',
-                selectedKeys.filter((k) => k)
-              );
+            options={channelOptionGroups}
+            selectedOptions={selectedFilters.channels}
+            onSelectionChange={(selectedIds) => {
+              handleFilterChange('channels', selectedIds);
             }}
           />
         )}
         {metricOptions.length > 0 && (
           <MultiSelect
             label="Metrics"
-            options={getOptionsFromKeys(metricOptions)}
-            selectedOptions={selectedFilters.metrics.map(
-              (key) => metricOptions.find((opt) => opt.key === key)?.label || key
-            )}
-            onSelectionChange={(selectedLabels) => {
-              const selectedKeys = selectedLabels.map(
-                (label) => metricOptions.find((opt) => opt.label === label)?.key || ''
-              );
-              handleFilterChange(
-                'metrics',
-                selectedKeys.filter((k) => k)
-              );
+            options={metricOptionGroups}
+            selectedOptions={selectedFilters.metrics}
+            onSelectionChange={(selectedIds) => {
+              handleFilterChange('metrics', selectedIds);
             }}
           />
         )}
+        <MultiSelect
+          label="Campaigns"
+          options={mockCampaignData}
+          selectedOptions={selectedCampaignOffers}
+          onSelectionChange={setSelectedCampaignOffers}
+        />
       </header>
 
       {isLoading && <Spinner label="Updating data..." />}
