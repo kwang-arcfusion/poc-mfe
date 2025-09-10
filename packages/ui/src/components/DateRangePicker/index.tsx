@@ -41,8 +41,8 @@ export type DateRangePickerProps = {
 };
 
 const MODE_LABELS: Record<Mode, string> = {
-  dateRange: 'Date Range',
   selectDate: 'Date',
+  dateRange: 'Range',
   today: 'Today',
   yesterday: 'Yesterday',
   thisWeek: 'This Week',
@@ -332,8 +332,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           </MenuTrigger>
           <MenuPopover>
             <MenuList>
-              <MenuItem onClick={() => handleMenuSelect('dateRange')}>Date Range</MenuItem>
               <MenuItem onClick={() => handleMenuSelect('selectDate')}>Date</MenuItem>
+              <MenuItem onClick={() => handleMenuSelect('dateRange')}>Range</MenuItem>
               <MenuItem onClick={() => handleMenuSelect('today')}>Today</MenuItem>
               <MenuItem onClick={() => handleMenuSelect('yesterday')}>Yesterday</MenuItem>
               <MenuItem onClick={() => handleMenuSelect('thisWeek')}>This Week</MenuItem>

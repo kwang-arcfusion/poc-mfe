@@ -5,7 +5,6 @@ import {
   Button,
   Input,
   Menu,
-  MenuItem, // ✨ FIX: เปลี่ยนมาใช้ MenuItem ธรรมดา
   MenuItemCheckbox,
   MenuList,
   MenuPopover,
@@ -17,12 +16,12 @@ import {
   type MenuCheckedValueChangeEvent,
   type MenuCheckedValueChangeData,
 } from '@fluentui/react-components';
-import {
-  ChevronDown20Regular,
-  Search20Regular,
+import { 
+  ChevronDown20Regular, 
+  Search20Regular, 
   Dismiss20Regular,
-  CheckboxChecked16Regular, // ✨ FIX: Import ไอคอนสำหรับ Checkbox
-  CheckboxUnchecked16Regular, // ✨ FIX: Import ไอคอนสำหรับ Checkbox
+  CheckboxChecked16Regular,
+  CheckboxUnchecked16Regular,
 } from '@fluentui/react-icons';
 
 const useStyles = makeStyles({
@@ -59,6 +58,31 @@ const useStyles = makeStyles({
     fontWeight: tokens.fontWeightSemibold,
     fontSize: tokens.fontSizeBase200,
   },
+  // ✨ FIX: 1. สร้าง Style สำหรับ "MenuItem ปลอม" ของเรา
+  nonClosingMenuItem: {
+    display: 'flex',
+    alignItems: 'center',
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
+    color: tokens.colorNeutralForeground1,
+    backgroundColor: 'transparent',
+    fontSize: tokens.fontSizeBase300,
+    cursor: 'pointer',
+    ':hover': {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+    },
+    ':focus': {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+      outline: 'none',
+    },
+  },
+  menuIcon: {
+    width: '16px',
+    height: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
 });
 
 interface OptionItem {
@@ -74,7 +98,7 @@ export interface OptionGroup {
 export interface MultiSelectProps {
   label: string;
   options: OptionGroup[];
-  selectedOptions: string[];
+  selectedOptions: string[]; 
   onSelectionChange: (newSelection: string[]) => void;
 }
 
@@ -87,36 +111,35 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   const styles = useStyles();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const allChildren = useMemo(() => options.flatMap((group) => group.children), [options]);
+  const allChildren = useMemo(() => options.flatMap(group => group.children), [options]);
 
   const filteredGroups = useMemo(() => {
     if (!searchTerm) {
       return options;
     }
     return options
-      .map((group) => {
-        const filteredChildren = group.children.filter((child) =>
+      .map(group => {
+        const filteredChildren = group.children.filter(child =>
           child.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
         return { ...group, children: filteredChildren };
       })
-      .filter((group) => group.children.length > 0);
+      .filter(group => group.children.length > 0);
   }, [options, searchTerm]);
-
+  
   const allVisibleOptionIds = useMemo(
-    () => filteredGroups.flatMap((group) => group.children.map((child) => child.id)),
+    () => filteredGroups.flatMap(group => group.children.map(child => child.id)),
     [filteredGroups]
   );
 
   const isAllSelected = useMemo(() => {
     if (allVisibleOptionIds.length === 0) return false;
-    return allVisibleOptionIds.every((id) => selectedOptions.includes(id));
+    return allVisibleOptionIds.every(id => selectedOptions.includes(id));
   }, [allVisibleOptionIds, selectedOptions]);
-
-  // ✨ FIX: สร้าง handler แยกสำหรับ "Select All" โดยเฉพาะ
+  
   const handleSelectAllToggle = () => {
     if (isAllSelected) {
-      const newSelection = selectedOptions.filter((id) => !allVisibleOptionIds.includes(id));
+      const newSelection = selectedOptions.filter(id => !allVisibleOptionIds.includes(id));
       onSelectionChange(newSelection);
     } else {
       onSelectionChange([...new Set([...selectedOptions, ...allVisibleOptionIds])]);
@@ -129,18 +152,16 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   ) => {
     onSelectionChange(data.checkedItems);
   };
-
+  
   const triggerContent = useMemo(() => {
     const count = selectedOptions.length;
     let selectionText = 'Select';
     if (count === 1) {
-      const selectedChild = allChildren.find((c) => c.id === selectedOptions[0]);
-      selectionText = selectedChild ? selectedChild.name : '1 selected';
+        const selectedChild = allChildren.find(c => c.id === selectedOptions[0]);
+        selectionText = selectedChild ? selectedChild.name : '1 selected';
     } else if (count > 1) {
-      const firstSelectedChild = allChildren.find((c) => c.id === selectedOptions[0]);
-      selectionText = firstSelectedChild
-        ? `${firstSelectedChild.name}, +${count - 1}`
-        : `${count} selected`;
+        const firstSelectedChild = allChildren.find(c => c.id === selectedOptions[0]);
+        selectionText = firstSelectedChild ? `${firstSelectedChild.name}, +${count - 1}` : `${count} selected`;
     }
 
     return (
@@ -188,22 +209,33 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           onCheckedValueChange={handleCheckedValueChange}
         >
           {allVisibleOptionIds.length > 0 && (
-            <>
-              {/* ✨ FIX: ใช้ MenuItem ธรรมดาพร้อม onClick และแสดงไอคอน Checkbox เอง */}
-              <MenuItem
-                icon={isAllSelected ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
-                onClick={handleSelectAllToggle}
-              >
-                Select All
-              </MenuItem>
-              <MenuDivider />
-            </>
+             <>
+                {/* ✨ FIX: 2. ใช้ <div> ที่เราสร้าง Style เองแทน <MenuItem> */}
+                <div
+                    role="menuitem"
+                    tabIndex={0}
+                    className={styles.nonClosingMenuItem}
+                    onClick={handleSelectAllToggle}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleSelectAllToggle();
+                        }
+                    }}
+                >
+                    <span className={styles.menuIcon}>
+                        {isAllSelected ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
+                    </span>
+                    Select All
+                </div>
+                <MenuDivider />
+             </>
           )}
 
           {filteredGroups.map((group, index) => (
             <React.Fragment key={`${group.name}-${index}`}>
               {group.name && <div className={styles.groupTitle}>{group.name}</div>}
-              {group.children.map((child) => (
+              {group.children.map(child => (
                 <MenuItemCheckbox key={child.id} name={label} value={child.id}>
                   {child.name}
                 </MenuItemCheckbox>
