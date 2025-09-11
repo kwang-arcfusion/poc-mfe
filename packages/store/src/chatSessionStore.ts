@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { getApiBaseUrl, getConversationByThreadId } from '@arcfusion/client';
 import { useChatHistoryStore } from './chatHistoryStore';
+import { useTypingEffectStore } from './typingEffectStore'; // ✨ เพิ่ม import
 import type {
   ConversationResponse,
   StreamedEvent,
@@ -213,6 +214,8 @@ export const createChatSessionStore = () =>
 
               if (eventData.message_id) {
                 set({ streamingMessageId: eventData.message_id });
+                // use startTyping, it will stop in ChatMessage when typing effect is done
+                useTypingEffectStore.getState().startTyping(eventData.message_id);
                 continue;
               }
 
