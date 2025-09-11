@@ -1,17 +1,14 @@
 // packages/ui/src/components/DateRangePicker/dateUtils.ts
+import type { DateRange } from './index';
 
-import type { DateRange } from './index'; // Import type จากไฟล์ index ที่จะสร้าง
-
-// Helper to get the Monday of a given date's week
 function getStartOfWeek(date: Date): Date {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(d.setDate(diff));
 }
 
-// Helper to get the Sunday of a given date's week
 function getEndOfWeek(date: Date): Date {
   const startOfWeek = getStartOfWeek(date);
   const endOfWeek = new Date(startOfWeek);
@@ -20,7 +17,6 @@ function getEndOfWeek(date: Date): Date {
   return endOfWeek;
 }
 
-// Helper to check if two dates are the same day, ignoring time
 export function isSameDay(date1: Date | null, date2: Date | null): boolean {
   if (!date1 || !date2) return false;
   return (
@@ -30,7 +26,6 @@ export function isSameDay(date1: Date | null, date2: Date | null): boolean {
   );
 }
 
-// Main function to get all date presets
 export const getDatePresets = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -79,20 +74,34 @@ export type Mode =
   | 'thisMonth'
   | 'lastMonth';
 
-// Function to determine the mode from a given DateRange value
 export const getModeFromValue = (value: DateRange): Mode => {
   if (!value.start && !value.end) {
-    return 'thisWeek'; // Default mode if nothing is selected
+    return 'thisWeek';
   }
 
   const presets = getDatePresets();
 
-  if (isSameDay(value.start, presets.today.start)) return 'today';
-  if (isSameDay(value.start, presets.yesterday.start)) return 'yesterday';
-  if (isSameDay(value.start, presets.thisWeek.start) && isSameDay(value.end, presets.thisWeek.end)) return 'thisWeek';
-  if (isSameDay(value.start, presets.lastWeek.start) && isSameDay(value.end, presets.lastWeek.end)) return 'lastWeek';
-  if (isSameDay(value.start, presets.thisMonth.start) && isSameDay(value.end, presets.thisMonth.end)) return 'thisMonth';
-  if (isSameDay(value.start, presets.lastMonth.start) && isSameDay(value.end, presets.lastMonth.end)) return 'lastMonth';
+  if (isSameDay(value.start, presets.today.start) && isSameDay(value.end, presets.today.end))
+    return 'today';
+  if (
+    isSameDay(value.start, presets.yesterday.start) &&
+    isSameDay(value.end, presets.yesterday.end)
+  )
+    return 'yesterday';
+  if (isSameDay(value.start, presets.thisWeek.start) && isSameDay(value.end, presets.thisWeek.end))
+    return 'thisWeek';
+  if (isSameDay(value.start, presets.lastWeek.start) && isSameDay(value.end, presets.lastWeek.end))
+    return 'lastWeek';
+  if (
+    isSameDay(value.start, presets.thisMonth.start) &&
+    isSameDay(value.end, presets.thisMonth.end)
+  )
+    return 'thisMonth';
+  if (
+    isSameDay(value.start, presets.lastMonth.start) &&
+    isSameDay(value.end, presets.lastMonth.end)
+  )
+    return 'lastMonth';
 
   if (isSameDay(value.start, value.end)) {
     return 'selectDate';

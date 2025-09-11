@@ -1,4 +1,3 @@
-// packages/ui/src/components/DateRangePicker/index.tsx
 import * as React from 'react';
 import {
   makeStyles,
@@ -89,7 +88,6 @@ const useStyles = makeStyles({
     marginRight: '6px',
   },
   pickerStart: {
-    // Hide the original DatePicker border
     direction: 'rtl',
     '--spacingHorizontalMNudge': '0',
     ...shorthands.border('none'),
@@ -106,7 +104,6 @@ const useStyles = makeStyles({
     },
   },
   pickerEnd: {
-    // Hide the original DatePicker border
     '--spacingHorizontalMNudge': '0',
     ...shorthands.border('none'),
     '& input': {
@@ -256,18 +253,18 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     }
   };
 
-  // Handler for range selection (opens end date picker)
   const handleSelectStartForRange = (d: Date | null | undefined) => {
     const start = d ? startOfDay(d) : null;
     const isEndInvalid = range.end && start && range.end < start;
     setRange({ start, end: isEndInvalid ? null : range.end });
     setOpenStart(false);
     if (start) {
-      setTimeout(() => setOpenEnd(true), 0);
+      requestAnimationFrame(() => {
+        setOpenEnd(true);
+      });
     }
   };
 
-  // Handler for single date selection (does NOT open end date picker)
   const handleSelectSingleDate = (d: Date | null | undefined) => {
     const date = d ? startOfDay(d) : null;
     setRange({ start: date, end: date });
@@ -290,7 +287,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setOpenStart(open);
     if (open) {
       setOpenEnd(false);
-      patchDatePickerPopupTheme(rootRef.current);
+      requestAnimationFrame(() => {
+        patchDatePickerPopupTheme(rootRef.current);
+      });
     }
   };
   const onEndOpenChange = (open: boolean) => {
@@ -302,7 +301,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setOpenEnd(open);
     if (open) {
       setOpenStart(false);
-      patchDatePickerPopupTheme(rootRef.current);
+      requestAnimationFrame(() => {
+        patchDatePickerPopupTheme(rootRef.current);
+      });
     }
   };
 
@@ -359,6 +360,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             maxDate={maxDateProp}
             open={openStart}
             onOpenChange={onStartOpenChange}
+            initialPickerDate={range.start ?? undefined}
           />
           {isDateRangeMode && (
             <>
@@ -376,6 +378,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 maxDate={maxDateProp}
                 open={openEnd}
                 onOpenChange={onEndOpenChange}
+                initialPickerDate={range.end ?? range.start ?? undefined}
               />
             </>
           )}
