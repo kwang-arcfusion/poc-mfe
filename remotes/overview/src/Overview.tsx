@@ -97,6 +97,9 @@ const useStyles = makeStyles({
   menuPopover: {
     minWidth: '120px',
   },
+  applyButton: {
+    minWidth: 0,
+  },
 });
 
 const initialFilters: FilterValues = {
@@ -269,6 +272,7 @@ export default function Overview() {
                 menuButton={triggerProps}
                 primaryActionButton={{
                   onClick: handleApplyFilters,
+                  className: styles.applyButton,
                 }}
               >
                 Apply
@@ -331,14 +335,14 @@ export default function Overview() {
         <MultiSelect
           label="Offers"
           options={mockCampaignData}
-          selectedOptions={pendingCampaignOffers}
+          selectedOptions={pendingCampaignOffers || []}
           onSelectionChange={setPendingCampaignOffers}
         />
         {channelOptions.length > 0 && (
           <MultiSelect
             label="Channels"
             options={channelOptionGroups}
-            selectedOptions={pendingFilters.channels}
+            selectedOptions={pendingFilters.channels || []}
             onSelectionChange={(s) => handleFilterChange('channels', s)}
           />
         )}
@@ -346,7 +350,7 @@ export default function Overview() {
           <MultiSelect
             label="Metrics"
             options={metricOptionGroups}
-            selectedOptions={pendingFilters.metrics}
+            selectedOptions={pendingFilters.metrics || []}
             onSelectionChange={(s) => handleFilterChange('metrics', s)}
           />
         )}

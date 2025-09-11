@@ -151,29 +151,31 @@ function useControllable<T>(controlled: T | undefined, defaultValue: T, onChange
 function patchDatePickerPopupTheme(rootEl: HTMLElement | null) {
   if (!rootEl || !rootEl.ownerDocument) return;
   const provider = rootEl.closest<HTMLElement>('.fui-FluentProvider');
-  if (!provider) return;
-  const providerClasses = Array.from(provider.classList).filter((c) => c.startsWith('fui-'));
-  const applyTo = (el: HTMLElement) => {
-    if (!el || el.dataset.themePatched === 'true') return;
-    providerClasses.forEach((c) => el.classList.add(c));
-    el.dataset.themePatched = 'true';
-  };
-  rootEl.ownerDocument
-    .querySelectorAll<HTMLElement>('[id^="datePicker-popupSurface"]')
-    .forEach(applyTo);
-  const obs = new MutationObserver((mutations) => {
-    for (const m of mutations) {
-      m.addedNodes.forEach((n) => {
-        if (!(n instanceof HTMLElement)) return;
-        if (n.id?.startsWith('datePicker-popupSurface')) applyTo(n);
-        n.querySelectorAll?.('[id^="datePicker-popupSurface"]').forEach((node) =>
-          applyTo(node as HTMLElement)
-        );
-      });
-    }
+  requestAnimationFrame(() => {
+    if (!provider) return;
+    const providerClasses = Array.from(provider.classList).filter((c) => c.startsWith('fui-'));
+    const applyTo = (el: HTMLElement) => {
+      if (!el || el.dataset.themePatched === 'true') return;
+      providerClasses.forEach((c) => el.classList.add(c));
+      el.dataset.themePatched = 'true';
+    };
+    rootEl.ownerDocument
+      .querySelectorAll<HTMLElement>('[id^="datePicker-popupSurface"]')
+      .forEach(applyTo);
+    const obs = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        m.addedNodes.forEach((n) => {
+          if (!(n instanceof HTMLElement)) return;
+          if (n.id?.startsWith('datePicker-popupSurface')) applyTo(n);
+          n.querySelectorAll?.('[id^="datePicker-popupSurface"]').forEach((node) =>
+            applyTo(node as HTMLElement)
+          );
+        });
+      }
+    });
+    obs.observe(rootEl.ownerDocument.body, { childList: true, subtree: true });
+    window.setTimeout(() => obs.disconnect(), 1500);
   });
-  obs.observe(rootEl.ownerDocument.body, { childList: true, subtree: true });
-  window.setTimeout(() => obs.disconnect(), 1500);
 }
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
@@ -352,7 +354,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             disabled={disabled}
             size={size}
             placeholder={startPlaceholder}
-            value={range.start ?? undefined}
+            value={range.start}
             onSelectDate={isDateRangeMode ? handleSelectStartForRange : handleSelectSingleDate}
             formatDate={formatDate}
             allowTextInput={false}
@@ -360,7 +362,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             maxDate={maxDateProp}
             open={openStart}
             onOpenChange={onStartOpenChange}
-            initialPickerDate={range.start ?? undefined}
+            initialPickerDate={range.start!}
           />
           {isDateRangeMode && (
             <>
@@ -370,7 +372,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 disabled={disabled}
                 size={size}
                 placeholder={endPlaceholder}
-                value={range.end ?? undefined}
+                value={range.end}
                 onSelectDate={handleSelectEnd}
                 formatDate={formatDate}
                 allowTextInput={false}
@@ -378,7 +380,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 maxDate={maxDateProp}
                 open={openEnd}
                 onOpenChange={onEndOpenChange}
-                initialPickerDate={range.end ?? range.start ?? undefined}
+                initialPickerDate={range.end ?? range.start!}
               />
             </>
           )}
