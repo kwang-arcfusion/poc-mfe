@@ -1,11 +1,8 @@
 // remotes/stories/src/Stories.tsx
 import React, { useState, useEffect } from 'react';
 import { makeStyles, shorthands, Button, tokens, Spinner, Text } from '@fluentui/react-components';
-import { Filter28Filled } from '@fluentui/react-icons';
-import { DateRangePicker, type DateRange, MultiSelect } from '@arcfusion/ui';
 import { useGroupedStories } from './hooks/useGroupedStories';
 import { StoryGroup } from './components/StoryGroup';
-// ✨ 1. แก้ไขการ import เหลือแค่ getStories ก็เพียงพอ
 import { getStories } from '@arcfusion/client';
 import type { Story } from '@arcfusion/types';
 
@@ -84,19 +81,14 @@ export default function Stories({ navigate }: StoriesProps) {
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // ✨ 2. ลบ loadingMessage state ออก ไม่จำเป็นแล้ว
 
   const allGroupedStories = useGroupedStories(stories);
   const [visibleGroupCount, setVisibleGroupCount] = useState(1);
-  const [filters, setFilters] = useState<FilterValues>(initialFilters);
-  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
 
-  // ✨ 3. กลับมาใช้ useEffect แบบง่าย เรียก API แค่ครั้งเดียว
   useEffect(() => {
     const fetchStories = async () => {
       try {
         setIsLoading(true);
-        // การเรียก API แค่ครั้งเดียวก็จะได้ข้อมูลทั้งหมด รวมถึง echart_config
         const response = await getStories();
         setStories(response.items);
         setError(null);
@@ -109,13 +101,6 @@ export default function Stories({ navigate }: StoriesProps) {
     };
     fetchStories();
   }, []);
-
-  const handleFilterChange = (category: keyof FilterValues, selection: string[]) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [category]: selection,
-    }));
-  };
 
   const visibleGroups = allGroupedStories.slice(0, visibleGroupCount);
   const hasMoreGroups = visibleGroupCount < allGroupedStories.length;
@@ -145,7 +130,6 @@ export default function Stories({ navigate }: StoriesProps) {
   return (
     <div className={styles.root}>
       <div className={styles.storiesGroup}>
-        {/* ✨ 4. ไม่ต้องแก้ไขอะไรตรงนี้ เพราะ InsightCard รับ story object ทั้งก้อนอยู่แล้ว */}
         {visibleGroups.map((group) => (
           <StoryGroup
             key={group.title}

@@ -35,7 +35,6 @@ const useStyles = makeStyles({
   },
   tabList: {
     width: '100%',
-    // --- Styles for Active Tab (same as before) ---
     '& [aria-selected="true"] .fui-Tab__content': {
       color: tokens.colorBrandForeground1,
     },
@@ -43,15 +42,12 @@ const useStyles = makeStyles({
       backgroundColor: tokens.colorBrandStroke1,
     },
 
-    // --- V V V Add styles for Hover V V V ---
-    // Select a tab that is not active (:not) and is being hovered
     '& [role="tab"]:hover .fui-Tab__content': {
       color: tokens.colorCompoundBrandForeground1Hover, // <-- Use color for Hover state
     },
   },
 });
 
-// --- Data Structures (from step 1) ---
 export interface SidebarNavItem {
   value: string;
   label: string;

@@ -21,7 +21,6 @@ export type { MultiSelectProps } from './MultiSelect';
 
 export * from './ChatHistoryPopover';
 
-// ✨ 1. Export Chat components ทั้งหมด
 export * from './Chat/AiStatusIndicator';
 export * from './Chat/AssetTabs';
 export * from './Chat/ChatInputBar';

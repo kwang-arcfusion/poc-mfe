@@ -29,7 +29,6 @@ export function FeedbackControls({ messageId }: FeedbackControlsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
-  // ถ้าไม่มี messageId ก็ไม่ต้องแสดงผล Component นี้เลย
   if (!messageId) {
     return null;
   }

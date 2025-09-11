@@ -1,7 +1,6 @@
 // packages/ui/src/components/Chat/InitialView.tsx
 import * as React from 'react';
 import { makeStyles, Title3, Button, tokens, shorthands } from '@fluentui/react-components';
-// ❌ ลบการ import icon ที่เคย hardcode ออก
 
 const useStyles = makeStyles({
   initialViewContainer: {
@@ -13,7 +12,6 @@ const useStyles = makeStyles({
     ...shorthands.gap('24px'),
     height: '100%',
   },
-  // ✨ Style นี้จะถูกนำไปใช้กับ wrapper ของ icon ที่รับเข้ามา
   iconContainer: {
     color: tokens.colorBrandForeground1,
   },
@@ -38,19 +36,17 @@ const useStyles = makeStyles({
   },
 });
 
-// 👈 1. กำหนดค่าเริ่มต้นสำหรับ Title (Starters จะไม่มี่ค่า default แล้ว)
 const DEFAULT_TITLE = 'Finding the fresh insights today?';
 
-// 👈 2. อัปเดต Interface สำหรับ Props ใหม่
 interface InitialViewProps {
-  icon: React.ReactNode; // บังคับให้ส่ง icon เข้ามา
-  starters: string[]; // บังคับให้ส่ง starters เข้ามา
-  title?: string; // title ยังคงเป็น optional
+  icon: React.ReactNode;
+  starters: string[];
+  title?: string;
   onSuggestionClick: (text: string) => void;
 }
 
 export function InitialView({
-  icon, // 👈 3. รับ icon และ starters เข้ามา
+  icon,
   starters,
   title = DEFAULT_TITLE,
   onSuggestionClick,
@@ -58,7 +54,6 @@ export function InitialView({
   const styles = useStyles();
   return (
     <div className={styles.initialViewContainer}>
-      {/* 👈 4. แสดงผล icon ที่ได้รับมาจาก prop */}
       <div className={styles.iconContainer}>{icon}</div>
 
       <Title3 as="h1" className={styles.title}>

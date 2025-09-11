@@ -47,7 +47,6 @@ const useStyles = makeStyles({
 interface ChatMessageProps {
   sender: 'user' | 'ai';
   content: string;
-  // ✨ เราไม่ต้องใช้ messageId ที่นี่แล้ว แต่เก็บไว้เผื่ออนาคต
   messageId?: string;
 }
 

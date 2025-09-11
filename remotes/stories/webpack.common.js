@@ -1,6 +1,6 @@
 // remotes/stories/webpack.common.js
 const path = require('path');
-const createRemoteConfig = require('../../configs/webpack.config.remote'); // <-- Fix path correctly
+const createRemoteConfig = require('../../configs/webpack.config.remote');
 
 module.exports = (env = {}) =>
   createRemoteConfig({

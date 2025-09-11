@@ -3,7 +3,6 @@ import * as React from 'react';
 import { Card, Text, Tooltip, makeStyles, shorthands, tokens } from '@fluentui/react-components';
 import { Info16Regular, ArrowDown16Regular, ArrowUp16Regular } from '@fluentui/react-icons';
 
-// ✨ 1. ย้าย type ไปไว้ในไฟล์ types.ts ที่กำลังจะสร้าง
 export type Delta = { direction: 'up' | 'down' | 'flat'; text: string };
 
 const useStyles = makeStyles({

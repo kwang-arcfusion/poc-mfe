@@ -11,12 +11,11 @@ const useStatusStyles = makeStyles({
   },
 });
 
-// ✨ เพิ่ม export เพื่อให้ component อื่นสามารถนำไปใช้ได้
 export const TASK_DISPLAY_TEXT: Record<string, string> = {
   thinking: 'Thinking',
   'creating sql': 'Creating SQL',
   'creating table': 'Creating Table',
-  'creating chart': 'Creating Chart', // เพิ่มจากขั้นตอนก่อนหน้า
+  'creating chart': 'Creating Chart',
   answering: 'Answering',
 };
 

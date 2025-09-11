@@ -45,7 +45,7 @@ export const EvidenceSection: React.FC<EvidenceSectionProps> = ({ story }) => {
       yAxis: {
         ...newConfig.yAxis,
         nameTextStyle: {
-          align: 'left', // ให้ชิดซ้าย
+          align: 'left',
         },
       },
       series: (newConfig.series || []).map((s: any) => ({

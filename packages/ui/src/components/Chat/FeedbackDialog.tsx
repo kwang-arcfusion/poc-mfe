@@ -29,7 +29,6 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     gridTemplate: 'none',
   },
-  // แก้ไขชื่อคลาสเพื่อความถูกต้อง
   dialogAction: {
     marginTop: '18px',
     display: 'flex !important',
@@ -57,13 +56,11 @@ export const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ open, onClose, o
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
   const [details, setDetails] = useState('');
 
-  // สร้างตัวแปร boolean เพื่อเช็คว่า 'Other' ถูกเลือกหรือไม่
   const isOtherSelected = selectedReasons.includes('Other');
 
   const handleCheckboxChange = (reason: string, checked: boolean) => {
     setSelectedReasons((prev) => (checked ? [...prev, reason] : prev.filter((r) => r !== reason)));
 
-    // ถ้า uncheck 'Other' ให้ล้างค่า details
     if (reason === 'Other' && !checked) {
       setDetails('');
     }
@@ -75,7 +72,6 @@ export const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ open, onClose, o
   };
 
   React.useEffect(() => {
-    // Reset state ทั้งหมดเมื่อ Dialog ปิด
     if (!open) {
       setSelectedReasons([]);
       setDetails('');
@@ -97,7 +93,6 @@ export const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ open, onClose, o
               />
             ))}
 
-            {/* แสดง Textarea ก็ต่อเมื่อ 'Other' ถูกเลือก */}
             {isOtherSelected && (
               <Textarea
                 placeholder="Please provide more details about the issue..."

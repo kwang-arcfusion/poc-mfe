@@ -28,19 +28,18 @@ const useStyles = makeStyles({
   },
 });
 
-// 👈 1. เพิ่ม size เข้าไปใน Props Interface
 interface ChatInputBarProps {
   onSendMessage: (text: string) => void;
   isStreaming: boolean;
   sourceInfoText?: string;
-  size?: 'small' | 'medium' | 'large'; // เพิ่ม type ของ size
+  size?: 'small' | 'medium' | 'large';
 }
 
 export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   onSendMessage,
   isStreaming,
   sourceInfoText,
-  size = 'large', // 👈 2. รับ prop และกำหนดค่า default เป็น 'large'
+  size = 'large',
 }) => {
   const styles = useStyles();
   const [inputValue, setInputValue] = useState('');
@@ -59,7 +58,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           resize="vertical"
           placeholder="Ask Anything..."
           className={styles.textarea}
-          size={size} // 👈 3. ส่ง prop size ไปให้ Textarea
+          size={size}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={(e) => {

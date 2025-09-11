@@ -1,6 +1,5 @@
 // remotes/stories/src/storyDetail/TechnicalDetails.tsx
 import * as React from 'react';
-// ✨ 1. เพิ่ม import ที่จำเป็นสำหรับฟังก์ชัน Copy
 import { useState, useRef, useEffect } from 'react';
 import {
   makeStyles,
@@ -9,7 +8,7 @@ import {
   Tab,
   TabList,
   Text,
-  Button, // ✨ เพิ่ม Button
+  Button,
 } from '@fluentui/react-components';
 import { Copy24Regular, Checkmark24Regular, CalendarDataBar24Color } from '@fluentui/react-icons';
 import type { Story } from '@arcfusion/types';
@@ -68,7 +67,7 @@ interface TechnicalDetailsProps {
 
 export const TechnicalDetails: React.FC<TechnicalDetailsProps> = ({ story }) => {
   const s = useStyles();
-  const [selectedValue, setSelectedValue] = React.useState('notes'); // ✨ 4. เพิ่ม State และ Logic สำหรับการ Copy (เหมือนใน SqlTableTabs)
+  const [selectedValue, setSelectedValue] = React.useState('notes');
 
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
   const timeoutRef = useRef<number | null>(null);
@@ -84,7 +83,7 @@ export const TechnicalDetails: React.FC<TechnicalDetailsProps> = ({ story }) => 
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
-  }; // Cleanup timeout เมื่อ component unmount
+  };
 
   useEffect(() => {
     return () => {
@@ -92,15 +91,7 @@ export const TechnicalDetails: React.FC<TechnicalDetailsProps> = ({ story }) => 
         clearTimeout(timeoutRef.current);
       }
     };
-  }, []); // ✨ 5. สร้างฟังก์ชัน handler สำหรับการเปลี่ยน Tab เพื่อ reset สถานะปุ่ม
-
-  const handleTabSelect = (_: any, data: { value: string }) => {
-    setSelectedValue(data.value);
-    setCopyState('idle'); // Reset copy state เมื่อเปลี่ยน tab
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-  }; // ✨ 6. เตรียมข้อมูล Metadata ที่จะแสดงผลและ Copy
+  }, []);
 
   const metadataString = React.useMemo(
     () =>
@@ -135,7 +126,6 @@ export const TechnicalDetails: React.FC<TechnicalDetailsProps> = ({ story }) => 
             ))}
           </ul>
         )}
-        {/* ✨ 8. ปรับปรุง JSX ของ Tab SQL และ Metadata ให้มีปุ่ม Copy */}
         {selectedValue === 'sql' && (
           <div className={s.codeContainer}>
             <Button

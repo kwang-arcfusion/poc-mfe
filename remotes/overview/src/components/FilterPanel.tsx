@@ -14,9 +14,6 @@ import {
   Body1,
 } from '@fluentui/react-components';
 
-// =================================================================
-// Data and Types (เหมือนเดิม)
-// =================================================================
 type Metric = {
   label: string;
   value: number;
@@ -180,12 +177,12 @@ const useStyles = makeStyles({
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
     boxShadow: tokens.shadow16,
     width: '280px',
-  }, // ✨ แก้ไข Style ตรงนี้
+  },
   popoverTitle: {
     fontWeight: tokens.fontWeightSemibold,
     paddingBottom: tokens.spacingVerticalXS,
     marginBottom: tokens.spacingVerticalS,
-    ...shorthands.borderBottom('1px', 'solid', tokens.colorNeutralStroke2), // ลบ nowrap และ ellipsis ออก แล้วเพิ่ม word-break
+    ...shorthands.borderBottom('1px', 'solid', tokens.colorNeutralStroke2),
     wordBreak: 'break-word',
   },
 });

@@ -57,16 +57,13 @@ const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   return response.json();
 };
 
-// --- ✨ START: แก้ไขส่วนนี้ ---
 export const getStories = (page = 1, pageSize = 20): Promise<PaginatedStoriesResponse> => {
   return apiFetch(`/v1/stories/?page=${page}&page_size=${pageSize}`);
 };
 
 export const getStoryById = (storyId: string): Promise<Story> => {
-  // Endpoint นี้ไม่มีปัญหา trailing slash
   return apiFetch(`/v1/stories/${storyId}`);
 };
-// --- END: สิ้นสุดส่วนที่แก้ไข ---
 
 // --- Chat API ---
 export const getConversations = (
@@ -94,7 +91,6 @@ export const deleteFeedback = (messageId: string): Promise<null> => {
   });
 };
 
-// --- Export API ---
 /**
  * Constructs the URL to download the SQL result of a message as a CSV file.
  * @param messageId - The ID of the message.

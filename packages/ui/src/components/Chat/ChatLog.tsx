@@ -113,7 +113,6 @@ export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask 
                   <AssetTabs key={block.id} group={block.group} messageId={block.messageId} />
                 )
               )}
-              {/* ✨ แก้ไขเงื่อนไขการแสดงผลที่นี่ */}
               {!(isStreaming && turnIndex === groupedTurns.length - 1) && hasContent && (
                 <FeedbackControls messageId={turnMessageId} />
               )}

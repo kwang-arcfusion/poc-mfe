@@ -22,7 +22,6 @@ import { AskAiPanel } from './askAiPanel/AskAiPanel';
 import { TechnicalDetails } from './storyDetail/TechnicalDetails';
 
 const useStyles = makeStyles({
-  // ... (styles ทั้งหมดเหมือนเดิม ไม่ต้องแก้ไข)
   outer: {
     overflow: 'hidden',
     height: 'calc(100vh - 60px)',
@@ -130,14 +129,12 @@ const useStyles = makeStyles({
   },
 });
 
-// ✨ 1. เพิ่ม navigate เข้าไปใน Props Interface
 interface StoryDetailPageProps {
   storyId?: string;
   threadId?: string | null;
   navigate: (path: string, options?: { replace?: boolean }) => void;
 }
 
-// ✨ 2. รับ navigate เข้ามาเป็น prop
 export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDetailPageProps) {
   const s = useStyles();
   const { setMainOverflow } = useLayoutStore();
@@ -269,7 +266,7 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
                     story={story!}
                     threadId={threadId || undefined}
                     onClose={() => setAiOpen(false)}
-                    navigate={navigate} // 👈 3. ส่ง navigate ต่อไปให้ AskAiPanel
+                    navigate={navigate}
                   />
                 </ChatSessionProvider>
               </aside>

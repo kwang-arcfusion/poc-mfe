@@ -2,8 +2,9 @@
   "name": "arcfusion",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "pnpm clean:p && turbo run build",
     "b:p": "cd packages/client && rm -rf .turbo dist tsconfig.tsbuildinfo && pnpm build && cd ../store && rm -rf .turbo dist tsconfig.tsbuildinfo && pnpm build && cd ../ui && rm -rf .turbo dist tsconfig.tsbuildinfo && pnpm build",
+    "clean:p": "rm -rf packages/*/tsconfig.tsbuildinfo packages/*/.turbo packages/*/dist",
     "b:ui": "pnpm build --filter=@arcfusion/ui",
     "b:store": "pnpm build --filter=@arcfusion/store",
     "b:types": "pnpm build --filter=@arcfusion/types",

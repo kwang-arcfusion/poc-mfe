@@ -46,20 +46,15 @@ export interface PaginatedConversationsResponse {
   page_size: number;
 }
 
-// Event types ที่จะได้รับจาก SSE stream ของ /chat/ask
 export type SqlQueryEvent = { sql_query: string };
 export type SqlResultEvent = { sql_query_result: Record<string, any>[] };
-// ✨ START: แก้ไขส่วนนี้
 export type ChartBuilderResultEvent = { chart_builder_result: Record<string, any> };
-// ✨ END: สิ้นสุดการแก้ไข
 export type AnswerChunkEvent = { answer_chunk: string };
 export type FinalAnswerEvent = { answer: string };
 export type StreamedEvent =
   | SqlQueryEvent
   | SqlResultEvent
-  // ✨ START: แก้ไขส่วนนี้
   | ChartBuilderResultEvent
-  // ✨ END: สิ้นสุดการแก้ไข
   | AnswerChunkEvent
   | FinalAnswerEvent;
 

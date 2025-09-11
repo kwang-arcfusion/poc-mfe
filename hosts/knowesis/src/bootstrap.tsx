@@ -3,21 +3,18 @@ import { createRoot } from 'react-dom/client';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { App } from './App';
 
-// ✨ 1. Import ฟังก์ชัน init จาก package ใหม่
 import { initApiClient } from '@arcfusion/client';
 
 // ---- Main Application Setup ----
 const domain = process.env.AUTH0_DOMAIN;
 const clientId = process.env.AUTH0_CLIENT_ID;
 
-// ✨ 2. ดึงค่า API URL จาก process.env
 const apiUrl = process.env.REACT_APP_API_BASE_URL;
 console.log('bootstrap.tsx:15 |apiUrl| : ', apiUrl);
 if (!domain || !clientId) {
   throw new Error('Auth0 domain and client ID must be set in .env file');
 }
 
-// ✨ 3. ตรวจสอบและเรียกใช้ initApiClient
 if (!apiUrl) {
   throw new Error('REACT_APP_API_BASE_URL is not defined in .env file.');
 }

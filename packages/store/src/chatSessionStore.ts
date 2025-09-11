@@ -23,7 +23,6 @@ type AiTask =
 
 type StreamMode = 'default' | 'dynamic';
 
-// ✨ ================== START: CODE ที่แก้ไข ================== ✨
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
   if (!response || !response.messages) {
     return [];
@@ -33,7 +32,6 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
   for (const message of response.messages) {
     if (message.role === 'system') continue;
 
-    // ✨ 1. ประมวลผลและเพิ่ม TextBlock (ข้อความ) ก่อนเสมอ
     const textContent = typeof message.content === 'string' ? message.content : '';
     if (textContent) {
       blocks.push({
@@ -44,8 +42,7 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
         content: textContent,
       });
     }
-    
-    // ✨ 2. จากนั้นค่อยประมวลผลและเพิ่ม AssetsBlock (ตาราง/SQL/Chart)
+
     if (message.role === 'bot') {
       const assetGroup: AssetGroup = { id: uuidv4(), sqls: [], dataframes: [], charts: [] };
       let hasAssets = false;
@@ -86,7 +83,6 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
   }
   return blocks;
 }
-// ✨ =================== END: CODE ที่แก้ไข =================== ✨
 
 export interface ChatSessionState {
   threadId?: string;

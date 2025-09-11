@@ -1,7 +1,6 @@
 // hosts/knowesis/src/pages/AskAiPage.tsx
 import React, { Suspense } from 'react';
 import { Spinner } from '@fluentui/react-components';
-// ✨ 1. ลบ useLocation ออก
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChatSessionProvider } from '@arcfusion/store';
 
@@ -15,7 +14,6 @@ export function AskAiPage() {
   return (
     <ChatSessionProvider>
       <Suspense fallback={<Spinner size="huge" />}>
-        {/* ✨ 3. ลบ location prop ออก */}
         <AskAi navigate={navigate} chatId={chatId} />
       </Suspense>
     </ChatSessionProvider>

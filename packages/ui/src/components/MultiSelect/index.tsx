@@ -5,7 +5,6 @@ import {
   Button,
   Input,
   Menu,
-  MenuItem,
   MenuItemCheckbox,
   MenuList,
   MenuPopover,
@@ -82,9 +81,9 @@ const useStyles = makeStyles({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  }, // ✨ 1. เพิ่ม style ใหม่สำหรับ placeholder text
+  },
   placeholderText: {
-    color: tokens.colorNeutralForeground4, // ใช้สีสำหรับ placeholder
+    color: tokens.colorNeutralForeground4,
   },
 });
 
@@ -199,7 +198,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         <Badge appearance="tint" size="large">
           {label}
         </Badge>
-        {/* ✨ 2. ใช้ style ใหม่กับ span นี้ โดยเช็คเงื่อนไข */}
         <span className={count === 0 ? styles.placeholderText : undefined}>{selectionText}</span>
       </span>
     );

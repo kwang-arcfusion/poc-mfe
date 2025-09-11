@@ -103,7 +103,6 @@ export function AskAiPanel({
   const handleSendMessage = (text: string) => {
     const { sendMessage, threadId: conversationThreadId } = storeApi.getState();
 
-    // ✨ ลบ `.then()` ที่เรียก `updateLastMessageWithData` ออก
     sendMessage(text, conversationThreadId, story.id).then((newThreadId) => {
       if (isMountedRef.current && !conversationThreadId && newThreadId) {
         navigate(`/stories/${story.id}?thread=${newThreadId}`, { replace: true });

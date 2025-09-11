@@ -117,7 +117,6 @@ const useStyles = makeStyles({
       cursor: 'pointer',
       width: '76px',
     },
-    // <-- [Edit] Make this selector more specific
     '& .fui-Input__contentAfter': {
       display: 'none',
     },
@@ -353,7 +352,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
             size={size}
             placeholder={startPlaceholder}
             value={range.start ?? undefined}
-            // *** CRITICAL LOGIC CHANGE HERE ***
             onSelectDate={isDateRangeMode ? handleSelectStartForRange : handleSelectSingleDate}
             formatDate={formatDate}
             allowTextInput={false}

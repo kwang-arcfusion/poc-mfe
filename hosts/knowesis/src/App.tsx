@@ -57,16 +57,13 @@ function ThemedApp() {
   const { dispatchToast } = useToastController(toasterId);
   const { unreadResponses } = useChatHistoryStore();
 
-  // ✨ 2. ใช้ useRef เพื่อเก็บจำนวน unread ของ render ก่อนหน้า
   const prevUnreadCountRef = useRef(unreadResponses.length);
 
   useEffect(() => {
     const prevCount = prevUnreadCountRef.current;
     const currentCount = unreadResponses.length;
 
-    // ✨ 3. เงื่อนไขใหม่: จะทำงานก็ต่อเมื่อมี unread item เพิ่มขึ้นมาเท่านั้น
     if (currentCount > prevCount) {
-      // ดึง item ล่าสุดที่เพิ่มเข้ามา (จะอยู่ท้าย Array เสมอ)
       const newNotification = unreadResponses[unreadResponses.length - 1];
       const { threadId, storyId, title } = newNotification;
 
@@ -101,10 +98,8 @@ function ThemedApp() {
         </Toast>,
         { intent: 'success', position: 'bottom-end', timeout: 8000 }
       );
-      // ❗ ไม่มีการเรียก removeUnreadResponse ที่นี่อีกต่อไป
     }
 
-    // ✨ 4. อัปเดตค่า ref ให้เป็นค่าปัจจุบันเสมอ เพื่อใช้ใน render ถัดไป
     prevUnreadCountRef.current = unreadResponses.length;
   }, [unreadResponses, dispatchToast, navigate]);
 
