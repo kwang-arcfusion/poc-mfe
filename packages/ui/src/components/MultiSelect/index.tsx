@@ -17,9 +17,9 @@ import {
   type MenuCheckedValueChangeEvent,
   type MenuCheckedValueChangeData,
 } from '@fluentui/react-components';
-import { 
-  ChevronDown20Regular, 
-  Search20Regular, 
+import {
+  ChevronDown20Regular,
+  Search20Regular,
   Dismiss20Regular,
   CheckboxChecked16Regular,
   CheckboxUnchecked16Regular,
@@ -82,7 +82,10 @@ const useStyles = makeStyles({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  }
+  }, // ✨ 1. เพิ่ม style ใหม่สำหรับ placeholder text
+  placeholderText: {
+    color: tokens.colorNeutralForeground4, // ใช้สีสำหรับ placeholder
+  },
 });
 
 interface OptionItem {
@@ -98,7 +101,7 @@ export interface OptionGroup {
 export interface MultiSelectProps {
   label: string;
   options: OptionGroup[];
-  selectedOptions: string[]; 
+  selectedOptions: string[];
   onSelectionChange: (newSelection: string[]) => void;
 }
 
@@ -111,44 +114,44 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   const styles = useStyles();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const allChildren = useMemo(() => options.flatMap(group => group.children), [options]);
+  const allChildren = useMemo(() => options.flatMap((group) => group.children), [options]);
 
   const filteredGroups = useMemo(() => {
     if (!searchTerm) {
       return options;
     }
     return options
-      .map(group => {
-        const filteredChildren = group.children.filter(child =>
+      .map((group) => {
+        const filteredChildren = group.children.filter((child) =>
           child.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
         return { ...group, children: filteredChildren };
       })
-      .filter(group => group.children.length > 0);
+      .filter((group) => group.children.length > 0);
   }, [options, searchTerm]);
-  
+
   const allVisibleOptionIds = useMemo(
-    () => filteredGroups.flatMap(group => group.children.map(child => child.id)),
+    () => filteredGroups.flatMap((group) => group.children.map((child) => child.id)),
     [filteredGroups]
   );
 
   const isAllSelected = useMemo(() => {
     if (allVisibleOptionIds.length === 0) return false;
-    return allVisibleOptionIds.every(id => selectedOptions.includes(id));
+    return allVisibleOptionIds.every((id) => selectedOptions.includes(id));
   }, [allVisibleOptionIds, selectedOptions]);
 
   const uniqueMatchingNames = useMemo(() => {
     if (!searchTerm) {
-        return [];
+      return [];
     }
-    const allMatchingChildren = filteredGroups.flatMap(group => group.children);
-    const uniqueNames = [...new Set(allMatchingChildren.map(child => child.name))];
+    const allMatchingChildren = filteredGroups.flatMap((group) => group.children);
+    const uniqueNames = [...new Set(allMatchingChildren.map((child) => child.name))];
     return uniqueNames;
   }, [searchTerm, filteredGroups]);
-  
+
   const handleSelectAllToggle = () => {
     if (isAllSelected) {
-      const newSelection = selectedOptions.filter(id => !allVisibleOptionIds.includes(id));
+      const newSelection = selectedOptions.filter((id) => !allVisibleOptionIds.includes(id));
       onSelectionChange(newSelection);
     } else {
       onSelectionChange([...new Set([...selectedOptions, ...allVisibleOptionIds])]);
@@ -156,20 +159,18 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   };
 
   const handleSelectAllByName = (name: string) => {
-    const idsToToggle = allChildren
-        .filter(child => child.name === name)
-        .map(child => child.id);
+    const idsToToggle = allChildren.filter((child) => child.name === name).map((child) => child.id);
 
     if (idsToToggle.length === 0) return;
 
-    const areAllSelectedForThisName = idsToToggle.every(id => selectedOptions.includes(id));
+    const areAllSelectedForThisName = idsToToggle.every((id) => selectedOptions.includes(id));
 
     if (areAllSelectedForThisName) {
-        const newSelection = selectedOptions.filter(id => !idsToToggle.includes(id));
-        onSelectionChange(newSelection);
+      const newSelection = selectedOptions.filter((id) => !idsToToggle.includes(id));
+      onSelectionChange(newSelection);
     } else {
-        const newSelection = [...new Set([...selectedOptions, ...idsToToggle])];
-        onSelectionChange(newSelection);
+      const newSelection = [...new Set([...selectedOptions, ...idsToToggle])];
+      onSelectionChange(newSelection);
     }
   };
 
@@ -179,18 +180,15 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   ) => {
     onSelectionChange(data.checkedItems);
   };
-  
-  // ✨ FIX: ปรับปรุง Logic การแสดงผลบนปุ่มให้เหมือนกันทั้งหมด
+
   const triggerContent = useMemo(() => {
     const count = selectedOptions.length;
     let selectionText = 'Select';
 
     if (count > 0) {
       const firstSelectedId = selectedOptions[0];
-      const firstSelectedChild = allChildren.find(c => c.id === firstSelectedId);
-      
-      // ถ้าหาชื่อเจอ ให้ใช้ชื่อนั้น ถ้าหาไม่เจอ (ซึ่งไม่ควรจะเกิดขึ้น) ให้ใช้ ID แทนไปเลย
-      // แต่จะไม่มีการแสดง "X selected" อีกต่อไป
+      const firstSelectedChild = allChildren.find((c) => c.id === firstSelectedId);
+
       const displayName = firstSelectedChild ? firstSelectedChild.name : firstSelectedId;
 
       selectionText = count === 1 ? displayName : `${displayName}, +${count - 1}`;
@@ -201,7 +199,8 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         <Badge appearance="tint" size="large">
           {label}
         </Badge>
-        <span>{selectionText}</span>
+        {/* ✨ 2. ใช้ style ใหม่กับ span นี้ โดยเช็คเงื่อนไข */}
+        <span className={count === 0 ? styles.placeholderText : undefined}>{selectionText}</span>
       </span>
     );
   }, [selectedOptions, label, styles, allChildren]);
@@ -218,6 +217,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           {triggerContent}
         </Button>
       </MenuTrigger>
+
       <MenuPopover className={styles.popoverSurface}>
         <div className={styles.searchContainer}>
           <Input
@@ -236,70 +236,74 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
             }
           />
         </div>
+
         <MenuList
           checkedValues={{ [label]: selectedOptions }}
           onCheckedValueChange={handleCheckedValueChange}
         >
           {allVisibleOptionIds.length > 0 && (
-             <>
-                <div
-                    role="menuitem"
-                    tabIndex={0}
-                    className={styles.nonClosingMenuItem}
-                    onClick={handleSelectAllToggle}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            handleSelectAllToggle();
-                        }
-                    }}
-                >
-                    <span className={styles.menuIcon}>
-                        {isAllSelected ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
-                    </span>
-                    Select All
-                </div>
-                <MenuDivider />
-             </>
+            <>
+              <div
+                role="menuitem"
+                tabIndex={0}
+                className={styles.nonClosingMenuItem}
+                onClick={handleSelectAllToggle}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSelectAllToggle();
+                  }
+                }}
+              >
+                <span className={styles.menuIcon}>
+                  {isAllSelected ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
+                </span>
+                Select All
+              </div>
+              <MenuDivider />
+            </>
           )}
 
           {uniqueMatchingNames.length > 0 && (
             <>
-                {uniqueMatchingNames.map(name => {
-                    const idsForThisName = allChildren
-                        .filter(child => child.name === name)
-                        .map(child => child.id);
-                    const isChecked = idsForThisName.length > 0 && idsForThisName.every(id => selectedOptions.includes(id));
+              {uniqueMatchingNames.map((name) => {
+                const idsForThisName = allChildren
+                  .filter((child) => child.name === name)
+                  .map((child) => child.id);
+                const isChecked =
+                  idsForThisName.length > 0 &&
+                  idsForThisName.every((id) => selectedOptions.includes(id));
 
-                    return (
-                        <div
-                            key={name}
-                            role="menuitem"
-                            tabIndex={0}
-                            className={styles.nonClosingMenuItem}
-                            onClick={() => handleSelectAllByName(name)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault();
-                                    handleSelectAllByName(name);
-                                }
-                            }}
-                        >
-                            <span className={styles.menuIcon}>
-                                {isChecked ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
-                            </span>
-                            {name}
-                        </div>
-                    );
-                })}
-                <MenuDivider />
+                return (
+                  <div
+                    key={name}
+                    role="menuitem"
+                    tabIndex={0}
+                    className={styles.nonClosingMenuItem}
+                    onClick={() => handleSelectAllByName(name)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSelectAllByName(name);
+                      }
+                    }}
+                  >
+                    <span className={styles.menuIcon}>
+                      {isChecked ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
+                    </span>
+                    {name}
+                  </div>
+                );
+              })}
+              <MenuDivider />
             </>
           )}
 
           {filteredGroups.map((group, index) => (
             <React.Fragment key={`${group.name}-${index}`}>
               {group.name && <div className={styles.groupTitle}>{group.name}</div>}
-              {group.children.map(child => (
+
+              {group.children.map((child) => (
                 <MenuItemCheckbox key={child.id} name={label} value={child.id}>
                   {child.name}
                 </MenuItemCheckbox>
