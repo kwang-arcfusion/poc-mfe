@@ -15,10 +15,14 @@ const useStyles = makeStyles({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    ...shorthands.gap('24px'),
     ...shorthands.padding('0px', '24px', '24px', '24px'),
     height: '100%',
     boxSizing: 'border-box',
+  },
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
   },
   loadingContainer: {
     display: 'flex',
@@ -215,20 +219,22 @@ export default function Overview() {
         )}
       </header>
 
-      {isLoading && <Spinner label="Updating data..." />}
-      {error && !isLoading && (
-        <Text weight="semibold" style={{ color: tokens.colorPaletteRedForeground1 }}>
-          {error}
-        </Text>
-      )}
+      <div className={styles.container}>
+        {isLoading && <Spinner />}
+        {error && !isLoading && (
+          <Text weight="semibold" style={{ color: tokens.colorPaletteRedForeground1 }}>
+            {error}
+          </Text>
+        )}
 
-      {data && !error && (
-        <>
-          <OverallPerformance cards={data.cards} />
-          <DailyPerformanceChart data={data.series} />
-          {data.tables[0] && <ByChannelTable items={data.tables[0]} />}
-        </>
-      )}
+        {data && !error && (
+          <>
+            <OverallPerformance cards={data.cards} />
+            <DailyPerformanceChart data={data.series} />
+            {data.tables[0] && <ByChannelTable items={data.tables[0]} />}
+          </>
+        )}
+      </div>
     </div>
   );
 }

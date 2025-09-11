@@ -43,7 +43,7 @@ export const ByChannelTable: React.FC<{ items: TableData }> = ({ items }) => {
 
   return (
     <section>
-      <Text as="h2" size={600} weight="semibold">
+      <Text as="h2" size={500} weight="semibold">
         {items.title}
       </Text>
       <Card className={styles.tableCard}>

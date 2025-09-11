@@ -76,7 +76,7 @@ export const DailyPerformanceChart: React.FC<{ data: SeriesData }> = ({ data }) 
 
   return (
     <section>
-      <Text as="h2" size={600} weight="semibold">
+      <Text as="h2" size={500} weight="semibold">
         Daily Performance
       </Text>
       <Card className={styles.card}>
