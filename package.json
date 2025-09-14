@@ -14,7 +14,13 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "clean": "rm -rf node_modules .turbo hosts/*/dist remotes/*/dist packages/*/dist"
+    "clean": "rm -rf node_modules .turbo hosts/*/dist remotes/*/dist packages/*/dist",
+    "s:knowesis": "serve -s -p 8000 hosts/knowesis/dist",
+    "s:ask_ai": "serve -s -p 8001 remotes/ask_ai/dist",
+    "s:home": "serve -s -p 8002 remotes/home/dist",
+    "s:stories": "serve -s -p 8003 remotes/stories/dist",
+    "s:overview": "serve -s -p 8004 remotes/overview/dist",
+    "preview": "run-p s:*"
   },
   "overrides": {
     "@babel/preset-typescript": "7.27.1"
