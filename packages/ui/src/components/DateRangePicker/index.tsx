@@ -94,12 +94,13 @@ const useStyles = makeStyles({
     '--spacingHorizontalMNudge': '0',
     ...shorthands.border('none'),
     '& input': {
+      direction: 'ltr',
       textAlign: 'left',
       ...shorthands.border('none'),
       ...shorthands.padding('0px'),
       backgroundColor: 'transparent',
       cursor: 'pointer',
-      width: '76px',
+      width: '80px',
     },
     '& .fui-Input__contentAfter': {
       paddingRight: '6px',
@@ -114,7 +115,7 @@ const useStyles = makeStyles({
       ...shorthands.padding('0px'),
       backgroundColor: 'transparent',
       cursor: 'pointer',
-      width: '76px',
+      width: '80px',
     },
     '& .fui-Input__contentAfter': {
       display: 'none',
@@ -224,7 +225,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   );
   const formatDate = React.useCallback((d?: Date) => {
     if (!d) return '';
-    return d.toISOString().split('T')[0];
+    return new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(d);
   }, []);
 
   const handleMenuSelect = (selectedMode: Mode) => {
