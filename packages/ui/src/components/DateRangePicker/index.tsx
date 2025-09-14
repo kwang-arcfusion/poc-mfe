@@ -1,3 +1,5 @@
+// packages/ui/src/components/DateRangePicker/index.tsx
+
 import * as React from 'react';
 import {
   makeStyles,
@@ -148,35 +150,7 @@ function useControllable<T>(controlled: T | undefined, defaultValue: T, onChange
   return [value, set] as const;
 }
 
-function patchDatePickerPopupTheme(rootEl: HTMLElement | null) {
-  if (!rootEl || !rootEl.ownerDocument) return;
-  const provider = rootEl.closest<HTMLElement>('.fui-FluentProvider');
-  requestAnimationFrame(() => {
-    if (!provider) return;
-    const providerClasses = Array.from(provider.classList).filter((c) => c.startsWith('fui-'));
-    const applyTo = (el: HTMLElement) => {
-      if (!el || el.dataset.themePatched === 'true') return;
-      providerClasses.forEach((c) => el.classList.add(c));
-      el.dataset.themePatched = 'true';
-    };
-    rootEl.ownerDocument
-      .querySelectorAll<HTMLElement>('[id^="datePicker-popupSurface"]')
-      .forEach(applyTo);
-    const obs = new MutationObserver((mutations) => {
-      for (const m of mutations) {
-        m.addedNodes.forEach((n) => {
-          if (!(n instanceof HTMLElement)) return;
-          if (n.id?.startsWith('datePicker-popupSurface')) applyTo(n);
-          n.querySelectorAll?.('[id^="datePicker-popupSurface"]').forEach((node) =>
-            applyTo(node as HTMLElement)
-          );
-        });
-      }
-    });
-    obs.observe(rootEl.ownerDocument.body, { childList: true, subtree: true });
-    window.setTimeout(() => obs.disconnect(), 1500);
-  });
-}
+// ❌ เราจะไม่ใช้ฟังก์ชัน patchDatePickerPopupTheme เดิมอีกต่อไป ❌
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   value: valueProp,
@@ -200,6 +174,45 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const [openEnd, setOpenEnd] = React.useState(false);
 
   const dateStartRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const rootEl = rootRef.current;
+    if (!rootEl || !rootEl.ownerDocument) return;
+
+    const provider = rootEl.closest<HTMLElement>('.fui-FluentProvider');
+    if (!provider) return;
+    const providerClasses = Array.from(provider.classList).filter((c) => c.startsWith('fui-'));
+
+    const applyTheme = (element: HTMLElement) => {
+      if (!element || element.dataset.themePatched === 'true') return;
+      providerClasses.forEach((c) => element.classList.add(c));
+      element.dataset.themePatched = 'true';
+    };
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const addedNode of mutation.addedNodes) {
+          if (addedNode instanceof HTMLElement) {
+            const popup = addedNode.id?.startsWith('datePicker-popupSurface')
+              ? addedNode
+              : addedNode.querySelector<HTMLElement>('[id^="datePicker-popupSurface"]');
+            if (popup) {
+              applyTheme(popup);
+            }
+          }
+        }
+      }
+    });
+
+    observer.observe(rootEl.ownerDocument.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   React.useEffect(() => {
     setMode(getModeFromValue(range));
@@ -289,9 +302,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setOpenStart(open);
     if (open) {
       setOpenEnd(false);
-      requestAnimationFrame(() => {
-        patchDatePickerPopupTheme(rootRef.current);
-      });
     }
   };
   const onEndOpenChange = (open: boolean) => {
@@ -303,9 +313,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setOpenEnd(open);
     if (open) {
       setOpenStart(false);
-      requestAnimationFrame(() => {
-        patchDatePickerPopupTheme(rootRef.current);
-      });
     }
   };
 
