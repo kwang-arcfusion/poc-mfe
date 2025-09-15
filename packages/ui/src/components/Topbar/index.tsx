@@ -53,13 +53,7 @@ export interface TopbarProps extends UserMenuProps {
   methodsRight?: React.ReactNode;
 }
 
-export function Topbar({
-  pageTitle,
-  methodsLeft,
-  methodsRight,
-  user,
-  onLogout,
-}: TopbarProps) {
+export function Topbar({ pageTitle, methodsLeft, methodsRight, user, onLogout }: TopbarProps) {
   const styles = useStyles();
 
   return (
@@ -70,9 +64,9 @@ export function Topbar({
         <div className={styles.methodsRight}>{methodsRight}</div>
       </div>
       <div className={styles.rightContainer}>
-        <SearchBox placeholder="Search" />
+        {/* <SearchBox placeholder="Search" /> */}
         <ChatHistoryPopover />
-        <Alert24Regular color={tokens.colorBrandForeground1}></Alert24Regular>
+        {/* <Alert24Regular color={tokens.colorBrandForeground1}></Alert24Regular> */}
         <UserMenu user={user} onLogout={onLogout} />
       </div>
     </header>
