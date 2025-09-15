@@ -93,9 +93,8 @@ const useStyles = makeStyles({
   placeholderText: {
     color: tokens.colorNeutralForeground4,
   },
-  // --- NEW STYLE for the count part ---
   countText: {
-    whiteSpace: 'nowrap', // Prevent the count from wrapping
+    whiteSpace: 'nowrap',
     verticalAlign: 'bottom',
   },
 });
@@ -109,7 +108,7 @@ export interface MultiSelectProps {
   options: OptionGroup[];
   selectedOptions: string[];
   onSelectionChange: (newSelection: string[]) => void;
-  onSearchChange?: (value: string) => void; // ✨ เพิ่ม onSearchChange prop
+  onSearchChange?: (value: string) => void;
   showSelectAll?: boolean;
   maxWidth?: number | string;
 }
@@ -119,7 +118,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   options,
   selectedOptions,
   onSelectionChange,
-  onSearchChange, // ✨ รับ prop ใหม่
+  onSearchChange,
   showSelectAll = false,
   maxWidth,
 }) => {
@@ -146,18 +145,29 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     () => filteredGroups.flatMap((group) => group.children.map((child) => child.id)),
     [filteredGroups]
   );
+  
+  // ✨ 1. สร้าง Array ของ ID แบบไม่มี prefix สำหรับใช้กับ `MenuList` เท่านั้น
+  const simpleCheckedValues = useMemo(
+    () => selectedOptions.map(s => s.split(':').pop() || s),
+    [selectedOptions]
+  );
 
   const isAllSelected = useMemo(() => {
     if (allVisibleOptionIds.length === 0) return false;
-    return allVisibleOptionIds.every((id) => selectedOptions.includes(id));
-  }, [allVisibleOptionIds, selectedOptions]);
+    return allVisibleOptionIds.every((id) => simpleCheckedValues.includes(id));
+  }, [allVisibleOptionIds, simpleCheckedValues]);
+
 
   const handleSelectAllToggle = () => {
     if (isAllSelected) {
-      const newSelection = selectedOptions.filter((id) => !allVisibleOptionIds.includes(id));
+      const newSelection = selectedOptions.filter(
+        (prefixedId) => !allVisibleOptionIds.includes(prefixedId.split(':').pop() || '')
+      );
       onSelectionChange(newSelection);
     } else {
-      onSelectionChange([...new Set([...selectedOptions, ...allVisibleOptionIds])]);
+      // ✨ 2. แปลง ID ธรรมดาให้มี prefix ก่อนส่งกลับ
+      const prefixedVisibleIds = allVisibleOptionIds.map(id => `offer_group:${id}`);
+      onSelectionChange([...new Set([...selectedOptions, ...prefixedVisibleIds])]);
     }
   };
 
@@ -173,13 +183,19 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   const handleSelectAllByName = (name: string) => {
     const idsToToggle = allChildren.filter((child) => child.name === name).map((child) => child.id);
     if (idsToToggle.length === 0) return;
-    const areAllSelectedForThisName = idsToToggle.every((id) => selectedOptions.includes(id));
+    
+    // ใช้ simpleCheckedValues ในการเช็ค
+    const areAllSelectedForThisName = idsToToggle.every((id) => simpleCheckedValues.includes(id));
 
     if (areAllSelectedForThisName) {
-      const newSelection = selectedOptions.filter((id) => !idsToToggle.includes(id));
+      const newSelection = selectedOptions.filter(
+        (prefixedId) => !idsToToggle.includes(prefixedId.split(':').pop() || '')
+      );
       onSelectionChange(newSelection);
     } else {
-      const newSelection = [...new Set([...selectedOptions, ...idsToToggle])];
+      // ✨ 3. แปลง ID ธรรมดาให้มี prefix ก่อนส่งกลับ
+      const prefixedIdsToToggle = idsToToggle.map(id => `offer_group:${id}`);
+      const newSelection = [...new Set([...selectedOptions, ...prefixedIdsToToggle])];
       onSelectionChange(newSelection);
     }
   };
@@ -188,7 +204,10 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     _ev: MenuCheckedValueChangeEvent,
     data: MenuCheckedValueChangeData
   ) => {
-    onSelectionChange(data.checkedItems);
+    // data.checkedItems คือ list ของ ID ธรรมดา (เช่น ["HOL-P01", "WIN-B01"])
+    // ✨ 4. เราต้องแปลงกลับให้เป็น format ที่มี prefix ก่อนส่งไปที่ Store
+    const newSelection = data.checkedItems.map(id => `offer_group:${id}`);
+    onSelectionChange(newSelection);
   };
 
   const triggerContent = useMemo(() => {
@@ -204,11 +223,11 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
       );
     }
 
-    const firstSelectedId = selectedOptions[0];
-    const firstSelectedChild = allChildren.find((c) => c.id === firstSelectedId);
-    const displayName = firstSelectedChild ? firstSelectedChild.name : firstSelectedId;
+    const firstSelectedIdString = selectedOptions[0];
+    const actualId = firstSelectedIdString.split(':').pop();
+    const firstSelectedChild = allChildren.find((c) => c.id === actualId);
+    const displayName = firstSelectedChild ? firstSelectedChild.name : actualId;
 
-    // --- FIX: Create separate elements for the name and the count ---
     const valueStyle: React.CSSProperties = maxWidth ? { maxWidth } : {};
 
     return (
@@ -243,7 +262,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
             placeholder={`Search ${label}...`}
             value={searchTerm}
             onChange={(_, data) => {
-              // ✨ เรียก onSearchChange เมื่อมีการพิมพ์
               setSearchTerm(data.value);
               onSearchChange?.(data.value);
             }}
@@ -254,7 +272,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                   appearance="transparent"
                   icon={<Dismiss20Regular />}
                   onClick={() => {
-                    // ✨ เรียก onSearchChange เมื่อล้างค่า
                     setSearchTerm('');
                     onSearchChange?.('');
                   }}
@@ -265,7 +282,8 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         </div>
 
         <MenuList
-          checkedValues={{ [label]: selectedOptions }}
+          // ✨ 5. ใช้ simpleCheckedValues ที่เราสร้างไว้เพื่อให้ MenuList ติ๊ก checkbox ถูกต้อง
+          checkedValues={{ [label]: simpleCheckedValues }}
           onCheckedValueChange={handleCheckedValueChange}
         >
           {showSelectAll && allVisibleOptionIds.length > 0 && (
@@ -299,7 +317,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                   .map((child) => child.id);
                 const isChecked =
                   idsForThisName.length > 0 &&
-                  idsForThisName.every((id) => selectedOptions.includes(id));
+                  idsForThisName.every((id) => simpleCheckedValues.includes(id));
 
                 return (
                   <div
