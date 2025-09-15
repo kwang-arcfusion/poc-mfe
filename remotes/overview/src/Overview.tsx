@@ -1,5 +1,5 @@
 // remotes/overview/src/Overview.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   makeStyles,
   shorthands,
@@ -92,6 +92,8 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
+    flexDirection: 'column',
+    ...shorthands.gap('16px'),
   },
   menuPopover: {
     minWidth: '120px',
@@ -100,6 +102,19 @@ const useStyles = makeStyles({
     minWidth: 0,
   },
 });
+
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+};
 
 export default function Overview() {
   const styles = useStyles();
@@ -111,16 +126,18 @@ export default function Overview() {
     error,
     isDirty,
     pendingDateRange,
-    pendingFilters,
-    pendingCampaignOffers,
+    pendingOfferFilters,
+    pendingChannelFilters,
     availableCampaignOffers,
     availableChannels,
     chartMetricKey,
     focusedOfferId,
     rightPanelData,
+    isRightPanelVisible,
+    searchOffers,
     setPendingDateRange,
-    setPendingFilters,
-    setPendingCampaignOffers,
+    setPendingOfferFilters,
+    setPendingChannelFilters,
     setChartMetricKey,
     setFocusedOfferId,
     applyFilters,
@@ -128,6 +145,8 @@ export default function Overview() {
   } = useOverviewStore();
 
   const [isPanelOpen, setIsPanelOpen] = React.useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
     setMainOverflow('hidden');
@@ -137,6 +156,13 @@ export default function Overview() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    // Initialize with empty search, but subsequent searches depend on user input
+    if (debouncedSearchTerm !== undefined) {
+      searchOffers(debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm, searchOffers]);
 
   const FilterActionButton = () => {
     if (isDirty) {
@@ -181,7 +207,14 @@ export default function Overview() {
     if (isLoading && !overviewData) {
       return (
         <div className={styles.loadingContainer}>
-          <Spinner size="huge" label="Loading initial dashboard..." />
+          <Spinner size="huge" label="Loading..." />
+        </div>
+      );
+    }
+    if (!overviewData) {
+      return (
+        <div className={styles.loadingContainer}>
+          <Text weight="semibold">Please select filters and click Apply to see the data.</Text>
         </div>
       );
     }
@@ -220,15 +253,16 @@ export default function Overview() {
           label="Offers"
           maxWidth={92}
           options={availableCampaignOffers}
-          selectedOptions={pendingCampaignOffers}
-          onSelectionChange={setPendingCampaignOffers}
+          selectedOptions={pendingOfferFilters}
+          onSelectionChange={setPendingOfferFilters}
+          onSearchChange={setSearchTerm}
           showSelectAll
         />
         <MultiSelect
           label="Channels"
           options={availableChannels}
-          selectedOptions={pendingFilters.channels}
-          onSelectionChange={(s) => setPendingFilters('channels', s)}
+          selectedOptions={pendingChannelFilters}
+          onSelectionChange={setPendingChannelFilters}
           showSelectAll
         />
         <div style={{ flexGrow: 1 }} />
@@ -242,7 +276,7 @@ export default function Overview() {
 
       <div className={styles.outer}>
         <div className={styles.splitGrid}>
-          {isPanelOpen ? (
+          {isPanelOpen && isRightPanelVisible ? (
             <PanelGroup direction="horizontal">
               <Panel defaultSize={70} minSize={40}>
                 <div className={styles.leftPane}>{renderLeftPanelContent()}</div>

@@ -2,31 +2,33 @@
 import { create } from 'zustand';
 import {
   fetchAnalyticsOptions,
-  fetchCampaignOffersByDate,
   fetchOverviewData,
   fetchPerformanceSummary,
+  searchCampaignsAndOffers,
 } from '@arcfusion/client';
+import { getDatePresets } from '@arcfusion/ui';
+import type {
+  OptionGroup,
+  OverviewApiResponse,
+  FilterValues,
+  DateRange,
+  OptionItem,
+} from '@arcfusion/types';
 
-import type { DateRange, OptionGroup, OverviewApiResponse, FilterValues } from '@arcfusion/types';
-
-const getThisMonthDateRange = (): DateRange => {
-  const today = new Date();
-  const start = new Date(today.getFullYear(), today.getMonth(), 1);
-  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  end.setHours(23, 59, 59, 999);
-  return { start, end };
-};
+type OfferChannelMap = { [offerId: string]: string[] };
 
 export interface OverviewState {
   pendingDateRange: DateRange;
-  pendingFilters: FilterValues;
-  pendingCampaignOffers: string[];
+  pendingOfferFilters: string[];
+  pendingChannelFilters: string[];
   appliedDateRange: DateRange;
-  appliedFilters: FilterValues;
-  appliedCampaignOffers: string[];
+  appliedOfferFilters: string[];
+  appliedChannelFilters: string[];
   overviewData: OverviewApiResponse | null;
   availableCampaignOffers: OptionGroup[];
   availableChannels: OptionGroup[];
+  offerChannelMap: OfferChannelMap;
+  isRightPanelVisible: boolean;
   chartMetricKey: string;
   focusedOfferId: string | null;
   rightPanelData: any[];
@@ -34,9 +36,10 @@ export interface OverviewState {
   isLoading: boolean;
   error: string | null;
   initialize: () => Promise<void>;
+  searchOffers: (query: string) => Promise<void>;
   setPendingDateRange: (range: DateRange) => void;
-  setPendingFilters: (category: 'channels', selection: string[]) => void;
-  setPendingCampaignOffers: (selection: string[]) => void;
+  setPendingOfferFilters: (selection: string[]) => void;
+  setPendingChannelFilters: (selection: string[]) => void;
   setChartMetricKey: (key: string) => void;
   setFocusedOfferId: (offerId: string | null) => void;
   applyFilters: () => void;
@@ -44,15 +47,18 @@ export interface OverviewState {
 }
 
 export const useOverviewStore = create<OverviewState>((set, get) => ({
+  // --- Initial State ---
   pendingDateRange: { start: null, end: null },
-  pendingFilters: { channels: [] },
-  pendingCampaignOffers: [],
+  pendingOfferFilters: [],
+  pendingChannelFilters: [],
   appliedDateRange: { start: null, end: null },
-  appliedFilters: { channels: [] },
-  appliedCampaignOffers: [],
+  appliedOfferFilters: [],
+  appliedChannelFilters: [],
   overviewData: null,
   availableCampaignOffers: [],
   availableChannels: [],
+  offerChannelMap: {},
+  isRightPanelVisible: false,
   rightPanelData: [],
   chartMetricKey: '',
   focusedOfferId: null,
@@ -60,26 +66,37 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   isLoading: true,
   error: null,
 
+  // --- Actions ---
   initialize: async () => {
     set({ isLoading: true, error: null });
     try {
-      const initialDateRange = getThisMonthDateRange();
+      const initialDateRange = getDatePresets().thisWeek;
       const [options, campaignOffers] = await Promise.all([
         fetchAnalyticsOptions(),
-        fetchCampaignOffersByDate(initialDateRange),
+        searchCampaignsAndOffers(initialDateRange, ''),
       ]);
+
       const allChannelOptions = options.dimensions.find((d) => d.key === 'channel')?.options || [];
       const allChannelIds = allChannelOptions.map((o) => o.key);
-      const allOfferIds = campaignOffers.flatMap((cg) => cg.children.map((offer) => offer.id));
+
+      const newOfferChannelMap: OfferChannelMap = {};
+      const allOfferFilterStrings: string[] = []; // ✨ เตรียม list ของ filter string ทั้งหมด
+
+      campaignOffers.forEach((group: OptionGroup) => {
+        group.children.forEach((child: OptionItem) => {
+          if (child.channels) {
+            newOfferChannelMap[child.id] = child.channels;
+          }
+          // ✨ สร้าง filter string สำหรับ offer แต่ละตัว
+          // ในตัวอย่างนี้ เราจะใช้ offer_group เป็น default เพื่อรวมผล
+          allOfferFilterStrings.push(`offer_group:${child.id}`);
+        });
+      });
 
       set({
         pendingDateRange: initialDateRange,
-        appliedDateRange: initialDateRange,
-        pendingFilters: { channels: allChannelIds },
-        appliedFilters: { channels: allChannelIds },
-        pendingCampaignOffers: allOfferIds,
-        appliedCampaignOffers: allOfferIds,
         availableCampaignOffers: campaignOffers,
+        offerChannelMap: newOfferChannelMap,
         availableChannels: [
           {
             name: 'Channels',
@@ -87,42 +104,84 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
           },
         ],
         chartMetricKey: options.metrics.length > 0 ? options.metrics[0].key : '',
-        isDirty: false,
+        // ✨ ตั้งค่า filter เริ่มต้นให้เป็น "ทั้งหมด"
+        pendingOfferFilters: allOfferFilterStrings,
+        pendingChannelFilters: allChannelIds,
+        isDirty: true, // ตั้งเป็น true เพื่อให้ปุ่ม Apply แสดง
       });
+
+      // ✨ เรียก applyFilters ทันทีเพื่อโหลดข้อมูลหน้า Dashboard
       await get().applyFilters();
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
     }
   },
 
-  setPendingDateRange: async (range: DateRange) => {
-    set({ pendingDateRange: range, isDirty: true, isLoading: true });
+  searchOffers: async (query: string) => {
+    const { pendingDateRange } = get();
     try {
-      const newCampaignOffers = await fetchCampaignOffersByDate(range);
-      const newAvailableOfferIds = new Set(
-        newCampaignOffers.flatMap((cg) => cg.children.map((offer) => offer.id))
-      );
-      const currentSelectedOffers = get().pendingCampaignOffers;
-      const newOfferSelection = currentSelectedOffers.filter((id) => newAvailableOfferIds.has(id));
+      const campaignOffers = await searchCampaignsAndOffers(pendingDateRange, query);
+      const newOfferChannelMap: OfferChannelMap = {};
+      campaignOffers.forEach((group: OptionGroup) => {
+        group.children.forEach((child: OptionItem) => {
+          if (child.channels) {
+            newOfferChannelMap[child.id] = child.channels;
+          }
+        });
+      });
       set({
-        availableCampaignOffers: newCampaignOffers,
-        pendingCampaignOffers: newOfferSelection,
-        isLoading: false,
+        availableCampaignOffers: campaignOffers,
+        offerChannelMap: { ...get().offerChannelMap, ...newOfferChannelMap },
       });
     } catch (err: any) {
-      set({ error: err.message, isLoading: false });
+      set({ error: 'Failed to search offers.' });
     }
   },
 
-  setPendingFilters: (category, selection) => {
-    set((state) => ({
-      pendingFilters: { ...state.pendingFilters, [category]: selection },
-      isDirty: true,
-    }));
+  setPendingDateRange: async (range: DateRange) => {
+    set({ pendingDateRange: range, isDirty: true, availableCampaignOffers: [] });
+    await get().searchOffers('');
   },
 
-  setPendingCampaignOffers: (selection) => {
-    set({ pendingCampaignOffers: selection, isDirty: true, focusedOfferId: null });
+  setPendingOfferFilters: (selection: string[]) => {
+    const {
+      offerChannelMap,
+      pendingChannelFilters,
+      availableChannels: currentAvailableChannels,
+    } = get();
+
+    const relevantChannels = new Set<string>();
+    selection.forEach((filterString) => {
+      const match = filterString.match(/offer(?:_group)?:([^,]+)/);
+      const offerId = match ? match[1] : null;
+
+      if (offerId && offerChannelMap[offerId]) {
+        offerChannelMap[offerId].forEach((channel) => relevantChannels.add(channel));
+      }
+    });
+
+    const allPossibleChannels = (currentAvailableChannels[0]?.children || []).map((c) => c.id);
+    const newAvailableChannels = allPossibleChannels.filter(
+      (cId) => relevantChannels.size === 0 || relevantChannels.has(cId)
+    );
+    const newSelectedChannels = pendingChannelFilters.filter(
+      (c) => relevantChannels.size === 0 || relevantChannels.has(c)
+    );
+
+    const newAvailableChannelOptions = (currentAvailableChannels[0]?.children || []).filter((c) =>
+      newAvailableChannels.includes(c.id)
+    );
+
+    set({
+      pendingOfferFilters: selection,
+      availableChannels: [{ name: 'Channels', children: newAvailableChannelOptions }],
+      pendingChannelFilters: newSelectedChannels,
+      isDirty: true,
+    });
+  },
+
+  setPendingChannelFilters: (selection: string[]) => {
+    set({ pendingChannelFilters: selection, isDirty: true });
   },
 
   setChartMetricKey: (key) => {
@@ -130,30 +189,26 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   },
 
   setFocusedOfferId: (offerId: string | null) => {
-    const currentFocus = get().focusedOfferId;
-    const newFocusId = currentFocus === offerId ? null : offerId;
-    set({ focusedOfferId: newFocusId, isDirty: false });
-    get().applyFilters();
+    console.log('Drill down to offer:', offerId);
   },
 
   applyFilters: async () => {
-    const { pendingDateRange, pendingFilters, pendingCampaignOffers, focusedOfferId } = get();
-    const offerIdsForFetch = focusedOfferId ? [focusedOfferId] : pendingCampaignOffers;
-    set({ isLoading: true, error: null });
+    const { pendingDateRange, pendingChannelFilters, pendingOfferFilters } = get();
+    set({ isLoading: true, error: null, isRightPanelVisible: pendingOfferFilters.length > 0 });
     try {
       const [overviewData, rightPanelData] = await Promise.all([
-        fetchOverviewData(pendingDateRange, pendingFilters.channels, offerIdsForFetch),
+        fetchOverviewData(pendingDateRange, pendingChannelFilters, pendingOfferFilters),
         fetchPerformanceSummary({
           dateRange: pendingDateRange,
-          offer_ids: pendingCampaignOffers,
+          offer_ids: pendingOfferFilters,
         }),
       ]);
       set({
         overviewData,
         rightPanelData,
         appliedDateRange: pendingDateRange,
-        appliedFilters: pendingFilters,
-        appliedCampaignOffers: pendingCampaignOffers,
+        appliedOfferFilters: pendingOfferFilters,
+        appliedChannelFilters: pendingChannelFilters,
         isDirty: false,
         isLoading: false,
       });
@@ -163,11 +218,11 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   },
 
   cancelChanges: () => {
-    const { appliedDateRange, appliedFilters, appliedCampaignOffers } = get();
+    const { appliedDateRange, appliedOfferFilters, appliedChannelFilters } = get();
     set({
       pendingDateRange: appliedDateRange,
-      pendingFilters: appliedFilters,
-      pendingCampaignOffers: appliedCampaignOffers,
+      pendingOfferFilters: appliedOfferFilters,
+      pendingChannelFilters: appliedChannelFilters,
       isDirty: false,
       focusedOfferId: null,
     });

@@ -13,7 +13,9 @@ export type { AppShellProps } from './AppShell';
 export * from './UserMenu';
 export type { UserMenuProps } from './UserMenu';
 
-export * from './DateRangePicker';
+// ✨ Export getDatePresets เพื่อให้ store เรียกใช้ได้
+export { DateRangePicker } from './DateRangePicker';
+export { getDatePresets } from './DateRangePicker/dateUtils';
 export type { DateRange } from './DateRangePicker';
 
 export * from './MultiSelect';

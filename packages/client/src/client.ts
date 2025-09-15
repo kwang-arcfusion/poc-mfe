@@ -1,16 +1,16 @@
 // packages/client/src/client.ts
 import type {
-  PaginatedConversationsResponse,
-  PaginatedStoriesResponse,
-  Story,
-  ConversationResponse,
-  FeedbackRequest,
-  FeedbackResponse,
-  // --- UPDATED: Import types from the central package ---
-  AnalyticsOptions,
-  OverviewApiResponse,
-  OptionGroup,
-  DateRange,
+    PaginatedConversationsResponse,
+    PaginatedStoriesResponse,
+    Story,
+    ConversationResponse,
+    FeedbackRequest,
+    FeedbackResponse,
+    // --- UPDATED: Import types from the central package ---
+    AnalyticsOptions,
+    OverviewApiResponse,
+    OptionGroup,
+    DateRange,
 } from '@arcfusion/types';
 
 console.log('%c[client] Module Loaded', 'color: purple; font-weight: bold;');
@@ -18,126 +18,143 @@ console.log('%c[client] Module Loaded', 'color: purple; font-weight: bold;');
 let API_BASE_URL: string = '';
 
 export function initApiClient(baseUrl: string) {
-  if (!baseUrl) {
-    throw new Error('API Base URL cannot be empty.');
-  }
-  API_BASE_URL = baseUrl;
-  console.log(
-    `%c[client] Initialized with URL: ${API_BASE_URL}`,
-    'color: green; font-weight: bold;'
-  );
+    if (!baseUrl) {
+        throw new Error('API Base URL cannot be empty.');
+    }
+    API_BASE_URL = baseUrl;
+    console.log(
+        `%c[client] Initialized with URL: ${API_BASE_URL}`,
+        'color: green; font-weight: bold;'
+    );
 }
 
 export const getApiBaseUrl = (): string => {
-  if (!API_BASE_URL) {
-    console.error('[client] getApiBaseUrl called BEFORE initialization!');
-  }
-  return API_BASE_URL;
+    if (!API_BASE_URL) {
+        console.error('[client] getApiBaseUrl called BEFORE initialization!');
+    }
+    return API_BASE_URL;
 };
 
 const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-  if (!API_BASE_URL) {
-    throw new Error(
-      'API Client has not been initialized. Please call initApiClient(baseUrl) first.'
-    );
-  }
+    if (!API_BASE_URL) {
+        throw new Error(
+            'API Client has not been initialized. Please call initApiClient(baseUrl) first.'
+        );
+    }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        },
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ detail: 'An unknown error occurred' }));
-    throw new Error(errorBody.detail || `API request failed with status ${response.status}`);
-  }
+    if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ detail: 'An unknown error occurred' }));
+        throw new Error(errorBody.detail || `API request failed with status ${response.status}`);
+    }
 
-  if (response.status === 204) {
-    return null;
-  }
+    if (response.status === 204) {
+        return null;
+    }
 
-  return response.json();
+    return response.json();
 };
 
 // --- Stories API ---
 export const getStories = (page = 1, pageSize = 20): Promise<PaginatedStoriesResponse> => {
-  return apiFetch(`/v1/stories/?page=${page}&page_size=${pageSize}`);
+    return apiFetch(`/v1/stories/?page=${page}&page_size=${pageSize}`);
 };
 export const getStoryById = (storyId: string): Promise<Story> => {
-  return apiFetch(`/v1/stories/${storyId}`);
+    return apiFetch(`/v1/stories/${storyId}`);
 };
 
 // --- Chat API ---
 export const getConversations = (
-  page = 1,
-  pageSize = 20
+    page = 1,
+    pageSize = 20
 ): Promise<PaginatedConversationsResponse> => {
-  return apiFetch(`/v1/chat/conversations?page=${page}&page_size=${pageSize}`);
+    return apiFetch(`/v1/chat/conversations?page=${page}&page_size=${pageSize}`);
 };
 export const getConversationByThreadId = (threadId: string): Promise<ConversationResponse> => {
-  return apiFetch(`/v1/chat/conversations/${threadId}`);
+    return apiFetch(`/v1/chat/conversations/${threadId}`);
 };
 export const getExportCsvUrl = (messageId: string): string => {
-  const baseUrl = getApiBaseUrl();
-  if (!baseUrl) return '';
-  return `${baseUrl}/v1/chat/messages/${messageId}/export/csv`;
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) return '';
+    return `${baseUrl}/v1/chat/messages/${messageId}/export/csv`;
 };
 
 // --- Feedback API ---
 export const submitFeedback = (feedbackData: FeedbackRequest): Promise<FeedbackResponse> => {
-  return apiFetch(`/v1/feedback/`, { method: 'POST', body: JSON.stringify(feedbackData) });
+    return apiFetch(`/v1/feedback/`, { method: 'POST', body: JSON.stringify(feedbackData) });
 };
 export const deleteFeedback = (messageId: string): Promise<null> => {
-  return apiFetch(`/v1/feedback/${messageId}`, { method: 'DELETE' });
+    return apiFetch(`/v1/feedback/${messageId}`, { method: 'DELETE' });
 };
 
 // --- Analytics API Functions ---
 const formatDateForApi = (date: Date | null) => {
-  if (!date) return '';
-  return date.toISOString().split('T')[0];
+    if (!date) return '';
+    return date.toISOString().split('T')[0];
+};
+
+// ✨ เพิ่มฟังก์ชัน searchCampaignsAndOffers
+export const searchCampaignsAndOffers = (
+    dateRange: DateRange,
+    query: string
+): Promise<OptionGroup[]> => {
+    const params = new URLSearchParams({
+        start_date: formatDateForApi(dateRange.start),
+        end_date: formatDateForApi(dateRange.end),
+    });
+    if (query) {
+        params.append('query', query);
+    }
+    return apiFetch(`/v1/analytics/search?${params.toString()}`);
 };
 
 export const fetchAnalyticsOptions = (): Promise<AnalyticsOptions> => {
-  return apiFetch('/v1/analytics/options');
+    return apiFetch('/v1/analytics/options');
 };
 
 export const fetchCampaignOffersByDate = (dateRange: DateRange): Promise<OptionGroup[]> => {
-  const params = new URLSearchParams({
-    start_date: formatDateForApi(dateRange.start),
-    end_date: formatDateForApi(dateRange.end),
-  });
-  return apiFetch(`/v1/analytics/filters/campaign-offers?${params.toString()}`);
+    const params = new URLSearchParams({
+        start_date: formatDateForApi(dateRange.start),
+        end_date: formatDateForApi(dateRange.end),
+    });
+    return apiFetch(`/v1/analytics/filters/campaign-offers?${params.toString()}`);
 };
 
 export const fetchPerformanceSummary = (filters: {
-  dateRange: DateRange;
-  offer_ids?: string[];
+    dateRange: DateRange;
+    offer_ids?: string[];
 }): Promise<any[]> => {
-  const params = new URLSearchParams({
-    start_date: formatDateForApi(filters.dateRange.start),
-    end_date: formatDateForApi(filters.dateRange.end),
-  });
-  if (filters.offer_ids && filters.offer_ids.length > 0) {
-    params.append('offer_ids', filters.offer_ids.join(','));
-  }
-  return apiFetch(`/v1/analytics/performance-summary?${params.toString()}`);
+    const params = new URLSearchParams({
+        start_date: formatDateForApi(filters.dateRange.start),
+        end_date: formatDateForApi(filters.dateRange.end),
+    });
+    // ✨ ปรับปรุงให้ส่ง offer_ids เป็น filter string list
+    if (filters.offer_ids && filters.offer_ids.length > 0) {
+        filters.offer_ids.forEach(filter => params.append('filter', filter));
+    }
+    return apiFetch(`/v1/analytics/performance-summary?${params.toString()}`);
 };
 
 export const fetchOverviewData = (
-  dateRange: DateRange,
-  channels: string[],
-  offer_ids: string[]
+    dateRange: DateRange,
+    channels: string[],
+    offerFilters: string[] // ✨ เปลี่ยนชื่อ parameter เพื่อความชัดเจน
 ): Promise<OverviewApiResponse> => {
-  const params = new URLSearchParams({
-    start: formatDateForApi(dateRange.start),
-    end: formatDateForApi(dateRange.end),
-    channels: channels.join(','),
-  });
-  if (offer_ids.length > 0) {
-    params.append('offer_ids', offer_ids.join(','));
-  }
-  return apiFetch(`/v1/analytics/overview?${params.toString()}`);
+    const params = new URLSearchParams({
+        start: formatDateForApi(dateRange.start),
+        end: formatDateForApi(dateRange.end),
+        channels: channels.join(','),
+    });
+    // ✨ ปรับปรุงให้ส่ง offerFilters เป็น list of string
+    if (offerFilters.length > 0) {
+        offerFilters.forEach(filter => params.append('filter', filter));
+    }
+    return apiFetch(`/v1/analytics/overview?${params.toString()}`);
 };

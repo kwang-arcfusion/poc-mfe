@@ -100,11 +100,6 @@ const useStyles = makeStyles({
   },
 });
 
-interface OptionItem {
-  id: string;
-  name: string;
-}
-
 import type { OptionGroup } from '@arcfusion/types';
 
 export type { OptionGroup };
@@ -114,6 +109,7 @@ export interface MultiSelectProps {
   options: OptionGroup[];
   selectedOptions: string[];
   onSelectionChange: (newSelection: string[]) => void;
+  onSearchChange?: (value: string) => void; // ✨ เพิ่ม onSearchChange prop
   showSelectAll?: boolean;
   maxWidth?: number | string;
 }
@@ -123,6 +119,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   options,
   selectedOptions,
   onSelectionChange,
+  onSearchChange, // ✨ รับ prop ใหม่
   showSelectAll = false,
   maxWidth,
 }) => {
@@ -245,14 +242,22 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           <Input
             placeholder={`Search ${label}...`}
             value={searchTerm}
-            onChange={(_, data) => setSearchTerm(data.value)}
+            onChange={(_, data) => {
+              // ✨ เรียก onSearchChange เมื่อมีการพิมพ์
+              setSearchTerm(data.value);
+              onSearchChange?.(data.value);
+            }}
             contentBefore={<Search20Regular />}
             contentAfter={
               searchTerm && (
                 <Button
                   appearance="transparent"
                   icon={<Dismiss20Regular />}
-                  onClick={() => setSearchTerm('')}
+                  onClick={() => {
+                    // ✨ เรียก onSearchChange เมื่อล้างค่า
+                    setSearchTerm('');
+                    onSearchChange?.('');
+                  }}
                 />
               )
             }
