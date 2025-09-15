@@ -1,20 +1,39 @@
 // remotes/overview/src/components/OverallPerformance.tsx
 import React from 'react';
-import { makeStyles, shorthands, Text } from '@fluentui/react-components';
+import { makeStyles, shorthands, Text, tokens } from '@fluentui/react-components';
 import { CardData } from '../types';
 import { MetricCard } from './MetricCard';
 
 const useStyles = makeStyles({
   grid: {
-    display: 'grid',
+    display: 'flex',
+    flexWrap: 'nowrap',
+    overflowX: 'auto',
     ...shorthands.gap('16px'),
-    // Responsive grid that shows as many cards as fit, with a minimum width
-    gridTemplateColumns: `repeat(auto-fill, minmax(220px, 1fr))`,
     marginTop: '12px',
+    paddingBottom: '16px',
+    scrollbarWidth: 'thin',
+    '&::-webkit-scrollbar': {
+      height: '8px',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: tokens.colorNeutralStroke2,
+      ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    },
   },
 });
 
-export const OverallPerformance: React.FC<{ cards: CardData[] }> = ({ cards }) => {
+interface OverallPerformanceProps {
+  cards: CardData[];
+  onCardClick: (metricKey: string) => void;
+  selectedMetricKey: string;
+}
+
+export const OverallPerformance: React.FC<OverallPerformanceProps> = ({
+  cards,
+  onCardClick,
+  selectedMetricKey,
+}) => {
   const styles = useStyles();
 
   return (
@@ -24,7 +43,12 @@ export const OverallPerformance: React.FC<{ cards: CardData[] }> = ({ cards }) =
       </Text>
       <div className={styles.grid}>
         {cards.map((card) => (
-          <MetricCard key={card.key} card={card} />
+          <MetricCard
+            key={card.key}
+            card={card}
+            onClick={onCardClick}
+            isSelected={card.key === selectedMetricKey}
+          />
         ))}
       </div>
     </section>

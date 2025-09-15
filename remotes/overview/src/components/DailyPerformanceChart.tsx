@@ -1,78 +1,122 @@
 // remotes/overview/src/components/DailyPerformanceChart.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, Text, makeStyles, shorthands, tokens } from '@fluentui/react-components';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import ReactECharts from 'echarts-for-react';
+import { useThemeStore } from '@arcfusion/store';
 import { SeriesData } from '../types';
 
 const useStyles = makeStyles({
   card: {
-    ...shorthands.padding('24px'),
+    ...shorthands.padding('24px', '24px', '12px', '24px'),
     height: '400px',
     marginTop: '12px',
   },
 });
 
-// A color palette for the chart lines
-const LINE_COLORS = [
-  tokens.colorBrandStroke1,
-  tokens.colorPaletteGreenForeground3,
-  tokens.colorPaletteRedForeground3,
-  tokens.colorPaletteBlueForeground2,
-  tokens.colorPalettePurpleForeground2,
-];
+interface DailyPerformanceChartProps {
+  data: SeriesData;
+  metricKey: string;
+}
 
-// Helper function to format dates for the X-axis
-const formatXAxis = (tickItem: string) => {
-  const date = new Date(tickItem);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
-
-// Custom tooltip for better styling
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div
-        style={{
-          backgroundColor: tokens.colorNeutralBackground1,
-          border: `1px solid ${tokens.colorNeutralStroke2}`,
-          borderRadius: tokens.borderRadiusMedium,
-          padding: tokens.spacingHorizontalM,
-          boxShadow: tokens.shadow8,
-        }}
-      >
-        <p style={{ margin: 0, fontWeight: 'bold' }}>{formatXAxis(label)}</p>
-        {payload.map((pld: any, index: number) => (
-          <p key={index} style={{ margin: '4px 0 0', color: pld.color }}>
-            {`${pld.name}: ${pld.value.toFixed(1)}%`}
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
-export const DailyPerformanceChart: React.FC<{ data: SeriesData }> = ({ data }) => {
+export const DailyPerformanceChart: React.FC<DailyPerformanceChartProps> = ({
+  data,
+  metricKey,
+}) => {
   const styles = useStyles();
+  const { theme } = useThemeStore();
 
-  // Combine points from all series and pivot the data for Recharts
-  // from { series: [{ points: [...] }] } to [{ date: '...', series1: y, series2: y }]
-  const processedData = data.series[0].points.map((point, index) => {
-    const dataPoint: { [key: string]: string | number } = { date: point.date };
-    data.series.forEach((s) => {
-      dataPoint[s.label] = s.points[index]?.y || 0;
+  const echartsOption = useMemo(() => {
+    const activeSeries = data.series.find((s) => s.key === metricKey);
+    if (!activeSeries || !activeSeries.points) {
+      return {};
+    }
+
+    const yAxisLabel = activeSeries.label || '';
+
+    const pointsByDate = new Map<string, { [channel: string]: number }>();
+    const channels = new Set<string>();
+    activeSeries.points.forEach((point) => {
+      if (point.channel) {
+        channels.add(point.channel);
+        if (!pointsByDate.has(point.date)) {
+          pointsByDate.set(point.date, {});
+        }
+        pointsByDate.get(point.date)![point.channel] = point.y;
+      }
     });
-    return dataPoint;
-  });
+
+    const sortedDates = Array.from(pointsByDate.keys()).sort();
+
+    const seriesForEcharts = Array.from(channels).map((channel) => ({
+      name: channel,
+      type: 'line',
+      smooth: true,
+      symbol: 'none',
+      data: sortedDates.map((date) => pointsByDate.get(date)?.[channel] ?? null),
+      emphasis: {
+        focus: 'series',
+      },
+    }));
+
+    // --- REFACTORED ECHARTS OPTION (following 'stories' remote pattern) ---
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'cross',
+        },
+        formatter: (params: any[]) => {
+          if (!params || params.length === 0) return '';
+          const date = new Date(params[0].axisValueLabel).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          });
+          let tooltipHtml = `${date}<br/>`;
+          params.forEach((item: any) => {
+            if (item.value !== undefined && item.value !== null) {
+              tooltipHtml += `${item.marker} ${item.seriesName}: <strong>${item.value.toFixed(1)}%</strong><br/>`;
+            }
+          });
+          return tooltipHtml;
+        },
+      },
+      legend: {
+        data: Array.from(channels),
+        bottom: 0,
+        icon: 'circle',
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '10%',
+        top: '15%',
+        containLabel: true,
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: sortedDates.map((d) =>
+          new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        ),
+      },
+      yAxis: {
+        type: 'value',
+        name: yAxisLabel,
+        nameLocation: 'end',
+        nameTextStyle: {
+          align: 'left',
+          verticalAlign: 'bottom',
+          padding: [0, 0, 10, 0],
+        },
+        axisLabel: {
+          formatter: '{value}%',
+        },
+      },
+      series: seriesForEcharts,
+    };
+  }, [data, metricKey]);
 
   return (
     <section>
@@ -80,34 +124,13 @@ export const DailyPerformanceChart: React.FC<{ data: SeriesData }> = ({ data }) 
         Daily Performance
       </Text>
       <Card className={styles.card}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={processedData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={tokens.colorNeutralStroke2} />
-            <XAxis
-              dataKey="date"
-              tickFormatter={formatXAxis}
-              stroke={tokens.colorNeutralForeground2}
-              tickMargin={10}
-            />
-            <YAxis
-              stroke={tokens.colorNeutralForeground2}
-              tickFormatter={(value) => `${value}%`}
-              tickMargin={5}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            {data.series.map((s, index) => (
-              <Line
-                key={s.key}
-                type="monotone"
-                dataKey={s.label}
-                stroke={LINE_COLORS[index % LINE_COLORS.length]}
-                strokeWidth={2}
-                dot={false}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+        <ReactECharts
+          option={echartsOption}
+          theme={theme} // <-- Use the built-in theme prop like in 'stories'
+          style={{ height: '100%', width: '100%' }}
+          notMerge={true}
+          lazyUpdate={true}
+        />
       </Card>
     </section>
   );

@@ -14,7 +14,8 @@
     "@fluentui/react-datepicker-compat": "^0.6.13",
     "@fluentui/react-icons": "^2.0.308",
     "@types/react-sparklines": "^1.7.5",
-    "@types/recharts": "^2.0.1",
+    "echarts": "^5.5.1",
+    "echarts-for-react": "^3.0.2",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-sparklines": "^1.7.0",
@@ -38,6 +39,7 @@
     "webpack": "^5",
     "webpack-cli": "^6",
     "webpack-dev-server": "^5",
-    "webpack-merge": "^6.0.1"
+    "webpack-merge": "^6.0.1",
+    "@types/recharts": "^2.0.1"
   }
 }

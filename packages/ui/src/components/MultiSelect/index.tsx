@@ -13,6 +13,7 @@ import {
   shorthands,
   tokens,
   MenuDivider,
+  mergeClasses,
   type MenuCheckedValueChangeEvent,
   type MenuCheckedValueChangeData,
 } from '@fluentui/react-components';
@@ -82,8 +83,20 @@ const useStyles = makeStyles({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  valueText: {
+    display: 'inline-block',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    verticalAlign: 'bottom',
+  },
   placeholderText: {
     color: tokens.colorNeutralForeground4,
+  },
+  // --- NEW STYLE for the count part ---
+  countText: {
+    whiteSpace: 'nowrap', // Prevent the count from wrapping
+    verticalAlign: 'bottom',
   },
 });
 
@@ -102,6 +115,8 @@ export interface MultiSelectProps {
   options: OptionGroup[];
   selectedOptions: string[];
   onSelectionChange: (newSelection: string[]) => void;
+  showSelectAll?: boolean;
+  maxWidth?: number | string;
 }
 
 export const MultiSelect: React.FC<MultiSelectProps> = ({
@@ -109,6 +124,8 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   options,
   selectedOptions,
   onSelectionChange,
+  showSelectAll = false,
+  maxWidth,
 }) => {
   const styles = useStyles();
   const [searchTerm, setSearchTerm] = useState('');
@@ -139,15 +156,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     return allVisibleOptionIds.every((id) => selectedOptions.includes(id));
   }, [allVisibleOptionIds, selectedOptions]);
 
-  const uniqueMatchingNames = useMemo(() => {
-    if (!searchTerm) {
-      return [];
-    }
-    const allMatchingChildren = filteredGroups.flatMap((group) => group.children);
-    const uniqueNames = [...new Set(allMatchingChildren.map((child) => child.name))];
-    return uniqueNames;
-  }, [searchTerm, filteredGroups]);
-
   const handleSelectAllToggle = () => {
     if (isAllSelected) {
       const newSelection = selectedOptions.filter((id) => !allVisibleOptionIds.includes(id));
@@ -157,11 +165,18 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     }
   };
 
+  const uniqueMatchingNames = useMemo(() => {
+    if (!searchTerm) {
+      return [];
+    }
+    const allMatchingChildren = filteredGroups.flatMap((group) => group.children);
+    const uniqueNames = [...new Set(allMatchingChildren.map((child) => child.name))];
+    return uniqueNames;
+  }, [searchTerm, filteredGroups]);
+
   const handleSelectAllByName = (name: string) => {
     const idsToToggle = allChildren.filter((child) => child.name === name).map((child) => child.id);
-
     if (idsToToggle.length === 0) return;
-
     const areAllSelectedForThisName = idsToToggle.every((id) => selectedOptions.includes(id));
 
     if (areAllSelectedForThisName) {
@@ -182,26 +197,35 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 
   const triggerContent = useMemo(() => {
     const count = selectedOptions.length;
-    let selectionText = 'Select';
-
-    if (count > 0) {
-      const firstSelectedId = selectedOptions[0];
-      const firstSelectedChild = allChildren.find((c) => c.id === firstSelectedId);
-
-      const displayName = firstSelectedChild ? firstSelectedChild.name : firstSelectedId;
-
-      selectionText = count === 1 ? displayName : `${displayName}, +${count - 1}`;
+    if (count === 0) {
+      return (
+        <span className={styles.triggerButtonContents}>
+          <Badge appearance="tint" size="large">{label}</Badge>
+          <span className={styles.placeholderText}>Select</span>
+        </span>
+      );
     }
 
+    const firstSelectedId = selectedOptions[0];
+    const firstSelectedChild = allChildren.find((c) => c.id === firstSelectedId);
+    const displayName = firstSelectedChild ? firstSelectedChild.name : firstSelectedId;
+    
+    // --- FIX: Create separate elements for the name and the count ---
+    const valueStyle: React.CSSProperties = maxWidth ? { maxWidth } : {};
+    
     return (
-      <span className={styles.triggerButtonContents}>
-        <Badge appearance="tint" size="large">
-          {label}
-        </Badge>
-        <span className={count === 0 ? styles.placeholderText : undefined}>{selectionText}</span>
-      </span>
+        <span className={styles.triggerButtonContents}>
+            <Badge appearance="tint" size="large">{label}</Badge>
+            <span className={styles.valueText} style={valueStyle} title={displayName}>
+                {displayName}
+            </span>
+            {count > 1 && (
+                <span className={styles.countText}>, +{count - 1}</span>
+            )}
+        </span>
     );
-  }, [selectedOptions, label, styles, allChildren]);
+
+  }, [selectedOptions, label, styles, allChildren, maxWidth]);
 
   return (
     <Menu>
@@ -239,7 +263,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           checkedValues={{ [label]: selectedOptions }}
           onCheckedValueChange={handleCheckedValueChange}
         >
-          {allVisibleOptionIds.length > 0 && (
+          {showSelectAll && allVisibleOptionIds.length > 0 && (
             <>
               <div
                 role="menuitem"
@@ -300,7 +324,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           {filteredGroups.map((group, index) => (
             <React.Fragment key={`${group.name}-${index}`}>
               {group.name && <div className={styles.groupTitle}>{group.name}</div>}
-
               {group.children.map((child) => (
                 <MenuItemCheckbox key={child.id} name={label} value={child.id}>
                   {child.name}

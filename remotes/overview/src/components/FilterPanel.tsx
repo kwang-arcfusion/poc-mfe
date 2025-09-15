@@ -1,5 +1,5 @@
 // remotes/overview/src/components/FilterPanel.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   makeStyles,
   shorthands,
@@ -12,102 +12,24 @@ import {
   PopoverTrigger,
   PopoverSurface,
   Body1,
+  Spinner,
+  mergeClasses,
 } from '@fluentui/react-components';
+// --- NEW: Import icons for the new design ---
+import { Tag24Regular, MegaphoneLoud24Regular } from '@fluentui/react-icons';
 
-type Metric = {
-  label: string;
-  value: number;
-};
-
+// --- Type Definitions ---
+type Metric = { label: string; value: number };
 type PerformanceCardData = {
   id: string;
   title: string;
-  imageColor: string;
+  campaignName: string;
   growth?: number;
   metrics: Metric[];
+  // imageColor is no longer needed
 };
 
-const mockOfferData: PerformanceCardData[] = [
-  {
-    id: 'offer-1',
-    title: 'ndk:ContentPromo_MOU_ShortSeries_August_Promotion_Main',
-    imageColor: '#a19f9d',
-    growth: 30.6,
-    metrics: [
-      { label: 'Impressions', value: 167500000 },
-      { label: 'Reach', value: 144600000 },
-      { label: 'Engagement', value: 13200000 },
-      { label: 'Clicks', value: 620240 },
-      { label: 'Video views', value: 620240 },
-    ],
-  },
-  {
-    id: 'offer-2',
-    title: 'True5G_Sim_Prepaid_Special',
-    imageColor: '#605e5c',
-    growth: 12.1,
-    metrics: [
-      { label: 'Impressions', value: 98200000 },
-      { label: 'Reach', value: 85000000 },
-      { label: 'Engagement', value: 9800000 },
-      { label: 'Clicks', value: 410000 },
-      { label: 'Video views', value: 380000 },
-    ],
-  },
-  {
-    id: 'offer-3',
-    title: 'CP_FamilyPack_Discount_Aug',
-    imageColor: '#b3b0ad',
-    metrics: [
-      { label: 'Impressions', value: 75000000 },
-      { label: 'Reach', value: 68000000 },
-      { label: 'Engagement', value: 5400000 },
-    ],
-  },
-  {
-    id: 'offer-4',
-    title: 'NewUser_Welcome_Voucher_For_New_Subscribers_Only',
-    imageColor: '#8a8886',
-    growth: 45.8,
-    metrics: [
-      { label: 'Impressions', value: 210000000 },
-      { label: 'Reach', value: 198000000 },
-      { label: 'Engagement', value: 25000000 },
-      { label: 'Clicks', value: 980000 },
-    ],
-  },
-  {
-    id: 'offer-5',
-    title: 'GamingNation_TopUp_Promo',
-    imageColor: '#c9c7c5',
-    metrics: [
-      { label: 'Impressions', value: 12000000 },
-      { label: 'Reach', value: 11000000 },
-      { label: 'Engagement', value: 2100000 },
-      { label: 'Clicks', value: 95000 },
-      { label: 'Video views', value: 89000 },
-    ],
-  },
-  {
-    id: 'offer-6',
-    title: 'MovieLovers_Weekend_Pass',
-    imageColor: '#a19f9d',
-    growth: 8.2,
-    metrics: [
-      { label: 'Impressions', value: 45000000 },
-      { label: 'Reach', value: 41000000 },
-      { label: 'Engagement', value: 3800000 },
-    ],
-  },
-];
-
-const mockCampaignData: PerformanceCardData[] = [...mockOfferData]
-  .reverse()
-  .map((c) => ({ ...c, id: c.id.replace('offer', 'campaign') }));
-
-// =================================================================
-// Styles
-// =================================================================
+// --- Styles ---
 const useStyles = makeStyles({
   panelRoot: {
     display: 'flex',
@@ -127,13 +49,30 @@ const useStyles = makeStyles({
   perfCard: {
     display: 'flex',
     flexDirection: 'row',
+    alignItems: 'center', // Align items vertically
     ...shorthands.gap(tokens.spacingHorizontalL),
-    ...shorthands.padding('12px'),
+    ...shorthands.padding('16px'), // Increase padding slightly
+    cursor: 'pointer',
+    ...shorthands.border('2px', 'solid', 'transparent'),
+    ':hover': {
+      ...shorthands.borderColor(tokens.colorNeutralStroke1Hover),
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+    },
   },
-  imagePlaceholder: {
-    width: '100px',
-    height: '100px',
-    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+  selectedCard: {
+    ...shorthands.borderColor(tokens.colorBrandStroke1),
+    boxShadow: tokens.shadow8,
+  },
+  // --- NEW: Style for the icon container ---
+  iconContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '48px',
+    height: '48px',
+    ...shorthands.borderRadius(tokens.borderRadiusCircular),
+    backgroundColor: tokens.colorNeutralBackground2,
+    color: tokens.colorNeutralForeground2,
     flexShrink: 0,
   },
   textContent: {
@@ -185,11 +124,14 @@ const useStyles = makeStyles({
     ...shorthands.borderBottom('1px', 'solid', tokens.colorNeutralStroke2),
     wordBreak: 'break-word',
   },
+  center: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+  },
 });
 
-// =================================================================
-// Helper and Sub-Component
-// =================================================================
 const formatMetricValue = (value: number): string => {
   if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}B`;
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -197,11 +139,14 @@ const formatMetricValue = (value: number): string => {
   return value.toString();
 };
 
-const PerformanceCard: React.FC<{ data: PerformanceCardData }> = ({ data }) => {
+const PerformanceCard: React.FC<{
+  data: Omit<PerformanceCardData, 'campaignName'>;
+  icon: React.ReactNode; // <-- Pass icon as a prop
+  onClick?: () => void;
+  isSelected?: boolean;
+}> = ({ data, icon, onClick, isSelected }) => {
   const styles = useStyles();
-  const visibleMetrics = data.metrics.slice(0, 3);
-  const hasMoreMetrics = data.metrics.length > 3;
-
+  const visibleMetrics = data.metrics.slice(0, 2); // Show 2 metrics to keep it clean
   const [isOpen, setIsOpen] = useState(false);
   const timeoutRef = useRef<number>();
 
@@ -215,11 +160,8 @@ const PerformanceCard: React.FC<{ data: PerformanceCardData }> = ({ data }) => {
     clearTimeout(timeoutRef.current);
     setIsOpen(true);
   };
-
   const handleMouseLeave = () => {
-    timeoutRef.current = window.setTimeout(() => {
-      setIsOpen(false);
-    }, 50); // delay สั้นๆ เพื่อให้สามารถเลื่อนเมาส์ไปที่ Popover ได้
+    timeoutRef.current = window.setTimeout(() => setIsOpen(false), 50);
   };
 
   const popoverContent = (
@@ -227,7 +169,6 @@ const PerformanceCard: React.FC<{ data: PerformanceCardData }> = ({ data }) => {
       <Text as="h3" size={400} className={styles.popoverTitle} title={data.title}>
         {data.title}
       </Text>
-
       <div className={styles.metricsContainer}>
         {data.metrics.map((metric) => (
           <div key={metric.label} className={styles.metricRow}>
@@ -241,22 +182,20 @@ const PerformanceCard: React.FC<{ data: PerformanceCardData }> = ({ data }) => {
   return (
     <Popover withArrow positioning="before" open={isOpen}>
       <PopoverTrigger disableButtonEnhancement>
-        <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-          <Card className={styles.perfCard}>
-            <div className={styles.imagePlaceholder} style={{ backgroundColor: data.imageColor }} />
-
+        <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={onClick}>
+          <Card className={mergeClasses(styles.perfCard, isSelected && styles.selectedCard)}>
+            {/* --- REPLACEMENT: Use Icon instead of image placeholder --- */}
+            <div className={styles.iconContainer}>{icon}</div>
             <div className={styles.textContent}>
               <Text size={400} className={styles.title} title={data.title}>
                 {data.title}
               </Text>
-
               <div className={styles.metricsContainer}>
                 {visibleMetrics.map((metric) => (
                   <div key={metric.label} className={styles.metricRow}>
                     <Text size={300} className={styles.metricLabel}>
                       {metric.label}
                     </Text>
-
                     <Text size={300} className={styles.metricValue}>
                       {formatMetricValue(metric.value)}
                     </Text>
@@ -267,39 +206,95 @@ const PerformanceCard: React.FC<{ data: PerformanceCardData }> = ({ data }) => {
           </Card>
         </div>
       </PopoverTrigger>
-
       <PopoverSurface className={styles.popoverSurface}>{popoverContent}</PopoverSurface>
     </Popover>
   );
 };
 
-// =================================================================
-// Main FilterPanel Component (เหมือนเดิม)
-// =================================================================
 interface FilterPanelProps {
+  data: PerformanceCardData[];
+  isLoading: boolean;
   onClose: () => void;
+  onOfferClick: (offerId: string) => void;
+  focusedOfferId: string | null;
 }
 
-export const FilterPanel: React.FC<FilterPanelProps> = ({ onClose }) => {
+export const FilterPanel: React.FC<FilterPanelProps> = ({
+  data,
+  isLoading,
+  onClose,
+  onOfferClick,
+  focusedOfferId,
+}) => {
   const styles = useStyles();
-  const [selectedTab, setSelectedTab] = React.useState('offers');
+  const [selectedTab, setSelectedTab] = React.useState<'offers' | 'campaigns'>('offers');
+
+  const campaignData = useMemo(() => {
+    if (!data) return [];
+    const campaignAggregates = new Map<
+      string,
+      { id: string; title: string; metrics: { [label: string]: number } }
+    >();
+    data.forEach((offer) => {
+      if (!campaignAggregates.has(offer.campaignName)) {
+        campaignAggregates.set(offer.campaignName, {
+          id: offer.campaignName,
+          title: offer.campaignName,
+          metrics: {},
+        });
+      }
+      const campaign = campaignAggregates.get(offer.campaignName)!;
+      offer.metrics.forEach((metric) => {
+        campaign.metrics[metric.label] = (campaign.metrics[metric.label] || 0) + metric.value;
+      });
+    });
+    return Array.from(campaignAggregates.values()).map((c) => ({
+      ...c,
+      campaignName: c.title,
+      metrics: Object.entries(c.metrics).map(([label, value]) => ({ label, value })),
+    }));
+  }, [data]);
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className={styles.center}>
+          <Spinner />
+        </div>
+      );
+    }
+    const isOfferTab = selectedTab === 'offers';
+    const itemsToRender = isOfferTab ? data : campaignData;
+
+    if (!itemsToRender || itemsToRender.length === 0) {
+      return (
+        <div className={styles.center}>
+          <Text>No data to display.</Text>
+        </div>
+      );
+    }
+    return itemsToRender.map((item) => (
+      <PerformanceCard
+        key={item.id}
+        data={item}
+        // --- NEW: Dynamically provide the correct icon ---
+        icon={isOfferTab ? <Tag24Regular /> : <MegaphoneLoud24Regular />}
+        onClick={isOfferTab ? () => onOfferClick(item.id) : undefined}
+        isSelected={isOfferTab && item.id === focusedOfferId}
+      />
+    ));
+  };
 
   return (
     <div className={styles.panelRoot}>
       <TabList
         selectedValue={selectedTab}
-        onTabSelect={(_, data) => setSelectedTab(data.value as string)}
+        onTabSelect={(_, data) => setSelectedTab(data.value as 'offers' | 'campaigns')}
       >
-        <Tab value="offers">Offers</Tab> <Tab value="campaigns">Campaigns</Tab>
+        <Tab value="offers">Offers</Tab>
+        <Tab value="campaigns">Campaigns</Tab>
       </TabList>
-
-      <div className={styles.panelContainer}>
-        {selectedTab === 'offers' &&
-          mockOfferData.map((offer) => <PerformanceCard key={offer.id} data={offer} />)}
-
-        {selectedTab === 'campaigns' &&
-          mockCampaignData.map((campaign) => <PerformanceCard key={campaign.id} data={campaign} />)}
-      </div>
+      <div className={styles.panelContainer}>{renderContent()}</div>
     </div>
   );
 };

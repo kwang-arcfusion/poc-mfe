@@ -1,18 +1,29 @@
 // remotes/overview/src/components/MetricCard.tsx
 import React from 'react';
-import { Card, Text, makeStyles, shorthands, tokens } from '@fluentui/react-components';
+import { Card, Text, makeStyles, shorthands, tokens, mergeClasses } from '@fluentui/react-components';
 import { ArrowTrending24Regular, ArrowTrendingDown24Regular } from '@fluentui/react-icons';
 import { CardData } from '../types';
 
 const useStyles = makeStyles({
   card: {
-    width: '100%',
-    minWidth: '200px',
+    width: 'fit-content',
+    minWidth: '180px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
     ...shorthands.gap(tokens.spacingVerticalS),
-    height: '120px', // Set a fixed height for alignment
+    height: '100px',
+    cursor: 'pointer',
+    ...shorthands.border('2px', 'solid', 'transparent'),
+    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalL),
+    ':hover': {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+      ...shorthands.borderColor(tokens.colorNeutralStroke1Hover),
+    },
+  },
+  selected: {
+    ...shorthands.borderColor(tokens.colorBrandStroke1),
+    boxShadow: tokens.shadow8,
   },
   header: {
     display: 'flex',
@@ -21,9 +32,9 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground2,
   },
   value: {
-    fontSize: '2.5rem',
+    fontSize: '1.75rem',
     fontWeight: tokens.fontWeightSemibold,
-    lineHeight: 1.2, // Adjust line height
+    lineHeight: 1.1,
   },
   footer: {
     display: 'flex',
@@ -34,28 +45,28 @@ const useStyles = makeStyles({
   negative: { color: tokens.colorPaletteRedForeground3 },
 });
 
-// Helper to format the main value based on API format config
 const formatValue = (value: number, format: { type: string }) => {
-  if (format.type === 'percent') {
-    return `${value.toFixed(1)}%`;
-  }
-  if (format.type === 'currency') {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
-  }
-  // Default number formatting
+  if (format.type === 'percent') return `${value.toFixed(1)}%`;
+  if (format.type === 'currency') return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  if (format.type === 'number') return value.toFixed(2);
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
   if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
   return value.toLocaleString();
 };
 
-export const MetricCard: React.FC<{ card: CardData }> = ({ card }) => {
+interface MetricCardProps {
+  card: CardData;
+  onClick: (metricKey: string) => void;
+  isSelected?: boolean;
+}
+
+export const MetricCard: React.FC<MetricCardProps> = ({ card, onClick, isSelected }) => {
   const styles = useStyles();
-  // delta_pct is a decimal (e.g., 0.27), so multiply by 100 for display
-  const changePercent = card.delta_pct * 100;
+  const changePercent = (card.delta_pct || 0) * 100;
   const isPositive = changePercent >= 0;
 
   return (
-    <Card className={styles.card}>
+    <Card className={mergeClasses(styles.card, isSelected && styles.selected)} onClick={() => onClick(card.key)}>
       <div className={styles.header}>
         <Text>{card.label}</Text>
       </div>

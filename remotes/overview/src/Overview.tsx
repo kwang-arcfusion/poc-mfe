@@ -1,5 +1,5 @@
 // remotes/overview/src/Overview.tsx
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   makeStyles,
   shorthands,
@@ -16,14 +16,13 @@ import {
 } from '@fluentui/react-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLayoutStore } from '@arcfusion/store';
-import { OverviewApiResponse, FilterValues, AnalyticsOptions } from './types';
-import { fetchOverviewData, fetchAnalyticsOptions } from './services/api';
+import { DateRangePicker, MultiSelect } from '@arcfusion/ui';
+import { Filter28Filled, MoreHorizontal24Filled } from '@fluentui/react-icons';
 import { OverallPerformance } from './components/OverallPerformance';
 import { DailyPerformanceChart } from './components/DailyPerformanceChart';
 import { ByChannelTable } from './components/ByChannelTable';
 import { FilterPanel } from './components/FilterPanel';
-import { Filter28Filled, MoreHorizontal24Filled } from '@fluentui/react-icons';
-import { DateRangePicker, type DateRange, MultiSelect, type OptionGroup } from '@arcfusion/ui';
+import { useOverviewStore } from './stores/overviewFilterStore';
 
 const useStyles = makeStyles({
   pageContainer: {
@@ -102,163 +101,42 @@ const useStyles = makeStyles({
   },
 });
 
-const initialFilters: FilterValues = {
-  channels: ['SMS', 'Email'],
-  metrics: ['conversions_rate', 'impression_rate'],
-};
-
-const mockCampaignData: OptionGroup[] = [
-  {
-    name: 'holiday',
-    children: [
-      { id: '1', name: 'Happy Songkran Day' },
-      { id: '2', name: 'Happy New Year' },
-    ],
-  },
-  {
-    name: 'holiday-2',
-    children: [
-      { id: '3', name: 'Songkran Day 2' },
-      { id: '4', name: 'Happy Chinese Day' },
-    ],
-  },
-  {
-    name: 'holiday-3',
-    children: [
-      { id: '5', name: 'Happy Songkran Day' },
-      { id: '6', name: 'Happy Chinese Day 3' },
-    ],
-  },
-];
-
 export default function Overview() {
   const styles = useStyles();
-  const isInitialMount = useRef(true);
   const { setMainOverflow } = useLayoutStore();
-
-  const [data, setData] = useState<OverviewApiResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filterOptions, setFilterOptions] = useState<AnalyticsOptions | null>(null);
-
-  const [pendingDateRange, setPendingDateRange] = useState<DateRange>({ start: null, end: null });
-  const [appliedDateRange, setAppliedDateRange] = useState<DateRange>({ start: null, end: null });
-
-  const [pendingFilters, setPendingFilters] = useState<FilterValues>(initialFilters);
-  const [appliedFilters, setAppliedFilters] = useState<FilterValues>(initialFilters);
-
-  const [pendingCampaignOffers, setPendingCampaignOffers] = useState<string[]>([]);
-  const [appliedCampaignOffers, setAppliedCampaignOffers] = useState<string[]>([]);
-
-  const [isPanelOpen, setIsPanelOpen] = useState(true);
-
-  const isDirty = useMemo(() => {
-    return (
-      JSON.stringify(pendingDateRange) !== JSON.stringify(appliedDateRange) ||
-      JSON.stringify(pendingFilters) !== JSON.stringify(appliedFilters) ||
-      JSON.stringify(pendingCampaignOffers) !== JSON.stringify(appliedCampaignOffers)
-    );
-  }, [
+  const {
+    initialize,
+    overviewData,
+    isLoading,
+    error,
+    isDirty,
     pendingDateRange,
-    appliedDateRange,
     pendingFilters,
-    appliedFilters,
     pendingCampaignOffers,
-    appliedCampaignOffers,
-  ]);
+    availableCampaignOffers,
+    availableChannels,
+    chartMetricKey,
+    focusedOfferId,
+    rightPanelData,
+    setPendingDateRange,
+    setPendingFilters,
+    setPendingCampaignOffers,
+    setChartMetricKey,
+    setFocusedOfferId,
+    applyFilters,
+    cancelChanges,
+  } = useOverviewStore();
+
+  const [isPanelOpen, setIsPanelOpen] = React.useState(true);
 
   useEffect(() => {
     setMainOverflow('hidden');
+    initialize();
     return () => {
       setMainOverflow('auto');
     };
-  }, [setMainOverflow]);
-
-  useEffect(() => {
-    const loadInitialData = async () => {
-      setIsLoading(true);
-      try {
-        setError(null);
-        const [options, overviewData] = await Promise.all([
-          fetchAnalyticsOptions(),
-          fetchOverviewData({ start: null, end: null }, initialFilters),
-        ]);
-        setFilterOptions(options);
-        setData(overviewData);
-
-        const { start, end } = overviewData.meta.filters;
-        if (start && end) {
-          const initialDate = { start: new Date(start), end: new Date(end) };
-          setPendingDateRange(initialDate);
-          setAppliedDateRange(initialDate);
-        }
-        setPendingFilters(initialFilters);
-        setAppliedFilters(initialFilters);
-      } catch (err: any) {
-        console.error('Failed to load initial data:', err);
-        setError(err.message || 'Could not load dashboard data.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    const fetchDataOnUpdate = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const fetchedData = await fetchOverviewData(appliedDateRange, appliedFilters);
-        setData(fetchedData);
-      } catch (err: any) {
-        console.error('Data fetching error:', err);
-        setError(err.message || 'An unexpected error occurred.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchDataOnUpdate();
-  }, [appliedFilters, appliedDateRange, appliedCampaignOffers]);
-
-  const handleApplyFilters = () => {
-    setAppliedDateRange(pendingDateRange);
-    setAppliedFilters(pendingFilters);
-    setAppliedCampaignOffers(pendingCampaignOffers);
-  };
-
-  const handleCancelChanges = () => {
-    setPendingDateRange(appliedDateRange);
-    setPendingFilters(appliedFilters);
-    setPendingCampaignOffers(appliedCampaignOffers);
-  };
-
-  const channelOptions = useMemo(
-    () => filterOptions?.dimensions.find((d) => d.key === 'channel')?.options || [],
-    [filterOptions]
-  );
-  const metricOptions = useMemo(() => filterOptions?.metrics || [], [filterOptions]);
-
-  const handleFilterChange = (category: keyof FilterValues, selection: string[]) => {
-    setPendingFilters((prevFilters) => ({
-      ...prevFilters,
-      [category]: selection,
-    }));
-  };
-
-  const channelOptionGroups: OptionGroup[] = useMemo(
-    () => [{ name: '', children: channelOptions.map((opt) => ({ id: opt.key, name: opt.label })) }],
-    [channelOptions]
-  );
-
-  const metricOptionGroups: OptionGroup[] = useMemo(
-    () => [{ name: '', children: metricOptions.map((opt) => ({ id: opt.key, name: opt.label })) }],
-    [metricOptions]
-  );
 
   const FilterActionButton = () => {
     if (isDirty) {
@@ -271,7 +149,7 @@ export default function Overview() {
                 icon={<Filter28Filled />}
                 menuButton={triggerProps}
                 primaryActionButton={{
-                  onClick: handleApplyFilters,
+                  onClick: applyFilters,
                   className: styles.applyButton,
                 }}
               >
@@ -281,8 +159,8 @@ export default function Overview() {
           </MenuTrigger>
           <MenuPopover className={styles.menuPopover}>
             <MenuList>
-              <MenuItem onClick={handleApplyFilters}>Apply</MenuItem>
-              <MenuItem onClick={handleCancelChanges}>Undo</MenuItem>
+              <MenuItem onClick={applyFilters}>Apply</MenuItem>
+              <MenuItem onClick={cancelChanges}>Undo</MenuItem>
             </MenuList>
           </MenuPopover>
         </Menu>
@@ -300,63 +178,58 @@ export default function Overview() {
   };
 
   const renderLeftPanelContent = () => {
-    if (isLoading && !data) {
+    if (isLoading && !overviewData) {
       return (
         <div className={styles.loadingContainer}>
-          <Spinner size="huge" />
+          <Spinner size="huge" label="Loading initial dashboard..." />
         </div>
       );
     }
-    return (
-      <div className={styles.contentContainer}>
-        {isLoading && <Spinner />}
-        {error && !isLoading && (
+    if (error && !isLoading) {
+      return (
+        <div className={styles.loadingContainer}>
           <Text weight="semibold" style={{ color: tokens.colorPaletteRedForeground1 }}>
             {error}
           </Text>
-        )}
-        {data && !error && (
-          <>
-            <OverallPerformance cards={data.cards} />
-            <DailyPerformanceChart data={data.series} />
-            {data.tables[0] && <ByChannelTable items={data.tables[0]} />}
-          </>
-        )}
-      </div>
-    );
+        </div>
+      );
+    }
+    if (overviewData) {
+      return (
+        <div className={styles.contentContainer}>
+          {isLoading && <Spinner label="Applying filters..." />}
+          <OverallPerformance
+            cards={overviewData.cards}
+            onCardClick={setChartMetricKey}
+            selectedMetricKey={chartMetricKey}
+          />
+          <DailyPerformanceChart data={overviewData.series} metricKey={chartMetricKey} />
+          {overviewData.tables[0] && <ByChannelTable items={overviewData.tables[0]} />}
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
         <FilterActionButton />
-
         <DateRangePicker value={pendingDateRange} onChange={setPendingDateRange} />
         <MultiSelect
           label="Offers"
-          options={mockCampaignData}
-          selectedOptions={pendingCampaignOffers || []}
+          maxWidth={92}
+          options={availableCampaignOffers}
+          selectedOptions={pendingCampaignOffers}
           onSelectionChange={setPendingCampaignOffers}
         />
-        {channelOptions.length > 0 && (
-          <MultiSelect
-            label="Channels"
-            options={channelOptionGroups}
-            selectedOptions={pendingFilters.channels || []}
-            onSelectionChange={(s) => handleFilterChange('channels', s)}
-          />
-        )}
-        {metricOptions.length > 0 && (
-          <MultiSelect
-            label="Metrics"
-            options={metricOptionGroups}
-            selectedOptions={pendingFilters.metrics || []}
-            onSelectionChange={(s) => handleFilterChange('metrics', s)}
-          />
-        )}
-
+        <MultiSelect
+          label="Channels"
+          options={availableChannels}
+          selectedOptions={pendingFilters.channels}
+          onSelectionChange={(s) => setPendingFilters('channels', s)}
+        />
         <div style={{ flexGrow: 1 }} />
-
         <Button
           icon={<MoreHorizontal24Filled />}
           appearance="subtle"
@@ -375,7 +248,13 @@ export default function Overview() {
               <PanelResizeHandle className={styles.resizeHandle} />
               <Panel defaultSize={30} minSize={20}>
                 <aside className={styles.rightPane}>
-                  <FilterPanel onClose={() => setIsPanelOpen(false)} />
+                  <FilterPanel
+                    data={rightPanelData}
+                    isLoading={isLoading}
+                    onClose={() => setIsPanelOpen(false)}
+                    onOfferClick={setFocusedOfferId}
+                    focusedOfferId={focusedOfferId}
+                  />
                 </aside>
               </Panel>
             </PanelGroup>

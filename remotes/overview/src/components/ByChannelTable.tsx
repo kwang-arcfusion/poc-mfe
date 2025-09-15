@@ -18,11 +18,10 @@ const useStyles = makeStyles({
   tableCard: {
     padding: 0,
     marginTop: '12px',
-    overflowX: 'auto', // Ensure table is scrollable on small screens
+    overflowX: 'auto',
   },
 });
 
-// Helper to format cell values
 const formatCell = (
   value: string | number,
   format: { type: string; precision?: number | null }
@@ -50,23 +49,18 @@ export const ByChannelTable: React.FC<{ items: TableData }> = ({ items }) => {
         <Table aria-label={items.title}>
           <TableHeader>
             <TableRow>
-              {/* First column is always the dimension */}
               <TableHeaderCell key={items.dimension.key}>{items.dimension.label}</TableHeaderCell>
-              {/* Dynamically create the rest of the columns */}
               {items.columns.map((column) => (
                 <TableHeaderCell key={column.key}>{column.label}</TableHeaderCell>
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {/* Dynamically create rows */}
             {items.rows.map((row, rowIndex) => (
               <TableRow key={rowIndex}>
-                {/* Render the dimension cell */}
                 <TableCell>
                   <TableCellLayout>{String(row[items.dimension.key])}</TableCellLayout>
                 </TableCell>
-                {/* Render the metric cells in the correct order */}
                 {items.columns.map((column) => (
                   <TableCell key={column.key}>
                     {formatCell(row[column.key], column.format)}

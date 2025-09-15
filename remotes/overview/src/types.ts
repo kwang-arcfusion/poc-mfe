@@ -30,7 +30,6 @@ export interface AnalyticsOptions {
   metrics: MetricOption[];
 }
 
-
 // =================================================================
 // Types for the /analytics/overview API response
 // =================================================================
@@ -46,14 +45,17 @@ export interface CardData {
   key: string;
   label: string;
   value: number;
-  delta_pct: number; // Percentage change as a decimal (e.g., 0.27)
+  delta_pct: number;
   format: FormatConfig;
 }
 
-/** A single data point for a time-series chart, e.g., { date: "2025-07-15", y: 50.0 } */
-interface SeriesPoint {
+/** * A single data point for a time-series chart. 
+ * Now includes an optional 'channel' property.
+ */
+export interface SeriesPoint {
   date: string;
   y: number;
+  channel?: string;
 }
 
 /** Represents a single line on the chart (e.g., "Conversions Rate") and all its points */
@@ -86,7 +88,6 @@ export type TableRowData = {
 } & {
   channel: string; // Ensures 'channel' is always present
 };
-
 
 /** Contains all the data for a single table component */
 export interface TableData {
