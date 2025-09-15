@@ -20,6 +20,9 @@ const useStyles = makeStyles({
     marginTop: '12px',
     overflowX: 'auto',
   },
+  tableLayout: {
+    tableLayout: 'auto',
+  },
 });
 
 const formatCell = (
@@ -46,7 +49,7 @@ export const ByChannelTable: React.FC<{ items: TableData }> = ({ items }) => {
         {items.title}
       </Text>
       <Card className={styles.tableCard}>
-        <Table aria-label={items.title}>
+        <Table aria-label={items.title} className={styles.tableLayout}>
           <TableHeader>
             <TableRow>
               <TableHeaderCell key={items.dimension.key}>{items.dimension.label}</TableHeaderCell>

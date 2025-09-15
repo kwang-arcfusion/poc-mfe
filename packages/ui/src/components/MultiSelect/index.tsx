@@ -75,6 +75,12 @@ const useStyles = makeStyles({
       backgroundColor: tokens.colorNeutralBackground1Hover,
       outline: 'none',
     },
+    // ✨ เพิ่ม style สำหรับสถานะ disabled
+    '&[aria-disabled="true"]': {
+      cursor: 'not-allowed',
+      opacity: 0.5,
+      backgroundColor: 'transparent',
+    },
   },
   menuIcon: {
     width: '16px',
@@ -111,6 +117,9 @@ export interface MultiSelectProps {
   onSearchChange?: (value: string) => void;
   showSelectAll?: boolean;
   maxWidth?: number | string;
+  // ✨ 1. เพิ่ม props min และ max
+  min?: number;
+  max?: number;
 }
 
 export const MultiSelect: React.FC<MultiSelectProps> = ({
@@ -121,6 +130,9 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   onSearchChange,
   showSelectAll = false,
   maxWidth,
+  // ✨ 2. รับ props min และ max เข้ามา
+  min,
+  max,
 }) => {
   const styles = useStyles();
   const [searchTerm, setSearchTerm] = useState('');
@@ -146,11 +158,14 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     [filteredGroups]
   );
   
-  // ✨ 1. สร้าง Array ของ ID แบบไม่มี prefix สำหรับใช้กับ `MenuList` เท่านั้น
   const simpleCheckedValues = useMemo(
     () => selectedOptions.map(s => s.split(':').pop() || s),
     [selectedOptions]
   );
+  
+  // ✨ 3. สร้าง state เพื่อเช็คเงื่อนไข min/max
+  const isMaxReached = max !== undefined && selectedOptions.length >= max;
+  const isMinReached = min !== undefined && selectedOptions.length <= min;
 
   const isAllSelected = useMemo(() => {
     if (allVisibleOptionIds.length === 0) return false;
@@ -159,13 +174,20 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 
 
   const handleSelectAllToggle = () => {
+    // ✨ 4. เพิ่มเงื่อนไขป้องกันการเลือก/ไม่เลือกทั้งหมด
+    if (!isAllSelected && max !== undefined && allVisibleOptionIds.length > max) {
+        return; // ป้องกันการเลือกทั้งหมดเกิน max
+    }
+    if (isAllSelected && min !== undefined && selectedOptions.length - allVisibleOptionIds.length < min) {
+        return; // ป้องกันการไม่เลือกทั้งหมดแล้วต่ำกว่า min
+    }
+
     if (isAllSelected) {
       const newSelection = selectedOptions.filter(
         (prefixedId) => !allVisibleOptionIds.includes(prefixedId.split(':').pop() || '')
       );
       onSelectionChange(newSelection);
     } else {
-      // ✨ 2. แปลง ID ธรรมดาให้มี prefix ก่อนส่งกลับ
       const prefixedVisibleIds = allVisibleOptionIds.map(id => `offer_group:${id}`);
       onSelectionChange([...new Set([...selectedOptions, ...prefixedVisibleIds])]);
     }
@@ -184,8 +206,19 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     const idsToToggle = allChildren.filter((child) => child.name === name).map((child) => child.id);
     if (idsToToggle.length === 0) return;
     
-    // ใช้ simpleCheckedValues ในการเช็ค
     const areAllSelectedForThisName = idsToToggle.every((id) => simpleCheckedValues.includes(id));
+
+    // ✨ 5. เพิ่มเงื่อนไขป้องกันการเลือก/ไม่เลือกตามกลุ่ม
+    if (areAllSelectedForThisName) {
+        if (min !== undefined && selectedOptions.length - idsToToggle.length < min) {
+            return; // ป้องกันการไม่เลือกแล้วต่ำกว่า min
+        }
+    } else {
+        const newItemsCount = idsToToggle.filter(id => !simpleCheckedValues.includes(id)).length;
+        if (max !== undefined && selectedOptions.length + newItemsCount > max) {
+            return; // ป้องกันการเลือกเกิน max
+        }
+    }
 
     if (areAllSelectedForThisName) {
       const newSelection = selectedOptions.filter(
@@ -193,7 +226,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
       );
       onSelectionChange(newSelection);
     } else {
-      // ✨ 3. แปลง ID ธรรมดาให้มี prefix ก่อนส่งกลับ
       const prefixedIdsToToggle = idsToToggle.map(id => `offer_group:${id}`);
       const newSelection = [...new Set([...selectedOptions, ...prefixedIdsToToggle])];
       onSelectionChange(newSelection);
@@ -204,8 +236,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     _ev: MenuCheckedValueChangeEvent,
     data: MenuCheckedValueChangeData
   ) => {
-    // data.checkedItems คือ list ของ ID ธรรมดา (เช่น ["HOL-P01", "WIN-B01"])
-    // ✨ 4. เราต้องแปลงกลับให้เป็น format ที่มี prefix ก่อนส่งไปที่ Store
     const newSelection = data.checkedItems.map(id => `offer_group:${id}`);
     onSelectionChange(newSelection);
   };
@@ -222,7 +252,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         </span>
       );
     }
-
+    
     const firstSelectedIdString = selectedOptions[0];
     const actualId = firstSelectedIdString.split(':').pop();
     const firstSelectedChild = allChildren.find((c) => c.id === actualId);
@@ -282,7 +312,6 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         </div>
 
         <MenuList
-          // ✨ 5. ใช้ simpleCheckedValues ที่เราสร้างไว้เพื่อให้ MenuList ติ๊ก checkbox ถูกต้อง
           checkedValues={{ [label]: simpleCheckedValues }}
           onCheckedValueChange={handleCheckedValueChange}
         >
@@ -299,6 +328,11 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                     handleSelectAllToggle();
                   }
                 }}
+                // ✨ 6. เพิ่ม disabled ให้ปุ่ม Select All
+                aria-disabled={
+                  (!isAllSelected && max !== undefined && allVisibleOptionIds.length > max) ||
+                  (isAllSelected && min !== undefined && min > 0 && allVisibleOptionIds.length > 0)
+                }
               >
                 <span className={styles.menuIcon}>
                   {isAllSelected ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
@@ -318,6 +352,12 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                 const isChecked =
                   idsForThisName.length > 0 &&
                   idsForThisName.every((id) => simpleCheckedValues.includes(id));
+                
+                // ✨ 7. สร้างเงื่อนไข disabled สำหรับการเลือกตามกลุ่ม
+                const newItemsCount = idsForThisName.filter(id => !simpleCheckedValues.includes(id)).length;
+                const isDisabled = 
+                    (!isChecked && max !== undefined && selectedOptions.length + newItemsCount > max) ||
+                    (isChecked && min !== undefined && selectedOptions.length - idsForThisName.length < min);
 
                 return (
                   <div
@@ -325,13 +365,14 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                     role="menuitem"
                     tabIndex={0}
                     className={styles.nonClosingMenuItem}
-                    onClick={() => handleSelectAllByName(name)}
+                    onClick={() => !isDisabled && handleSelectAllByName(name)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
+                      if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
                         e.preventDefault();
                         handleSelectAllByName(name);
                       }
                     }}
+                    aria-disabled={isDisabled}
                   >
                     <span className={styles.menuIcon}>
                       {isChecked ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
@@ -347,11 +388,24 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           {filteredGroups.map((group, index) => (
             <React.Fragment key={`${group.name}-${index}`}>
               {group.name && <div className={styles.groupTitle}>{group.name}</div>}
-              {group.children.map((child) => (
-                <MenuItemCheckbox key={child.id} name={label} value={child.id}>
-                  {child.name}
-                </MenuItemCheckbox>
-              ))}
+              {group.children.map((child) => {
+                const isChecked = simpleCheckedValues.includes(child.id);
+                // ✨ 8. เพิ่ม disabled ให้ checkbox แต่ละตัว
+                const isDisabled = 
+                    (isMaxReached && !isChecked) || 
+                    (isMinReached && isChecked);
+
+                return (
+                  <MenuItemCheckbox 
+                    key={child.id} 
+                    name={label} 
+                    value={child.id} 
+                    disabled={isDisabled}
+                  >
+                    {child.name}
+                  </MenuItemCheckbox>
+                );
+              })}
             </React.Fragment>
           ))}
         </MenuList>

@@ -252,6 +252,7 @@ export default function Overview() {
         <MultiSelect
           label="Offers"
           maxWidth={92}
+          min={1}
           options={availableCampaignOffers}
           selectedOptions={pendingOfferFilters}
           onSelectionChange={setPendingOfferFilters}
@@ -259,6 +260,7 @@ export default function Overview() {
           showSelectAll
         />
         <MultiSelect
+          min={1}
           label="Channels"
           options={availableChannels}
           selectedOptions={pendingChannelFilters}
