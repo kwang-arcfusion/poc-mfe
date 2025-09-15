@@ -15,10 +15,8 @@ import {
   Spinner,
   mergeClasses,
 } from '@fluentui/react-components';
-// --- NEW: Import icons for the new design ---
 import { Tag24Regular, MegaphoneLoud24Regular } from '@fluentui/react-icons';
 
-// --- Type Definitions ---
 type Metric = { label: string; value: number };
 type PerformanceCardData = {
   id: string;
@@ -26,10 +24,8 @@ type PerformanceCardData = {
   campaignName: string;
   growth?: number;
   metrics: Metric[];
-  // imageColor is no longer needed
 };
 
-// --- Styles ---
 const useStyles = makeStyles({
   panelRoot: {
     display: 'flex',
@@ -49,9 +45,9 @@ const useStyles = makeStyles({
   perfCard: {
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center', // Align items vertically
+    alignItems: 'center',
     ...shorthands.gap(tokens.spacingHorizontalL),
-    ...shorthands.padding('16px'), // Increase padding slightly
+    ...shorthands.padding('16px'),
     cursor: 'pointer',
     ...shorthands.border('2px', 'solid', 'transparent'),
     ':hover': {
@@ -63,7 +59,6 @@ const useStyles = makeStyles({
     ...shorthands.borderColor(tokens.colorBrandStroke1),
     boxShadow: tokens.shadow8,
   },
-  // --- NEW: Style for the icon container ---
   iconContainer: {
     display: 'flex',
     alignItems: 'center',
@@ -141,19 +136,17 @@ const formatMetricValue = (value: number): string => {
 
 const PerformanceCard: React.FC<{
   data: Omit<PerformanceCardData, 'campaignName'>;
-  icon: React.ReactNode; // <-- Pass icon as a prop
+  icon: React.ReactNode;
   onClick?: () => void;
   isSelected?: boolean;
 }> = ({ data, icon, onClick, isSelected }) => {
   const styles = useStyles();
-  const visibleMetrics = data.metrics.slice(0, 2); // Show 2 metrics to keep it clean
+  const visibleMetrics = data.metrics.slice(0, 2);
   const [isOpen, setIsOpen] = useState(false);
   const timeoutRef = useRef<number>();
 
   useEffect(() => {
-    return () => {
-      clearTimeout(timeoutRef.current);
-    };
+    return () => clearTimeout(timeoutRef.current);
   }, []);
 
   const handleMouseEnter = () => {
@@ -184,7 +177,6 @@ const PerformanceCard: React.FC<{
       <PopoverTrigger disableButtonEnhancement>
         <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} onClick={onClick}>
           <Card className={mergeClasses(styles.perfCard, isSelected && styles.selectedCard)}>
-            {/* --- REPLACEMENT: Use Icon instead of image placeholder --- */}
             <div className={styles.iconContainer}>{icon}</div>
             <div className={styles.textContent}>
               <Text size={400} className={styles.title} title={data.title}>
@@ -277,7 +269,6 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
       <PerformanceCard
         key={item.id}
         data={item}
-        // --- NEW: Dynamically provide the correct icon ---
         icon={isOfferTab ? <Tag24Regular /> : <MegaphoneLoud24Regular />}
         onClick={isOfferTab ? () => onOfferClick(item.id) : undefined}
         isSelected={isOfferTab && item.id === focusedOfferId}

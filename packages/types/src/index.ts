@@ -103,3 +103,5 @@ export interface FeedbackResponse {
 }
 
 export * from './chat';
+export * from './ui'; // <-- ADD THIS
+export * from './analytics'; // <-- ADD THIS

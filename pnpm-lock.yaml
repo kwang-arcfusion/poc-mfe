@@ -431,9 +431,15 @@ importers:
 
   remotes/overview:
     dependencies:
+      '@arcfusion/client':
+        specifier: workspace:^
+        version: link:../../packages/client
       '@arcfusion/store':
         specifier: workspace:^
         version: link:../../packages/store
+      '@arcfusion/types':
+        specifier: workspace:^
+        version: link:../../packages/types
       '@arcfusion/ui':
         specifier: workspace:^
         version: link:../../packages/ui

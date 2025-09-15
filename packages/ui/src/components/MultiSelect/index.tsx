@@ -105,10 +105,9 @@ interface OptionItem {
   name: string;
 }
 
-export interface OptionGroup {
-  name: string;
-  children: OptionItem[];
-}
+import type { OptionGroup } from '@arcfusion/types';
+
+export type { OptionGroup };
 
 export interface MultiSelectProps {
   label: string;
@@ -200,7 +199,9 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     if (count === 0) {
       return (
         <span className={styles.triggerButtonContents}>
-          <Badge appearance="tint" size="large">{label}</Badge>
+          <Badge appearance="tint" size="large">
+            {label}
+          </Badge>
           <span className={styles.placeholderText}>Select</span>
         </span>
       );
@@ -209,22 +210,21 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
     const firstSelectedId = selectedOptions[0];
     const firstSelectedChild = allChildren.find((c) => c.id === firstSelectedId);
     const displayName = firstSelectedChild ? firstSelectedChild.name : firstSelectedId;
-    
+
     // --- FIX: Create separate elements for the name and the count ---
     const valueStyle: React.CSSProperties = maxWidth ? { maxWidth } : {};
-    
-    return (
-        <span className={styles.triggerButtonContents}>
-            <Badge appearance="tint" size="large">{label}</Badge>
-            <span className={styles.valueText} style={valueStyle} title={displayName}>
-                {displayName}
-            </span>
-            {count > 1 && (
-                <span className={styles.countText}>, +{count - 1}</span>
-            )}
-        </span>
-    );
 
+    return (
+      <span className={styles.triggerButtonContents}>
+        <Badge appearance="tint" size="large">
+          {label}
+        </Badge>
+        <span className={styles.valueText} style={valueStyle} title={displayName}>
+          {displayName}
+        </span>
+        {count > 1 && <span className={styles.countText}>, +{count - 1}</span>}
+      </span>
+    );
   }, [selectedOptions, label, styles, allChildren, maxWidth]);
 
   return (

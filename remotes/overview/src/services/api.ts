@@ -1,5 +1,11 @@
 // remotes/overview/src/services/api.ts
-import { AnalyticsOptions, MetricOption, OverviewApiResponse, FilterValues, TableRowData } from '../types';
+import {
+  AnalyticsOptions,
+  MetricOption,
+  OverviewApiResponse,
+  FilterValues,
+  TableRowData,
+} from '../types';
 import type { DateRange, OptionGroup } from '@arcfusion/ui';
 
 // --- Master Mock Database for Performance Cards ---
@@ -8,7 +14,6 @@ const ALL_MOCK_PERFORMANCE_DATA = [
     id: 'PREPAID_TO_POSTPAID_Q4_Offer',
     title: 'PREPAID_TO_POSTPAID_Q4_Offer',
     campaignName: 'PREPAID_TO_POSTPAID_Q4_Program',
-    imageColor: '#a19f9d',
     growth: 25.1,
     metrics: [
       { label: 'Impressions', value: 150000000 },
@@ -19,7 +24,6 @@ const ALL_MOCK_PERFORMANCE_DATA = [
     id: 'WINBACK_14GB_50THB_Offer',
     title: 'WINBACK_14GB_50THB_Offer',
     campaignName: 'WINBACK_14GB_50THB_Program',
-    imageColor: '#605e5c',
     growth: 12.1,
     metrics: [
       { label: 'Impressions', value: 98200000 },
@@ -30,7 +34,6 @@ const ALL_MOCK_PERFORMANCE_DATA = [
     id: 'CP_FamilyPack_Discount_Aug_Offer',
     title: 'CP_FamilyPack_Discount_Aug_Offer',
     campaignName: 'GENERAL_PROMOTIONS',
-    imageColor: '#b3b0ad',
     metrics: [
       { label: 'Impressions', value: 75000000 },
       { label: 'Engagement', value: 5400000 },
@@ -40,7 +43,6 @@ const ALL_MOCK_PERFORMANCE_DATA = [
     id: 'NewUser_Welcome_Voucher',
     title: 'NewUser_Welcome_Voucher_For_New_Subscribers_Only',
     campaignName: 'GENERAL_PROMOTIONS',
-    imageColor: '#8a8886',
     growth: 45.8,
     metrics: [
       { label: 'Impressions', value: 210000000 },
@@ -49,7 +51,6 @@ const ALL_MOCK_PERFORMANCE_DATA = [
   },
 ];
 
-// --- NEW: Expanded list of all possible metrics ---
 const ALL_MOCK_METRIC_OPTIONS: MetricOption[] = [
   { key: 'conversions_rate', label: 'Conversions Rate', type: 'percent' },
   { key: 'impression_rate', label: 'Impression Rate', type: 'percent' },
@@ -62,6 +63,7 @@ const ALL_MOCK_METRIC_OPTIONS: MetricOption[] = [
 
 // --- API Service Functions ---
 export const fetchAnalyticsOptions = async (): Promise<AnalyticsOptions> => {
+  await new Promise((res) => setTimeout(res, 200)); // Simulate network delay
   return {
     dimensions: [
       {
@@ -80,6 +82,7 @@ export const fetchAnalyticsOptions = async (): Promise<AnalyticsOptions> => {
 export const fetchCampaignOffersByDate = async (dateRange: DateRange): Promise<OptionGroup[]> => {
   console.log('MOCK: Fetching campaign/offers for', dateRange);
   await new Promise((res) => setTimeout(res, 300));
+  // In a real scenario, this would filter by date. Here, we return all for simplicity.
   return [
     {
       name: 'PREPAID_TO_POSTPAID_Q4_Program',
@@ -99,39 +102,68 @@ export const fetchCampaignOffersByDate = async (dateRange: DateRange): Promise<O
   ];
 };
 
+// ** NEW MOCK FUNCTION **
+export const fetchAvailableChannelsForOffers = async (
+  offerIds: string[]
+): Promise<OptionGroup[]> => {
+  console.log('MOCK: Fetching available channels for offers:', offerIds);
+  await new Promise((res) => setTimeout(res, 250));
+  // Mock logic: If a specific offer is selected, maybe it only uses SMS.
+  if (offerIds.length === 1 && offerIds[0] === 'WINBACK_14GB_50THB_Offer') {
+    return [
+      {
+        name: 'Channels',
+        children: [{ id: 'SMS', name: 'SMS' }],
+      },
+    ];
+  }
+  // Otherwise, return all channels.
+  return [
+    {
+      name: 'Channels',
+      children: [
+        { id: 'SMS', name: 'SMS' },
+        { id: 'Email', name: 'Email' },
+      ],
+    },
+  ];
+};
+
 export const fetchPerformanceSummary = async (filters: {
   dateRange: DateRange;
   offer_ids?: string[];
 }): Promise<any[]> => {
   console.log('MOCK: Fetching performance summary with filters', filters);
   await new Promise((res) => setTimeout(res, 400));
-  if (filters.offer_ids && filters.offer_ids.length > 0) {
-    return ALL_MOCK_PERFORMANCE_DATA.filter((item) => filters.offer_ids!.includes(item.id));
+  // If no offers are selected (empty array), it means "all"
+  if (!filters.offer_ids || filters.offer_ids.length === 0) {
+    return ALL_MOCK_PERFORMANCE_DATA;
   }
-  return ALL_MOCK_PERFORMANCE_DATA;
+  return ALL_MOCK_PERFORMANCE_DATA.filter((item) => filters.offer_ids!.includes(item.id));
 };
 
 export const fetchOverviewData = async (
   dateRange: DateRange,
   filters: Omit<FilterValues, 'metrics'>,
-  campaignOfferFilters?: { offer_ids?: string[]; campaign_ids?: string[] }
+  campaignOfferFilters: { offer_ids?: string[] }
 ): Promise<OverviewApiResponse> => {
-  console.log('MOCK: Generating dynamic data for filters:', { dateRange, filters, campaignOfferFilters });
-  await new Promise((res) => setTimeout(res, 500));
+  console.log('MOCK: Generating dynamic data for filters:', {
+    dateRange,
+    filters,
+    campaignOfferFilters,
+  });
+  await new Promise((res) => setTimeout(res, 600));
 
   const start = dateRange.start || new Date();
   const end = dateRange.end || new Date();
 
-  const isDrillDown = campaignOfferFilters?.offer_ids?.length === 1;
-  const valueMultiplier = isDrillDown ? 0.3 : 1;
+  const isDrillDown = campaignOfferFilters?.offer_ids && campaignOfferFilters.offer_ids.length > 0;
+  const valueMultiplier = isDrillDown ? 0.4 + Math.random() * 0.2 : 1;
 
   const cards = ALL_MOCK_METRIC_OPTIONS.map((metricInfo) => {
     let value = (Math.random() * 80 + 10) * valueMultiplier;
-    if (metricInfo.type === 'number') {
-      value = (Math.random() * 4 + 1); // For ROAS
-    } else if (metricInfo.type === 'currency') {
-      value = (Math.random() * 15 + 5); // For CPC/CPA
-    }
+    if (metricInfo.type === 'number') value = (Math.random() * 4 + 1) * valueMultiplier;
+    if (metricInfo.type === 'currency') value = (Math.random() * 15 + 5) * valueMultiplier;
     return {
       key: metricInfo.key,
       label: metricInfo.label,
@@ -147,10 +179,8 @@ export const fetchOverviewData = async (
       const points: { date: string; channel: string; y: number }[] = [];
       let currentDay = new Date(start);
       while (currentDay <= end) {
-        filters.channels.forEach((channel) => {
+        (filters.channels || []).forEach((channel) => {
           let yValue = (Math.random() * 70 + 20) * valueMultiplier;
-          if (metricInfo.type === 'number') yValue = Math.random() * 4 + 1;
-          if (metricInfo.type === 'currency') yValue = Math.random() * 15 + 5;
           points.push({
             date: currentDay.toISOString().split('T')[0],
             channel: channel,
@@ -177,12 +207,10 @@ export const fetchOverviewData = async (
         label: metricInfo.label,
         format: { type: metricInfo.type, precision: 1 },
       })),
-      rows: filters.channels.map((channel) => {
+      rows: (filters.channels || []).map((channel) => {
         const row: TableRowData = { channel };
         ALL_MOCK_METRIC_OPTIONS.forEach((metricInfo) => {
           let value = (Math.random() * 90 + 5) * valueMultiplier;
-          if (metricInfo.type === 'number') value = Math.random() * 4 + 1;
-          if (metricInfo.type === 'currency') value = Math.random() * 15 + 5;
           row[metricInfo.key] = value;
         });
         return row;
@@ -201,6 +229,7 @@ export const fetchOverviewData = async (
         metrics: ALL_MOCK_METRIC_OPTIONS.map((m) => m.key),
         compare: 'prev_period',
         group_by: 'day',
+        offer_ids: campaignOfferFilters.offer_ids,
       },
     },
     cards,

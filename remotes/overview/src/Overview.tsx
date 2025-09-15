@@ -222,12 +222,14 @@ export default function Overview() {
           options={availableCampaignOffers}
           selectedOptions={pendingCampaignOffers}
           onSelectionChange={setPendingCampaignOffers}
+          showSelectAll
         />
         <MultiSelect
           label="Channels"
           options={availableChannels}
           selectedOptions={pendingFilters.channels}
           onSelectionChange={(s) => setPendingFilters('channels', s)}
+          showSelectAll
         />
         <div style={{ flexGrow: 1 }} />
         <Button

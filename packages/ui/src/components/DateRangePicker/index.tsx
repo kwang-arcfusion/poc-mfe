@@ -1,5 +1,4 @@
 // packages/ui/src/components/DateRangePicker/index.tsx
-
 import * as React from 'react';
 import {
   makeStyles,
@@ -20,13 +19,9 @@ import {
 } from '@fluentui/react-icons';
 import { DatePicker } from '@fluentui/react-datepicker-compat';
 import { getDatePresets, getModeFromValue, type Mode } from './dateUtils';
+import type { DateRange } from '@arcfusion/types'; // <-- UPDATED IMPORT
 
-type DateOrNull = Date | null;
-
-export type DateRange = {
-  start: DateOrNull;
-  end: DateOrNull;
-};
+export type { DateRange }; // <-- Re-export for convenience
 
 export type DateRangePickerProps = {
   value?: DateRange;

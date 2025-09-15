@@ -1,13 +1,19 @@
 // remotes/overview/src/components/MetricCard.tsx
 import React from 'react';
-import { Card, Text, makeStyles, shorthands, tokens, mergeClasses } from '@fluentui/react-components';
+import {
+  Card,
+  Text,
+  makeStyles,
+  shorthands,
+  tokens,
+  mergeClasses,
+} from '@fluentui/react-components';
 import { ArrowTrending24Regular, ArrowTrendingDown24Regular } from '@fluentui/react-icons';
 import { CardData } from '../types';
 
 const useStyles = makeStyles({
   card: {
-    width: 'fit-content',
-    minWidth: '180px',
+    minWidth: 'fit-content',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
@@ -47,7 +53,8 @@ const useStyles = makeStyles({
 
 const formatValue = (value: number, format: { type: string }) => {
   if (format.type === 'percent') return `${value.toFixed(1)}%`;
-  if (format.type === 'currency') return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  if (format.type === 'currency')
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   if (format.type === 'number') return value.toFixed(2);
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
   if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
@@ -66,7 +73,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({ card, onClick, isSelecte
   const isPositive = changePercent >= 0;
 
   return (
-    <Card className={mergeClasses(styles.card, isSelected && styles.selected)} onClick={() => onClick(card.key)}>
+    <Card
+      className={mergeClasses(styles.card, isSelected && styles.selected)}
+      onClick={() => onClick(card.key)}
+    >
       <div className={styles.header}>
         <Text>{card.label}</Text>
       </div>

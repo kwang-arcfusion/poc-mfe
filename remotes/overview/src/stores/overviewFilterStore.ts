@@ -1,27 +1,28 @@
 // remotes/overview/src/stores/overviewFilterStore.ts
 import { create } from 'zustand';
-import type { DateRange, OptionGroup } from '@arcfusion/ui';
-import type { AnalyticsOptions, FilterValues, OverviewApiResponse } from '../types';
 import {
   fetchAnalyticsOptions,
   fetchCampaignOffersByDate,
   fetchOverviewData,
   fetchPerformanceSummary,
-} from '../services/api';
+} from '@arcfusion/client';
+
+import type { DateRange, OptionGroup, OverviewApiResponse, FilterValues } from '@arcfusion/types';
 
 const getThisMonthDateRange = (): DateRange => {
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
   const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  end.setHours(23, 59, 59, 999);
   return { start, end };
 };
 
 export interface OverviewState {
   pendingDateRange: DateRange;
-  pendingFilters: Omit<FilterValues, 'metrics'>;
+  pendingFilters: FilterValues;
   pendingCampaignOffers: string[];
   appliedDateRange: DateRange;
-  appliedFilters: Omit<FilterValues, 'metrics'>;
+  appliedFilters: FilterValues;
   appliedCampaignOffers: string[];
   overviewData: OverviewApiResponse | null;
   availableCampaignOffers: OptionGroup[];
@@ -67,10 +68,10 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
         fetchAnalyticsOptions(),
         fetchCampaignOffersByDate(initialDateRange),
       ]);
-      const allChannelIds =
-        options.dimensions.find((d) => d.key === 'channel')?.options.map((o) => o.key) || [];
+      const allChannelOptions = options.dimensions.find((d) => d.key === 'channel')?.options || [];
+      const allChannelIds = allChannelOptions.map((o) => o.key);
       const allOfferIds = campaignOffers.flatMap((cg) => cg.children.map((offer) => offer.id));
-      const initialChartMetric = options.metrics.length > 0 ? options.metrics[0].key : '';
+
       set({
         pendingDateRange: initialDateRange,
         appliedDateRange: initialDateRange,
@@ -82,13 +83,10 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
         availableChannels: [
           {
             name: 'Channels',
-            children:
-              options.dimensions
-                .find((d) => d.key === 'channel')
-                ?.options.map((o) => ({ id: o.key, name: o.label })) || [],
+            children: allChannelOptions.map((o) => ({ id: o.key, name: o.label })),
           },
         ],
-        chartMetricKey: initialChartMetric,
+        chartMetricKey: options.metrics.length > 0 ? options.metrics[0].key : '',
         isDirty: false,
       });
       await get().applyFilters();
@@ -100,15 +98,15 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   setPendingDateRange: async (range: DateRange) => {
     set({ pendingDateRange: range, isDirty: true, isLoading: true });
     try {
-      const campaignOffers = await fetchCampaignOffersByDate(range);
-      const currentSelected = get().pendingCampaignOffers;
-      const newAvailableIds = new Set(
-        campaignOffers.flatMap((cg) => cg.children.map((offer) => offer.id))
+      const newCampaignOffers = await fetchCampaignOffersByDate(range);
+      const newAvailableOfferIds = new Set(
+        newCampaignOffers.flatMap((cg) => cg.children.map((offer) => offer.id))
       );
-      const newSelection = currentSelected.filter((id) => newAvailableIds.has(id));
+      const currentSelectedOffers = get().pendingCampaignOffers;
+      const newOfferSelection = currentSelectedOffers.filter((id) => newAvailableOfferIds.has(id));
       set({
-        availableCampaignOffers: campaignOffers,
-        pendingCampaignOffers: newSelection,
+        availableCampaignOffers: newCampaignOffers,
+        pendingCampaignOffers: newOfferSelection,
         isLoading: false,
       });
     } catch (err: any) {
@@ -120,7 +118,6 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
     set((state) => ({
       pendingFilters: { ...state.pendingFilters, [category]: selection },
       isDirty: true,
-      focusedOfferId: null,
     }));
   },
 
@@ -142,17 +139,10 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   applyFilters: async () => {
     const { pendingDateRange, pendingFilters, pendingCampaignOffers, focusedOfferId } = get();
     const offerIdsForFetch = focusedOfferId ? [focusedOfferId] : pendingCampaignOffers;
-    set({
-      appliedDateRange: pendingDateRange,
-      appliedFilters: pendingFilters,
-      appliedCampaignOffers: pendingCampaignOffers,
-      isDirty: false,
-      isLoading: true,
-      error: null,
-    });
+    set({ isLoading: true, error: null });
     try {
       const [overviewData, rightPanelData] = await Promise.all([
-        fetchOverviewData(pendingDateRange, pendingFilters, { offer_ids: offerIdsForFetch }),
+        fetchOverviewData(pendingDateRange, pendingFilters.channels, offerIdsForFetch),
         fetchPerformanceSummary({
           dateRange: pendingDateRange,
           offer_ids: pendingCampaignOffers,
@@ -161,6 +151,10 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
       set({
         overviewData,
         rightPanelData,
+        appliedDateRange: pendingDateRange,
+        appliedFilters: pendingFilters,
+        appliedCampaignOffers: pendingCampaignOffers,
+        isDirty: false,
         isLoading: false,
       });
     } catch (err: any) {
