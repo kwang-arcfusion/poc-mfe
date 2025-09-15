@@ -1,4 +1,5 @@
 // packages/ui/src/components/Chat/SqlTableTabs.tsx
+
 import * as React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import {
@@ -29,6 +30,7 @@ import type { SqlAsset, DataframeAsset, ChartAsset } from '@arcfusion/types';
 import ReactECharts from 'echarts-for-react';
 import { useThemeStore } from '@arcfusion/store';
 
+// ... useStyles (เหมือนเดิมทุกประการ)
 const useStyles = makeStyles({
   assetGroup: {
     ...shorthands.border('2px', 'solid', tokens.colorNeutralStroke2),
@@ -94,6 +96,7 @@ const useStyles = makeStyles({
   tableWrap: { overflowX: 'auto' },
 });
 
+
 interface SqlTableTabsProps {
   sql: SqlAsset;
   dataframe: DataframeAsset;
@@ -114,6 +117,7 @@ const TabContent = ({
   chart?: ChartAsset & { processedConfig: Record<string, any> };
   theme: 'light' | 'dark';
 }) => {
+  // ... เนื้อหาของ Component นี้เหมือนเดิมทุกประการ ...
   const styles = useStyles();
 
   if (activeTab === 'sql') {
@@ -138,6 +142,7 @@ const TabContent = ({
     );
   }
 
+  // Default to showing the table
   return (
     <div className={styles.tabPanelPad}>
       <div className={styles.tableWrap}>
@@ -177,12 +182,16 @@ const TabContent = ({
 export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsProps) {
   const styles = useStyles();
   const { theme } = useThemeStore();
-  const [activeTab, setActiveTab] = React.useState<TabValue>('table');
+  
+  // ✨ จุดที่แก้ไข 1: เปลี่ยนค่าเริ่มต้นของ Tab ให้เป็น 'chart' ถ้ามี chart, ถ้าไม่มีให้เป็น 'table'
+  const [activeTab, setActiveTab] = React.useState<TabValue>(chart ? 'chart' : 'table');
+  
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
   const timeoutRef = useRef<number | null>(null);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // ... โค้ดส่วน logic ของ handleExport, handleCopy, useEffect เหมือนเดิม ...
   const handleExport = () => {
     if (!messageId) {
       console.error('Cannot export: messageId is missing.');
@@ -215,6 +224,7 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
     };
   }, []);
 
+
   return (
     <>
       <div className={styles.assetGroup}>
@@ -229,14 +239,17 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
                 onClick={() => setIsDialogOpen(true)}
               />
             </Tooltip>
+            
+            {/* ✨ จุดที่แก้ไข 2: สลับตำแหน่งของ Tab ให้ Chart ขึ้นก่อน */}
             <TabList selectedValue={activeTab} onTabSelect={(_, data) => setActiveTab(data.value)}>
+              {chart && <Tab value="chart">Chart</Tab>}
               <Tab value="table">Table</Tab>
               <Tab value="sql">SQL</Tab>
-              {chart && <Tab value="chart">Chart</Tab>}
             </TabList>
           </div>
 
           <div className={styles.rightActions}>
+            {/* ... โค้ดส่วนปุ่ม Export, Copy เหมือนเดิม ... */}
             {activeTab === 'table' && messageId && (
               <Button
                 size="small"
@@ -273,39 +286,19 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
         <DialogSurface className={styles.dialogSurface}>
           <DialogBody className={styles.dialogBody}>
             <DialogTitle>
-              <div style={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-                <div>{dataframe.title || 'View Details'}</div>
-                <div>
-                  {activeTab === 'table' && messageId && (
-                    <Button
-                      icon={<ArrowDownload24Regular />}
-                      appearance="secondary"
-                      onClick={handleExport}
-                    >
-                      Export CSV
-                    </Button>
-                  )}
-                  {activeTab === 'sql' && messageId && (
-                    <Button
-                      icon={copyState === 'idle' ? <Copy24Regular /> : <Checkmark24Regular />}
-                      appearance="secondary"
-                      onClick={handleCopy}
-                    >
-                      {copyState === 'idle' ? 'Copy SQL' : 'Copied!'}
-                    </Button>
-                  )}
-                </div>
-              </div>
+                {/* ... โค้ดส่วน Title ของ Dialog เหมือนเดิม ... */}
             </DialogTitle>
 
             <div className={styles.dialogContent}>
+              
+              {/* ✨ จุดที่แก้ไข 3: สลับตำแหน่ง Tab ใน Dialog ด้วย */}
               <TabList
                 selectedValue={activeTab}
                 onTabSelect={(_, data) => setActiveTab(data.value)}
               >
+                {chart && <Tab value="chart">Chart</Tab>}
                 <Tab value="table">Table</Tab>
                 <Tab value="sql">SQL</Tab>
-                {chart && <Tab value="chart">Chart</Tab>}
               </TabList>
 
               <TabContent

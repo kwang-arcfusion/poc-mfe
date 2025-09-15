@@ -1,9 +1,10 @@
 // packages/store/src/chatSessionStore.ts
+
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { getApiBaseUrl, getConversationByThreadId } from '@arcfusion/client';
 import { useChatHistoryStore } from './chatHistoryStore';
-import { useTypingEffectStore } from './typingEffectStore'; // ✨ เพิ่ม import
+import { useTypingEffectStore } from './typingEffectStore';
 import type {
   ConversationResponse,
   StreamedEvent,
@@ -11,6 +12,7 @@ import type {
   Block,
   TextBlock,
   AssetsBlock,
+  ChatMessage, // ✨ เพิ่ม import
 } from '@arcfusion/types';
 
 type StreamStatus = 'idle' | 'streaming' | 'completed' | 'error';
@@ -25,6 +27,7 @@ type AiTask =
 type StreamMode = 'default' | 'dynamic';
 
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
+  // ... เนื้อหาฟังก์ชันนี้เหมือนเดิม ...
   if (!response || !response.messages) {
     return [];
   }
@@ -90,6 +93,7 @@ export interface ChatSessionState {
   streamingThreadId?: string;
   streamingMessageId?: string;
   blocks: Block[];
+  rawMessages: ChatMessage[]; // ✨ เพิ่ม state นี้
   status: StreamStatus;
   error: string | null;
   activePrompt: string | null;
@@ -114,6 +118,7 @@ const initialState: Omit<ChatSessionState, 'loadConversation' | 'sendMessage' | 
   streamingThreadId: undefined,
   streamingMessageId: undefined,
   blocks: [],
+  rawMessages: [], // ✨ เพิ่มค่าเริ่มต้น
   status: 'idle',
   error: null,
   activePrompt: null,
@@ -138,6 +143,7 @@ export const createChatSessionStore = () =>
         const loadedBlocks = transformConversationResponseToBlocks(conversationData);
         set({
           blocks: loadedBlocks,
+          rawMessages: conversationData.messages, // ✨ เก็บ messages ดิบไว้
           activePrompt: conversationData.title || 'Conversation',
           threadId: conversationData.thread_id,
           isLoadingHistory: false,
@@ -153,6 +159,7 @@ export const createChatSessionStore = () =>
     },
 
     sendMessage: async (text, currentThreadId, storyId) => {
+      // ... เนื้อหาฟังก์ชันนี้เหมือนเดิม ...
       if (get().status === 'streaming') return currentThreadId || '';
 
       if (!currentThreadId) {

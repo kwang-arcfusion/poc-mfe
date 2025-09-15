@@ -66,11 +66,13 @@ export interface ChatMessageContent {
 }
 
 export interface ChatMessage {
+  id?: string; // ✨ เพิ่ม id เข้าไปเผื่อใช้งาน
   role: 'user' | 'bot' | 'system';
   content: string | ChatMessageContent[];
   generated_sql?: string | null;
   sql_result?: Record<string, any>[] | null;
   chart_config?: Record<string, any> | null;
+  feedback?: FeedbackResponse | null; // ✨ เพิ่มบรรทัดนี้เข้าไป
 }
 
 export interface ConversationResponse {
@@ -103,5 +105,5 @@ export interface FeedbackResponse {
 }
 
 export * from './chat';
-export * from './ui'; // <-- ADD THIS
-export * from './analytics'; // <-- ADD THIS
+export * from './ui';
+export * from './analytics';

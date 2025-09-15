@@ -1,8 +1,11 @@
 // packages/ui/src/components/Chat/ChatLog.tsx
+
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { makeStyles, shorthands, tokens } from '@fluentui/react-components';
-import type { Block, TextBlock } from '@arcfusion/types';
-import { ChatMessage } from './ChatMessage';
+// ✨ 1. Import Type ที่เราต้องการใช้งาน
+import type { Block, TextBlock, ChatMessage } from '@arcfusion/types';
+// ✨ 2. เปลี่ยนชื่อ import เพื่อไม่ให้ซ้ำกับ Type
+import { ChatMessage as ChatMessageComponent } from './ChatMessage';
 import { AssetTabs } from './AssetTabs';
 import { AiStatusIndicator } from './AiStatusIndicator';
 import { FeedbackControls } from './FeedbackControls';
@@ -31,9 +34,11 @@ interface ChatLogProps {
   blocks: Block[];
   status: 'idle' | 'streaming' | 'completed' | 'error';
   currentAiTask: string | null;
+  // ✨ 3. รับ messages ทั้งหมดเข้ามาเพื่อค้นหา feedback
+  rawMessages?: ChatMessage[];
 }
 
-export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask }) => {
+export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask, rawMessages = [] }) => {
   const styles = useStyles();
   const [isStopAutoScrollDown, setIsStopAutoScrollDown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -82,7 +87,7 @@ export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask 
           if (turn.sender === 'user') {
             const userBlock = turn.blocks[0] as TextBlock;
             return (
-              <ChatMessage
+              <ChatMessageComponent
                 key={userBlock.id || turnIndex}
                 sender="user"
                 content={userBlock.content}
@@ -96,6 +101,10 @@ export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask 
             (b) => (b.kind === 'text' && b.content) || b.kind === 'assets'
           );
 
+          // ✨ 4. ค้นหา message และ feedback ที่ตรงกัน
+          const currentMessage = rawMessages.find(msg => msg.id === turnMessageId);
+          const initialFeedback = currentMessage?.feedback;
+
           return (
             <div key={turnIndex} className={styles.aiTurnWrapper}>
               {isStreaming && turnIndex === groupedTurns.length - 1 && (
@@ -103,7 +112,7 @@ export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask 
               )}
               {turn.blocks.map((block) =>
                 block.kind === 'text' ? (
-                  <ChatMessage
+                  <ChatMessageComponent
                     key={block.id}
                     sender="ai"
                     content={block.content}
@@ -114,7 +123,8 @@ export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask 
                 )
               )}
               {!(isStreaming && turnIndex === groupedTurns.length - 1) && hasContent && (
-                <FeedbackControls messageId={turnMessageId} />
+                // ✨ 5. ส่ง initialFeedback ลงไปเป็น prop
+                <FeedbackControls messageId={turnMessageId} initialFeedback={initialFeedback} />
               )}
             </div>
           );

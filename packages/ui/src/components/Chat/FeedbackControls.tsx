@@ -1,5 +1,6 @@
 // packages/ui/src/components/Chat/FeedbackControls.tsx
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react'; // ✨ เพิ่ม useEffect
 import { makeStyles, shorthands, tokens, Button, Tooltip } from '@fluentui/react-components';
 import {
   ThumbLike24Regular,
@@ -8,7 +9,7 @@ import {
   ThumbDislike24Filled,
 } from '@fluentui/react-icons';
 import { submitFeedback, deleteFeedback } from '@arcfusion/client';
-import type { FeedbackType } from '@arcfusion/types';
+import type { FeedbackType, FeedbackResponse } from '@arcfusion/types'; // ✨ Import Type ที่เกี่ยวข้อง
 import { FeedbackDialog } from './FeedbackDialog';
 
 const useStyles = makeStyles({
@@ -21,18 +22,30 @@ const useStyles = makeStyles({
 
 interface FeedbackControlsProps {
   messageId?: string;
+  initialFeedback?: FeedbackResponse | null; // ✨ เพิ่ม prop นี้
 }
 
-export function FeedbackControls({ messageId }: FeedbackControlsProps) {
+export function FeedbackControls({ messageId, initialFeedback }: FeedbackControlsProps) {
   const styles = useStyles();
-  const [feedbackState, setFeedbackState] = useState<FeedbackType | null>(null);
+
+  // ✨ กำหนดค่าเริ่มต้นของ state จาก prop ที่ได้รับมา
+  const [feedbackState, setFeedbackState] = useState<FeedbackType | null>(
+    () => initialFeedback?.feedback_type || null
+  );
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+
+  // ✨ เพิ่ม useEffect เพื่ออัปเดต state หาก prop เปลี่ยนแปลง (เช่น ข้อมูลโหลดมาทีหลัง)
+  useEffect(() => {
+    setFeedbackState(initialFeedback?.feedback_type || null);
+  }, [initialFeedback]);
 
   if (!messageId) {
     return null;
   }
 
+  // ... ส่วน logic ของ handleFeedback และ handleReportSubmit เหมือนเดิม ...
   const handleFeedback = async (newFeedback: FeedbackType) => {
     if (isSubmitting) return;
 

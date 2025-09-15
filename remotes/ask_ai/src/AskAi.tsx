@@ -1,4 +1,5 @@
 // remotes/ask_ai/src/AskAi.tsx
+
 import React, { useEffect, useRef } from 'react';
 import { makeStyles } from '@fluentui/react-components';
 import { SearchSparkle48Color } from '@fluentui/react-icons';
@@ -33,6 +34,8 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   const blocks = useChatSession((state) => state.blocks);
   const status = useChatSession((state) => state.status);
   const currentAiTask = useChatSession((state) => state.currentAiTask);
+  // ✨ ดึง rawMessages มาจาก store
+  const rawMessages = useChatSession((state) => state.rawMessages);
 
   const storeApi = useChatSessionStoreApi();
   const {
@@ -42,6 +45,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
     unreadResponses,
   } = useChatHistoryStore();
 
+  // ... useEffects และ handleSendMessage เหมือนเดิม ...
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -91,6 +95,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
     });
   };
 
+
   return (
     <div className={styles.root}>
       {blocks.length === 0 && !isCurrentChatStreaming ? (
@@ -104,6 +109,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
           blocks={blocks}
           status={isCurrentChatStreaming ? 'streaming' : 'idle'}
           currentAiTask={isCurrentChatStreaming ? currentAiTask : null}
+          rawMessages={rawMessages} // ✨ ส่ง prop เข้าไป
         />
       )}
       <ChatInputBar
