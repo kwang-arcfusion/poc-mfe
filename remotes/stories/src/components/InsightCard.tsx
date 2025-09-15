@@ -1,4 +1,5 @@
 // remotes/stories/src/components/InsightCard.tsx
+
 import React, { useMemo } from 'react';
 import { makeStyles, shorthands, tokens, Badge, Text } from '@fluentui/react-components';
 import { Sparkle24Regular } from '@fluentui/react-icons';
@@ -8,6 +9,7 @@ import type { Story } from '@arcfusion/types';
 import ReactECharts from 'echarts-for-react';
 import { useThemeStore } from '@arcfusion/store';
 
+// ... useStyles (เหมือนเดิมทุกประการ)
 const useStyles = makeStyles({
   insightCard: {
     display: 'flex',
@@ -113,6 +115,7 @@ const useStyles = makeStyles({
 });
 
 const formatTimeAgo = (dateString: string) => {
+  // ... ฟังก์ชันนี้เหมือนเดิม ...
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -141,11 +144,15 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   const timeAgo = formatTimeAgo(story.created_at);
   const topMover = story.top_movers?.[0];
 
+  // ✨ จุดที่แก้ไข: เปลี่ยนมาดึงข้อมูลจาก top_movers[0].name
+  const badgeText = topMover?.name?.toUpperCase() || story.type.split('_')[0].toUpperCase();
+
   const kpiValueColor =
     topMover?.direction === 'down'
       ? tokens.colorPaletteRedForeground1
       : tokens.colorPaletteGreenForeground1;
 
+  // ... โค้ดส่วนที่เหลือเหมือนเดิม ...
   const chartOptions = useMemo(() => {
     if (!story.echart_config) return null;
     const newConfig = JSON.parse(JSON.stringify(story.echart_config));
@@ -162,8 +169,9 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   return (
     <div className={styles.insightCard} onClick={onClick}>
       <header className={styles.cardHeader}>
-        <Badge appearance="tint">
-          <strong>{story.type.split('_')[0].toUpperCase()}</strong>
+        {/* ✨ จุดที่แก้ไข: ใช้ตัวแปร badgeText ที่ได้มาจาก top_movers */}
+        <Badge appearance="tint" size="extra-large">
+          {badgeText}
         </Badge>
         <Text className={styles.timeAgo}>{timeAgo}</Text>
       </header>

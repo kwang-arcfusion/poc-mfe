@@ -46,6 +46,7 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     rowGap: '6px',
+    lineHeight: 2,
     width: '100%',
   },
   sub: {

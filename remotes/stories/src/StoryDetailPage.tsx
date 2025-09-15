@@ -1,4 +1,5 @@
 // remotes/stories/src/StoryDetailPage.tsx
+
 import * as React from 'react';
 import {
   Badge,
@@ -21,6 +22,7 @@ import { EvidenceSection } from './storyDetail/EvidenceSection';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
 import { TechnicalDetails } from './storyDetail/TechnicalDetails';
 
+// ... useStyles (เหมือนเดิมทุกประการ)
 const useStyles = makeStyles({
   outer: {
     overflow: 'hidden',
@@ -33,15 +35,10 @@ const useStyles = makeStyles({
     right: '38px',
     zIndex: 10,
   },
-  singleGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr',
-    height: '100%',
-  },
   splitGrid: {
     display: 'flex',
     height: '100%',
-    paddingLeft: '12px',
+    // paddingLeft: '12px',
     boxSizing: 'border-box',
   },
   leftPane: {
@@ -138,12 +135,12 @@ interface StoryDetailPageProps {
 export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDetailPageProps) {
   const s = useStyles();
   const { setMainOverflow } = useLayoutStore();
-
   const [story, setStory] = React.useState<Story | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [aiOpen, setAiOpen] = React.useState(false);
 
+  // ... useEffect ทั้งหมดเหมือนเดิม ...
   React.useEffect(() => {
     setMainOverflow('hidden');
     return () => {
@@ -163,7 +160,6 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
       setIsLoading(false);
       return;
     }
-
     const fetchStory = async () => {
       try {
         setIsLoading(true);
@@ -177,11 +173,11 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
         setIsLoading(false);
       }
     };
-
     fetchStory();
   }, [storyId]);
 
   const renderContent = () => {
+    // ... เนื้อหาของฟังก์ชันนี้เหมือนเดิมทุกประการ ...
     if (isLoading) {
       return (
         <div className={s.centerContainer}>
@@ -189,7 +185,6 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
         </div>
       );
     }
-
     if (error || !story) {
       return (
         <div className={s.centerContainer}>
@@ -197,9 +192,7 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
         </div>
       );
     }
-
     const topMover = story.top_movers && story.top_movers.length > 0 ? story.top_movers[0] : null;
-
     return (
       <section className={s.leftPane}>
         <div className={s.page}>
@@ -239,6 +232,7 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
     );
   };
 
+  // ✨✨✨✨✨✨ จุดแก้ไขหลักอยู่ตรงนี้ ✨✨✨✨✨✨
   return (
     <div className={s.outer}>
       {!aiOpen && (
@@ -252,29 +246,32 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
         </Button>
       )}
 
-      <div className={aiOpen ? s.splitGrid : s.singleGrid}>
-        {aiOpen ? (
-          <PanelGroup direction="horizontal">
-            <Panel defaultSize={70} minSize={40}>
-              {renderContent()}
-            </Panel>
-            <PanelResizeHandle className={s.resizeHandle} />
-            <Panel defaultSize={30} minSize={20}>
-              <aside className={s.rightPane} aria-label="AI Chat Panel">
-                <ChatSessionProvider>
-                  <AskAiPanel
-                    story={story!}
-                    threadId={threadId || undefined}
-                    onClose={() => setAiOpen(false)}
-                    navigate={navigate}
-                  />
-                </ChatSessionProvider>
-              </aside>
-            </Panel>
-          </PanelGroup>
-        ) : (
-          renderContent()
-        )}
+      {/* ใช้ PanelGroup ตลอดเวลาเพื่อรักษาโครงสร้าง DOM */}
+      <div className={s.splitGrid}>
+        <PanelGroup direction="horizontal">
+          <Panel defaultSize={100} minSize={40}>
+            {renderContent()}
+          </Panel>
+
+          {/* Render Panel ที่สองและตัวลากก็ต่อเมื่อ aiOpen เป็น true */}
+          {aiOpen && (
+            <>
+              <PanelResizeHandle className={s.resizeHandle} />
+              <Panel defaultSize={30} minSize={20} collapsible>
+                <aside className={s.rightPane} aria-label="AI Chat Panel">
+                  <ChatSessionProvider>
+                    <AskAiPanel
+                      story={story!}
+                      threadId={threadId || undefined}
+                      onClose={() => setAiOpen(false)}
+                      navigate={navigate}
+                    />
+                  </ChatSessionProvider>
+                </aside>
+              </Panel>
+            </>
+          )}
+        </PanelGroup>
       </div>
     </div>
   );

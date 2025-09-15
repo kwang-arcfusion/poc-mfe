@@ -24,8 +24,17 @@ const useStyles = makeStyles({
     alignItems: 'center',
   },
   narrativeText: {
+    display: 'flex',
+    flexDirection: 'column',
+    lineHeight: 2,
+    gap: '12px',
     '& p': { margin: 0 },
     '& strong': { color: tokens.colorNeutralForeground1 },
+    '& ul': {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+    },
     '& ul, & ol': {
       ...shorthands.margin(0),
       paddingLeft: tokens.spacingHorizontalL,
