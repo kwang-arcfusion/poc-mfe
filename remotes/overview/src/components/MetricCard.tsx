@@ -13,7 +13,7 @@ import { CardData } from '../types';
 
 const useStyles = makeStyles({
   card: {
-    minWidth: 'fit-content',
+    minWidth: '140px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',

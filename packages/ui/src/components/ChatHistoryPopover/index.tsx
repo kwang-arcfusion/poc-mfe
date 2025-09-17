@@ -25,7 +25,7 @@ const useStyles = makeStyles({
     width: '380px',
     maxHeight: 'calc(100vh - 48px)',
     padding: 0,
-    left: '80px !important',
+    left: '44px !important',
     display: 'flex',
     flexDirection: 'column',
     ...shorthands.borderRadius(tokens.borderRadiusLarge),

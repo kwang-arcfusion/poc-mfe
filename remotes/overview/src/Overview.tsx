@@ -192,15 +192,6 @@ export default function Overview() {
         </Menu>
       );
     }
-
-    return (
-      <Button
-        appearance="subtle"
-        icon={<Filter28Filled />}
-        aria-label="Filters are up to date"
-        disabled
-      />
-    );
   };
 
   const renderLeftPanelContent = () => {
@@ -214,7 +205,7 @@ export default function Overview() {
     if (!overviewData) {
       return (
         <div className={styles.loadingContainer}>
-          <Text weight="semibold">Please select filters and click Apply to see the data.</Text>
+          <Text weight="semibold">No data</Text>
         </div>
       );
     }
@@ -230,7 +221,7 @@ export default function Overview() {
     if (overviewData) {
       return (
         <div className={styles.contentContainer}>
-          {isLoading && <Spinner label="Applying filters..." />}
+          {isLoading && <Spinner />}
           <OverallPerformance
             cards={overviewData.cards}
             onCardClick={setChartMetricKey}
@@ -247,7 +238,12 @@ export default function Overview() {
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
-        <FilterActionButton />
+        <Button
+          appearance="subtle"
+          icon={<Filter28Filled />}
+          aria-label="Filters are up to date"
+          disabled
+        />
         <DateRangePicker value={pendingDateRange} onChange={setPendingDateRange} />
         <MultiSelect
           label="Offers"
@@ -268,12 +264,8 @@ export default function Overview() {
           showSelectAll
         />
         <div style={{ flexGrow: 1 }} />
-        <Button
-          icon={<MoreHorizontal24Filled />}
-          appearance="subtle"
-          onClick={() => setIsPanelOpen(!isPanelOpen)}
-          aria-label="Toggle filter panel"
-        />
+
+        <FilterActionButton />
       </header>
 
       <div className={styles.outer}>
