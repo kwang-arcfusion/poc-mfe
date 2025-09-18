@@ -1,9 +1,7 @@
-// packages/ui/src/components/Chat/ChatMessage.tsx
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import { makeStyles, shorthands, tokens } from '@fluentui/react-components';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useTypingEffectStore } from '@arcfusion/store';
 
 const useStyles = makeStyles({
   root: {
@@ -51,53 +49,14 @@ interface ChatMessageProps {
   messageId?: string;
 }
 
-export function ChatMessage({ sender, content, messageId }: ChatMessageProps) {
+export function ChatMessage({ sender, content }: ChatMessageProps) {
   const styles = useStyles();
-  const [displayedText, setDisplayedText] = useState('');
-  const animationTimeoutRef = useRef<number>();
-  const debounceTimeoutRef = useRef<number>();
-  const speed = 20;
-
-  const { typingMessageIds, stopTyping } = useTypingEffectStore();
-  const isTyping = messageId ? typingMessageIds.has(messageId) : false;
-
-  useEffect(() => {
-    return () => {
-      clearTimeout(animationTimeoutRef.current);
-      clearTimeout(debounceTimeoutRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (sender === 'user') {
-      setDisplayedText(content);
-      return;
-    }
-
-    if (isTyping) {
-      if (displayedText !== content) {
-        clearTimeout(debounceTimeoutRef.current);
-
-        animationTimeoutRef.current = window.setTimeout(() => {
-          setDisplayedText(content.slice(0, displayedText.length + 1));
-        }, speed);
-      } else {
-        debounceTimeoutRef.current = window.setTimeout(() => {
-          if (messageId) {
-            stopTyping(messageId);
-          }
-        }, 500);
-      }
-    } else {
-      setDisplayedText(content);
-    }
-  }, [content, displayedText, sender, isTyping, messageId, stopTyping]);
 
   return (
     <div className={styles.root} data-sender={sender}>
       <div className={styles.bubble} data-sender={sender}>
         <div className={styles.markdown}>
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayedText || ' '}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content || ' '}</ReactMarkdown>
         </div>
       </div>
     </div>

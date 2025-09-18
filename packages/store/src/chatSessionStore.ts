@@ -1,10 +1,7 @@
-// packages/store/src/chatSessionStore.ts
-
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { getApiBaseUrl, getConversationByThreadId } from '@arcfusion/client';
 import { useChatHistoryStore } from './chatHistoryStore';
-import { useTypingEffectStore } from './typingEffectStore';
 import type {
   ConversationResponse,
   StreamedEvent,
@@ -12,7 +9,7 @@ import type {
   Block,
   TextBlock,
   AssetsBlock,
-  ChatMessage, // ✨ เพิ่ม import
+  ChatMessage,
 } from '@arcfusion/types';
 
 type StreamStatus = 'idle' | 'streaming' | 'completed' | 'error';
@@ -27,7 +24,6 @@ type AiTask =
 type StreamMode = 'default' | 'dynamic';
 
 function transformConversationResponseToBlocks(response: ConversationResponse): Block[] {
-  // ... เนื้อหาฟังก์ชันนี้เหมือนเดิม ...
   if (!response || !response.messages) {
     return [];
   }
@@ -93,7 +89,7 @@ export interface ChatSessionState {
   streamingThreadId?: string;
   streamingMessageId?: string;
   blocks: Block[];
-  rawMessages: ChatMessage[]; // ✨ เพิ่ม state นี้
+  rawMessages: ChatMessage[];
   status: StreamStatus;
   error: string | null;
   activePrompt: string | null;
@@ -118,7 +114,7 @@ const initialState: Omit<ChatSessionState, 'loadConversation' | 'sendMessage' | 
   streamingThreadId: undefined,
   streamingMessageId: undefined,
   blocks: [],
-  rawMessages: [], // ✨ เพิ่มค่าเริ่มต้น
+  rawMessages: [],
   status: 'idle',
   error: null,
   activePrompt: null,
@@ -143,7 +139,7 @@ export const createChatSessionStore = () =>
         const loadedBlocks = transformConversationResponseToBlocks(conversationData);
         set({
           blocks: loadedBlocks,
-          rawMessages: conversationData.messages, // ✨ เก็บ messages ดิบไว้
+          rawMessages: conversationData.messages,
           activePrompt: conversationData.title || 'Conversation',
           threadId: conversationData.thread_id,
           isLoadingHistory: false,
@@ -159,7 +155,6 @@ export const createChatSessionStore = () =>
     },
 
     sendMessage: async (text, currentThreadId, storyId) => {
-      // ... เนื้อหาฟังก์ชันนี้เหมือนเดิม ...
       if (get().status === 'streaming') return currentThreadId || '';
 
       if (!currentThreadId) {
@@ -221,8 +216,6 @@ export const createChatSessionStore = () =>
 
               if (eventData.message_id) {
                 set({ streamingMessageId: eventData.message_id });
-                // use startTyping, it will stop in ChatMessage when typing effect is done
-                useTypingEffectStore.getState().startTyping(eventData.message_id);
                 continue;
               }
 
@@ -284,7 +277,7 @@ export const createChatSessionStore = () =>
                 }
               }
 
-              if ('answer_chunk' in eventData || 'answer' in eventData) {
+              if ('answer_chunk' in eventData) {
                 const { streamMode, pendingAssets, streamingMessageId } = get();
 
                 if (
@@ -310,7 +303,7 @@ export const createChatSessionStore = () =>
                 set((state) => {
                   const newBlocks = [...state.blocks];
                   const lastBlock = newBlocks[newBlocks.length - 1];
-                  const textContent = (eventData as any).answer_chunk || (eventData as any).answer;
+                  const textContent = eventData.answer_chunk;
 
                   if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
                     (lastBlock as TextBlock).content += textContent;
@@ -325,6 +318,15 @@ export const createChatSessionStore = () =>
                   }
                   useChatHistoryStore.getState().startStreaming(newThreadId, 'answering');
                   return { blocks: newBlocks, currentAiTask: 'answering' };
+                });
+              } else if ('answer' in eventData) {
+                set((state) => {
+                  const newBlocks = [...state.blocks];
+                  const lastBlock = newBlocks[newBlocks.length - 1];
+                  if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
+                    (lastBlock as TextBlock).content = eventData.answer;
+                  }
+                  return { blocks: newBlocks };
                 });
               }
             } catch (e) {
