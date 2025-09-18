@@ -10,6 +10,9 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     alignItems: 'center',
     paddingBottom: tokens.spacingVerticalS,
+    paddingLeft: '12px',
+    paddingRight: '12px',
+    boxSizing: 'border-box',
   },
   inputContainer: {
     display: 'flex',

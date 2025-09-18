@@ -96,7 +96,6 @@ const useStyles = makeStyles({
   tableWrap: { overflowX: 'auto' },
 });
 
-
 interface SqlTableTabsProps {
   sql: SqlAsset;
   dataframe: DataframeAsset;
@@ -182,10 +181,10 @@ const TabContent = ({
 export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsProps) {
   const styles = useStyles();
   const { theme } = useThemeStore();
-  
+
   // ✨ จุดที่แก้ไข 1: เปลี่ยนค่าเริ่มต้นของ Tab ให้เป็น 'chart' ถ้ามี chart, ถ้าไม่มีให้เป็น 'table'
   const [activeTab, setActiveTab] = React.useState<TabValue>(chart ? 'chart' : 'table');
-  
+
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
   const timeoutRef = useRef<number | null>(null);
 
@@ -224,7 +223,6 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
     };
   }, []);
 
-
   return (
     <>
       <div className={styles.assetGroup}>
@@ -239,7 +237,7 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
                 onClick={() => setIsDialogOpen(true)}
               />
             </Tooltip>
-            
+
             {/* ✨ จุดที่แก้ไข 2: สลับตำแหน่งของ Tab ให้ Chart ขึ้นก่อน */}
             <TabList selectedValue={activeTab} onTabSelect={(_, data) => setActiveTab(data.value)}>
               {chart && <Tab value="chart">Chart</Tab>}
@@ -285,12 +283,9 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
       <Dialog open={isDialogOpen} onOpenChange={(_, data) => setIsDialogOpen(data.open)}>
         <DialogSurface className={styles.dialogSurface}>
           <DialogBody className={styles.dialogBody}>
-            <DialogTitle>
-                {/* ... โค้ดส่วน Title ของ Dialog เหมือนเดิม ... */}
-            </DialogTitle>
+            <DialogTitle>{/* ... โค้ดส่วน Title ของ Dialog เหมือนเดิม ... */}</DialogTitle>
 
             <div className={styles.dialogContent}>
-              
               {/* ✨ จุดที่แก้ไข 3: สลับตำแหน่ง Tab ใน Dialog ด้วย */}
               <TabList
                 selectedValue={activeTab}
