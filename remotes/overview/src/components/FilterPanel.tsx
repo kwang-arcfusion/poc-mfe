@@ -1,4 +1,5 @@
 // remotes/overview/src/components/FilterPanel.tsx
+
 import React, { useMemo } from 'react';
 import {
   makeStyles,
@@ -8,7 +9,7 @@ import {
   TabList,
   Text,
   Card,
-  Spinner,
+  Spinner, // Spinner ถูก import อยู่แล้ว
   mergeClasses,
 } from '@fluentui/react-components';
 
@@ -21,7 +22,6 @@ type PerformanceCardData = {
   metrics: Metric[];
 };
 
-// ✨ Change Start: Styles updated to match the image layout
 const useStyles = makeStyles({
   panelRoot: {
     display: 'flex',
@@ -40,7 +40,7 @@ const useStyles = makeStyles({
   },
   perfCard: {
     display: 'flex',
-    flexDirection: 'column', // Stack title and metrics vertically
+    flexDirection: 'column',
     ...shorthands.gap(tokens.spacingVerticalL),
     ...shorthands.padding('16px'),
     cursor: 'pointer',
@@ -68,12 +68,11 @@ const useStyles = makeStyles({
   },
   metricsContainer: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr', // Two columns
+    gridTemplateColumns: '1fr 1fr',
     columnGap: tokens.spacingHorizontalL,
     rowGap: tokens.spacingVerticalS,
   },
   metricRow: {
-    // A single row for a metric (label + value)
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -97,8 +96,14 @@ const useStyles = makeStyles({
     alignItems: 'center',
     height: '100%',
   },
+  panelHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexShrink: 0,
+    ...shorthands.padding(0, tokens.spacingHorizontalL),
+  },
 });
-// ✨ Change End
 
 const formatMetricValue = (value: number): string => {
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -106,7 +111,6 @@ const formatMetricValue = (value: number): string => {
   return value.toLocaleString();
 };
 
-// ✨ Change Start: PerformanceCard component refactored to show 2 columns of metrics
 const PerformanceCard: React.FC<{
   data: Omit<PerformanceCardData, 'campaignName'>;
   onClick?: () => void;
@@ -138,7 +142,6 @@ const PerformanceCard: React.FC<{
     </div>
   );
 };
-// ✨ Change End
 
 interface FilterPanelProps {
   data: PerformanceCardData[];
@@ -185,18 +188,17 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   }, [data]);
 
   const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className={styles.center}>
-          <Spinner />
-        </div>
-      );
-    }
-
     const isOfferTab = selectedTab === 'offers';
     const itemsToRender = isOfferTab ? data : campaignData;
 
     if (!itemsToRender || itemsToRender.length === 0) {
+      if (isLoading) {
+        return (
+          <div className={styles.center}>
+            <Spinner />
+          </div>
+        );
+      }
       return (
         <div className={styles.center}>
           <Text>No data to display.</Text>
@@ -216,13 +218,16 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
   return (
     <div className={styles.panelRoot}>
-      <TabList
-        selectedValue={selectedTab}
-        onTabSelect={(_, data) => setSelectedTab(data.value as 'offers' | 'campaigns')}
-      >
-        <Tab value="offers">Offers</Tab>
-        <Tab value="campaigns">Campaigns</Tab>
-      </TabList>
+      <div className={styles.panelHeader}>
+        <TabList
+          selectedValue={selectedTab}
+          onTabSelect={(_, data) => setSelectedTab(data.value as 'offers' | 'campaigns')}
+        >
+          <Tab value="offers">Offers</Tab>
+          <Tab value="campaigns">Campaigns</Tab>
+        </TabList>
+        {isLoading && <Spinner size="tiny" />}
+      </div>
       <div className={styles.panelContainer}>{renderContent()}</div>
     </div>
   );

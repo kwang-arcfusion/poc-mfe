@@ -1,4 +1,3 @@
-// remotes/overview/src/Overview.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   makeStyles,
@@ -13,6 +12,7 @@ import {
   MenuPopover,
   MenuTrigger,
   SplitButton,
+  ProgressBar, // ✨ 1. นำเข้า ProgressBar
 } from '@fluentui/react-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLayoutStore } from '@arcfusion/store';
@@ -101,6 +101,7 @@ const useStyles = makeStyles({
   applyButton: {
     minWidth: 0,
   },
+  loadingBar: {},
 });
 
 const useDebounce = (value: string, delay: number) => {
@@ -154,7 +155,6 @@ export default function Overview() {
     return () => {
       setMainOverflow('auto');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -183,6 +183,7 @@ export default function Overview() {
               </SplitButton>
             )}
           </MenuTrigger>
+
           <MenuPopover className={styles.menuPopover}>
             <MenuList>
               <MenuItem onClick={applyFilters}>Apply</MenuItem>
@@ -192,9 +193,11 @@ export default function Overview() {
         </Menu>
       );
     }
+    return null; // Return null when not dirty
   };
 
   const renderLeftPanelContent = () => {
+    // ✨ 3. ปรับปรุง Logic การแสดงผลทั้งหมดในฟังก์ชันนี้
     if (isLoading && !overviewData) {
       return (
         <div className={styles.loadingContainer}>
@@ -202,13 +205,7 @@ export default function Overview() {
         </div>
       );
     }
-    if (!overviewData) {
-      return (
-        <div className={styles.loadingContainer}>
-          <Text weight="semibold">No data</Text>
-        </div>
-      );
-    }
+
     if (error && !isLoading) {
       return (
         <div className={styles.loadingContainer}>
@@ -217,11 +214,25 @@ export default function Overview() {
           </Text>
         </div>
       );
-    }
-    if (overviewData) {
+    } // กรณีไม่มีข้อมูล
+
+    if (!overviewData) {
       return (
+        <div className={styles.loadingContainer}>
+          <Text weight="semibold">No data</Text>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {isLoading && (
+          <div className={styles.loadingBar}>
+            <ProgressBar />
+          </div>
+        )}
+
         <div className={styles.contentContainer}>
-          {isLoading && <Spinner />}
           <OverallPerformance
             cards={overviewData.cards}
             onCardClick={setChartMetricKey}
@@ -230,9 +241,8 @@ export default function Overview() {
           <DailyPerformanceChart data={overviewData.series} metricKey={chartMetricKey} />
           {overviewData.tables[0] && <ByChannelTable items={overviewData.tables[0]} />}
         </div>
-      );
-    }
-    return null;
+      </>
+    );
   };
 
   return (
@@ -245,6 +255,7 @@ export default function Overview() {
           disabled
         />
         <DateRangePicker value={pendingDateRange} onChange={setPendingDateRange} />
+
         <MultiSelect
           label="Offers"
           maxWidth={92}
@@ -255,6 +266,7 @@ export default function Overview() {
           onSearchChange={setSearchTerm}
           showSelectAll
         />
+
         <MultiSelect
           min={1}
           label="Channels"
@@ -264,7 +276,6 @@ export default function Overview() {
           showSelectAll
         />
         <div style={{ flexGrow: 1 }} />
-
         <FilterActionButton />
       </header>
 
