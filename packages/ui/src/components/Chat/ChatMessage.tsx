@@ -34,7 +34,7 @@ const useStyles = makeStyles({
     },
   },
   markdown: {
-    '& p': { marginTop: 0, marginBottom: tokens.spacingVerticalS },
+    '& p': { marginTop: 0, marginBottom: 0 },
     '& ul': {
       display: 'flex',
       flexDirection: 'column',
