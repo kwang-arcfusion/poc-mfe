@@ -86,9 +86,10 @@ export function AskAiPanel({
   useEffect(() => {
     const { loadConversation, clearChat } = storeApi.getState();
     const currentStoreThreadId = storeApi.getState().threadId;
+    const status = storeApi.getState().status; // ดึง status มาใช้
 
     if (initialThreadId) {
-      if (initialThreadId !== currentStoreThreadId) {
+      if (initialThreadId !== currentStoreThreadId && status !== 'streaming') {
         loadConversation(initialThreadId);
       }
     } else {
@@ -96,7 +97,7 @@ export function AskAiPanel({
         clearChat();
       }
     }
-  }, [initialThreadId, status, storeApi]);
+  }, [initialThreadId, storeApi]);
 
   const isCurrentChatStreaming = status === 'streaming';
 

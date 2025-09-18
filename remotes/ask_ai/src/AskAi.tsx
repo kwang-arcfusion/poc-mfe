@@ -62,9 +62,10 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
   useEffect(() => {
     const { loadConversation, clearChat } = storeApi.getState();
     const currentStoreThreadId = storeApi.getState().threadId;
+    const status = storeApi.getState().status; // ดึง status มาใช้
 
     if (chatId) {
-      if (chatId !== currentStoreThreadId) {
+      if (chatId !== currentStoreThreadId && status !== 'streaming') {
         loadConversation(chatId);
       }
     } else {
@@ -72,7 +73,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
         clearChat();
       }
     }
-  }, [chatId, status, storeApi]);
+  }, [chatId, storeApi]);
 
   const isCurrentChatStreaming = status === 'streaming';
 
@@ -95,6 +96,7 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
     });
   };
 
+  console.log('AskAi.tsx:98 |blocks| : ', blocks);
 
   return (
     <div className={styles.root}>
