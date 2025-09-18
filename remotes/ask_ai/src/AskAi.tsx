@@ -96,8 +96,6 @@ export default function AskAi({ navigate, chatId }: AskAiProps) {
     });
   };
 
-  console.log('AskAi.tsx:98 |blocks| : ', blocks);
-
   return (
     <div className={styles.root}>
       {blocks.length === 0 && !isCurrentChatStreaming ? (

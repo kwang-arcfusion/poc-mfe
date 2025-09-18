@@ -35,6 +35,11 @@ const useStyles = makeStyles({
   },
   markdown: {
     '& p': { marginTop: 0, marginBottom: tokens.spacingVerticalS },
+    '& ul': {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '6px',
+    },
     '& ul, & ol': {
       ...shorthands.padding(0, 0, 0, tokens.spacingHorizontalL),
       ...shorthands.margin(0),
