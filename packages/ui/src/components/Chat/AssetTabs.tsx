@@ -14,23 +14,42 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
         const xKey = seriesConfig.encode.x;
         const yKey = seriesConfig.encode.y;
 
-        const xAxisData = source.map((row: any) => row[xKey]);
-        const seriesData = source.map((row: any) => {
-          const value = row[yKey];
-          return typeof value === 'object' ? 0 : parseFloat(value) || 0;
-        });
+        if (newConfig.yAxis?.type === 'category') {
+          // Horizontal Bar Chart
+          const yAxisData = source.map((row: any) => row[yKey]);
+          const seriesData = source.map((row: any) => {
+            const value = row[xKey];
+            return typeof value === 'object' ? 0 : parseFloat(value) || 0;
+          });
 
-        if (newConfig.xAxis) {
-          newConfig.xAxis.data = xAxisData;
-        }
-        if (newConfig.series?.[0]) {
-          newConfig.series[0].data = seriesData;
+          if (newConfig.yAxis) {
+            newConfig.yAxis.data = yAxisData;
+          }
+          if (newConfig.series?.[0]) {
+            newConfig.series[0].data = seriesData;
+          }
+        } else {
+          // Vertical Bar Chart (Original Logic)
+          const xAxisData = source.map((row: any) => row[xKey]);
+          const seriesData = source.map((row: any) => {
+            const value = row[yKey];
+            return typeof value === 'object' ? 0 : parseFloat(value) || 0;
+          });
+
+          if (newConfig.xAxis) {
+            newConfig.xAxis.data = xAxisData;
+          }
+          if (newConfig.series?.[0]) {
+            newConfig.series[0].data = seriesData;
+          }
         }
 
+        // Delete processed properties
         delete newConfig.dataset;
         if (newConfig.series?.[0]) {
           delete newConfig.series[0].encode;
         }
+        // =================== END EDIT ===================
 
         if (newConfig.tooltip) {
           delete newConfig.tooltip.valueFormatter;
