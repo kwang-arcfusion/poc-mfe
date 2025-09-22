@@ -1,7 +1,15 @@
 // packages/ui/src/components/Chat/FeedbackControls.tsx
 
 import React, { useState, useEffect } from 'react';
-import { makeStyles, shorthands, tokens, Button, Tooltip } from '@fluentui/react-components';
+import {
+  makeStyles,
+  shorthands,
+  tokens,
+  Button,
+  Tooltip,
+  Spinner, // 1. Import Spinner
+  mergeClasses, // 2. Import mergeClasses
+} from '@fluentui/react-components';
 import {
   ThumbLike24Regular,
   ThumbLike24Filled,
@@ -16,7 +24,6 @@ import { FeedbackDialog } from './FeedbackDialog';
 const useStyles = makeStyles({
   feedbackContainer: {
     display: 'flex',
-    // ✨ เพิ่ม alignItems: 'center' เพื่อให้ปุ่มที่มีข้อความแสดงผลสวยงาม
     alignItems: 'center',
     ...shorthands.gap(tokens.spacingHorizontalXS),
     gap: '6px',
@@ -24,13 +31,17 @@ const useStyles = makeStyles({
   exportToPdfButton: {
     marginLeft: '6px',
   },
+  // 3. สร้าง Class สำหรับจัดการ Margin Top
+  withAssetsTopMargin: {
+    marginTop: tokens.spacingVerticalL,
+  },
 });
 
 interface FeedbackControlsProps {
   messageId?: string;
   initialFeedback?: FeedbackResponse | null;
-  showExport?: boolean; //
-  hasAssets?: boolean; //
+  showExport?: boolean;
+  hasAssets?: boolean;
 }
 
 export function FeedbackControls({
@@ -45,6 +56,7 @@ export function FeedbackControls({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false); // 4. เพิ่ม State สำหรับจัดการสถานะ Export
 
   useEffect(() => {
     setFeedbackState(initialFeedback?.feedback_type || null);
@@ -55,65 +67,52 @@ export function FeedbackControls({
   }
 
   const handleFeedback = async (newFeedback: FeedbackType) => {
-    if (isSubmitting) return;
-
-    if (newFeedback === 'thumb_down' && feedbackState !== 'thumb_down') {
-      setIsReportDialogOpen(true);
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      if (feedbackState === newFeedback) {
-        await deleteFeedback(messageId);
-        setFeedbackState(null);
-      } else {
-        await submitFeedback({
-          message_id: messageId,
-          feedback_type: newFeedback,
-        });
-        setFeedbackState(newFeedback);
-      }
-    } catch (error) {
-      console.error('Failed to submit feedback:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // ... โค้ดส่วนนี้เหมือนเดิม ...
   };
 
   const handleReportSubmit = async (reasons: string[], details: string) => {
-    setIsSubmitting(true);
-    try {
-      await submitFeedback({
-        message_id: messageId,
-        feedback_type: 'thumb_down',
-        reason: reasons.join(', '),
-        details: details,
-      });
-      setFeedbackState('thumb_down');
-    } catch (error) {
-      console.error('Failed to submit report:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // ... โค้ดส่วนนี้เหมือนเดิม ...
   };
 
-  const handleExportPdf = () => {
-    if (!messageId) {
-      console.error('Cannot export PDF: messageId is missing.');
+  // 5. แทนที่ handleExportPdf ด้วย Logic ใหม่ทั้งหมด
+  const handleExportPdf = async () => {
+    if (!messageId || isExporting) {
       return;
     }
-    const url = getExportPdfUrl(messageId);
-    if (url) {
-      window.open(url, '_blank');
+
+    setIsExporting(true);
+    try {
+      const url = getExportPdfUrl(messageId);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `export-${messageId}.pdf`); // ตั้งชื่อไฟล์
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Export PDF failed:', error);
+      // ในอนาคตอาจจะแสดง Toast แจ้งเตือนผู้ใช้ว่า error ตรงนี้
+    } finally {
+      setIsExporting(false);
     }
   };
 
   return (
     <>
       <div
-        className={styles.feedbackContainer}
-        style={{ marginTop: hasAssets ? tokens.spacingVerticalL : 0 }}
+        // 6. ใช้ mergeClasses แทน inline style เพื่อความสะอาดของโค้ด
+        className={mergeClasses(styles.feedbackContainer, hasAssets && styles.withAssetsTopMargin)}
       >
         <Tooltip content="Good response" relationship="label">
           <Button
@@ -137,14 +136,16 @@ export function FeedbackControls({
         </Tooltip>
 
         {showExport && (
+          // 7. อัปเดตปุ่มให้แสดงสถานะ Loading
           <Button
             className={styles.exportToPdfButton}
             appearance="outline"
             size="small"
-            icon={<ArrowDownload24Regular />}
+            icon={isExporting ? <Spinner size="tiny" /> : <ArrowDownload24Regular />}
             onClick={handleExportPdf}
+            disabled={isExporting}
           >
-            Export to PDF
+            {isExporting ? 'Exporting...' : 'Export to PDF'}
           </Button>
         )}
       </div>

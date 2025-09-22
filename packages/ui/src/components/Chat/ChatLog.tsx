@@ -106,7 +106,9 @@ export const ChatLog: React.FC<ChatLogProps> = ({
           const initialFeedback = currentMessage?.feedback;
 
           const shouldShowExport =
-            !!currentMessage?.generated_sql && currentMessage?.chart_config?.series.length > 0;
+            !!currentMessage?.generated_sql &&
+            (currentMessage?.chart_config?.series?.length > 0 ||
+              currentMessage?.chart_config?.graphic?.length);
 
           // ✨ 1. ตรวจสอบว่าใน turn นี้มี block ชนิด 'assets' หรือไม่
           const turnHasAssets = turn.blocks.some((b) => b.kind === 'assets');

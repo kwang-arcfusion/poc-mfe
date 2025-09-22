@@ -16,12 +16,12 @@ import {
   DialogActions,
   Tooltip,
   Text,
+  Spinner, // 1. Import Spinner
 } from '@fluentui/react-components';
 import {
   ArrowDownload24Regular,
   Copy24Regular,
   Checkmark24Regular,
-  FullScreenMaximize24Regular,
   Dismiss24Regular,
   FullScreenMaximize16Filled,
 } from '@fluentui/react-icons';
@@ -94,7 +94,7 @@ const useStyles = makeStyles({
 
 interface SqlTableTabsProps {
   sql: SqlAsset;
-  dataframe?: DataframeAsset; // ✨ Make dataframe optional
+  dataframe?: DataframeAsset;
   chart?: ChartAsset & { processedConfig: Record<string, any> };
   messageId?: string;
 }
@@ -108,7 +108,7 @@ const TabContent = ({
 }: {
   activeTab: TabValue;
   sql: SqlAsset;
-  dataframe?: DataframeAsset; // ✨ Make dataframe optional
+  dataframe?: DataframeAsset;
   chart?: ChartAsset & { processedConfig: Record<string, any> };
   theme: 'light' | 'dark';
 }) => {
@@ -194,15 +194,37 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
   const timeoutRef = useRef<number | null>(null);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isExportingCsv, setIsExportingCsv] = useState(false); // 2. เพิ่ม State สำหรับ CSV Export
 
-  const handleExport = () => {
-    if (!messageId) {
-      console.error('Cannot export: messageId is missing.');
+  // 3. แก้ไขฟังก์ชัน handleExport ทั้งหมด
+  const handleExportCsv = async () => {
+    if (!messageId || isExportingCsv) {
       return;
     }
-    const url = getExportCsvUrl(messageId);
-    if (url) {
-      window.open(url, '_blank');
+
+    setIsExportingCsv(true);
+    try {
+      const url = getExportCsvUrl(messageId);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch CSV: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `export-${messageId}.csv`);
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Export CSV failed:', error);
+    } finally {
+      setIsExportingCsv(false);
     }
   };
 
@@ -242,11 +264,12 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
             {activeTab === 'table' && messageId && dataframe && dataframe.rows.length > 0 && (
               <Button
                 size="small"
-                icon={<ArrowDownload24Regular />}
+                icon={isExportingCsv ? <Spinner size="tiny" /> : <ArrowDownload24Regular />}
                 appearance="subtle"
-                onClick={handleExport}
+                onClick={handleExportCsv}
+                disabled={isExportingCsv}
               >
-                Export CSV
+                {isExportingCsv ? 'Exporting...' : 'Export CSV'}
               </Button>
             )}
 
