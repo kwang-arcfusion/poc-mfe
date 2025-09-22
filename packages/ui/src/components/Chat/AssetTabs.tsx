@@ -80,7 +80,7 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
     });
   }, [group.charts]);
 
-  if (group.sqls.length === 0 || group.dataframes.length === 0) {
+  if (group.sqls.length === 0 && processedCharts.length === 0) {
     return null;
   }
 

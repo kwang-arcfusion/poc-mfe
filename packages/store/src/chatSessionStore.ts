@@ -1,3 +1,4 @@
+// packages/store/src/chatSessionStore.ts
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import { getApiBaseUrl, getConversationByThreadId } from '@arcfusion/client';
@@ -63,7 +64,7 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
         });
         hasAssets = true;
       }
-      if (message.chart_config) {
+      if (message.chart_config && message.chart_config.series?.length > 0) {
         assetGroup.charts.push({
           id: `chart-${idCounter}`,
           title: message.chart_config.title?.text || 'Chart',
