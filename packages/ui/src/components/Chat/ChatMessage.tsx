@@ -7,16 +7,17 @@ const useStyles = makeStyles({
   root: {
     display: 'flex',
     ...shorthands.gap(tokens.spacingHorizontalM),
-    maxWidth: '85%',
     width: 'fit-content',
     flexDirection: 'column',
     '&[data-sender="user"]': {
       alignSelf: 'flex-end',
       alignItems: 'flex-end',
+      maxWidth: '70%',
     },
     '&[data-sender="ai"]': {
       alignSelf: 'flex-start',
       alignItems: 'flex-start',
+      maxWidth: '100%',
     },
   },
   bubble: {
@@ -31,6 +32,7 @@ const useStyles = makeStyles({
     '&[data-sender="ai"]': {
       backgroundColor: tokens.colorNeutralBackground2,
       color: tokens.colorNeutralForeground1,
+      paddingLeft: 0,
     },
   },
   markdown: {

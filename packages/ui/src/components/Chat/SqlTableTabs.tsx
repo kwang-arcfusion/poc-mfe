@@ -40,9 +40,6 @@ const useStyles = makeStyles({
     boxSizing: 'border-box',
   },
   expandView: {
-    position: 'absolute',
-    left: '-10px',
-    top: '-10px',
     opacity: 0.3,
     transition: '0.25s ease',
     ':hover': {
@@ -151,7 +148,7 @@ const TabContent = ({
   return (
     <div className={styles.tabPanelPad}>
       <div className={styles.tableWrap}>
-        <table>
+        <table style={{ width: '100%' }}>
           <thead>
             <tr>
               {dataframe.columns.map((c: string) => (
@@ -235,16 +232,6 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
       <div className={styles.assetGroup}>
         <div className={styles.tabHeader}>
           <div className={styles.leftActions}>
-            <Tooltip content="Expand view" relationship="label">
-              <Button
-                className={styles.expandView}
-                size="small"
-                icon={<FullScreenMaximize16Filled />}
-                appearance="subtle"
-                onClick={() => setIsDialogOpen(true)}
-              />
-            </Tooltip>
-
             <TabList selectedValue={activeTab} onTabSelect={(_, data) => setActiveTab(data.value)}>
               {chart && <Tab value="chart">Chart</Tab>}
               <Tab value="table">Table</Tab> <Tab value="sql">SQL</Tab>
@@ -273,6 +260,16 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
                 {copyState === 'idle' ? 'Copy SQL' : 'Copied!'}
               </Button>
             )}
+
+            <Tooltip content="Expand view" relationship="label">
+              <Button
+                className={styles.expandView}
+                size="small"
+                icon={<FullScreenMaximize16Filled />}
+                appearance="subtle"
+                onClick={() => setIsDialogOpen(true)}
+              />
+            </Tooltip>
           </div>
         </div>
 

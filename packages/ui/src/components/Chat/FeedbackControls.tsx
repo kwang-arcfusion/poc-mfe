@@ -1,42 +1,51 @@
 // packages/ui/src/components/Chat/FeedbackControls.tsx
 
-import React, { useState, useEffect } from 'react'; // ✨ เพิ่ม useEffect
+import React, { useState, useEffect } from 'react';
 import { makeStyles, shorthands, tokens, Button, Tooltip } from '@fluentui/react-components';
 import {
   ThumbLike24Regular,
   ThumbLike24Filled,
   ThumbDislike24Regular,
   ThumbDislike24Filled,
+  ArrowDownload24Regular,
 } from '@fluentui/react-icons';
-import { submitFeedback, deleteFeedback } from '@arcfusion/client';
-import type { FeedbackType, FeedbackResponse } from '@arcfusion/types'; // ✨ Import Type ที่เกี่ยวข้อง
+import { submitFeedback, deleteFeedback, getExportPdfUrl } from '@arcfusion/client';
+import type { FeedbackType, FeedbackResponse } from '@arcfusion/types';
 import { FeedbackDialog } from './FeedbackDialog';
 
 const useStyles = makeStyles({
   feedbackContainer: {
     display: 'flex',
+    // ✨ เพิ่ม alignItems: 'center' เพื่อให้ปุ่มที่มีข้อความแสดงผลสวยงาม
+    alignItems: 'center',
     ...shorthands.gap(tokens.spacingHorizontalXS),
-    marginTop: tokens.spacingVerticalL,
+    gap: '6px',
+  },
+  exportToPdfButton: {
+    marginLeft: '6px',
   },
 });
 
 interface FeedbackControlsProps {
   messageId?: string;
-  initialFeedback?: FeedbackResponse | null; // ✨ เพิ่ม prop นี้
+  initialFeedback?: FeedbackResponse | null;
+  showExport?: boolean; //
+  hasAssets?: boolean; //
 }
 
-export function FeedbackControls({ messageId, initialFeedback }: FeedbackControlsProps) {
+export function FeedbackControls({
+  messageId,
+  initialFeedback,
+  showExport,
+  hasAssets,
+}: FeedbackControlsProps) {
   const styles = useStyles();
-
-  // ✨ กำหนดค่าเริ่มต้นของ state จาก prop ที่ได้รับมา
   const [feedbackState, setFeedbackState] = useState<FeedbackType | null>(
     () => initialFeedback?.feedback_type || null
   );
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
 
-  // ✨ เพิ่ม useEffect เพื่ออัปเดต state หาก prop เปลี่ยนแปลง (เช่น ข้อมูลโหลดมาทีหลัง)
   useEffect(() => {
     setFeedbackState(initialFeedback?.feedback_type || null);
   }, [initialFeedback]);
@@ -45,7 +54,6 @@ export function FeedbackControls({ messageId, initialFeedback }: FeedbackControl
     return null;
   }
 
-  // ... ส่วน logic ของ handleFeedback และ handleReportSubmit เหมือนเดิม ...
   const handleFeedback = async (newFeedback: FeedbackType) => {
     if (isSubmitting) return;
 
@@ -90,9 +98,23 @@ export function FeedbackControls({ messageId, initialFeedback }: FeedbackControl
     }
   };
 
+  const handleExportPdf = () => {
+    if (!messageId) {
+      console.error('Cannot export PDF: messageId is missing.');
+      return;
+    }
+    const url = getExportPdfUrl(messageId);
+    if (url) {
+      window.open(url, '_blank');
+    }
+  };
+
   return (
     <>
-      <div className={styles.feedbackContainer}>
+      <div
+        className={styles.feedbackContainer}
+        style={{ marginTop: hasAssets ? tokens.spacingVerticalL : 0 }}
+      >
         <Tooltip content="Good response" relationship="label">
           <Button
             appearance="subtle"
@@ -113,6 +135,18 @@ export function FeedbackControls({ messageId, initialFeedback }: FeedbackControl
             onClick={() => handleFeedback('thumb_down')}
           />
         </Tooltip>
+
+        {showExport && (
+          <Button
+            className={styles.exportToPdfButton}
+            appearance="outline"
+            size="small"
+            icon={<ArrowDownload24Regular />}
+            onClick={handleExportPdf}
+          >
+            Export to PDF
+          </Button>
+        )}
       </div>
       <FeedbackDialog
         open={isReportDialogOpen}

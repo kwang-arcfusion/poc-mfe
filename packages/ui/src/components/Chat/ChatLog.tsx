@@ -2,9 +2,7 @@
 
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { makeStyles, shorthands, tokens } from '@fluentui/react-components';
-// ✨ 1. Import Type ที่เราต้องการใช้งาน
 import type { Block, TextBlock, ChatMessage } from '@arcfusion/types';
-// ✨ 2. เปลี่ยนชื่อ import เพื่อไม่ให้ซ้ำกับ Type
 import { ChatMessage as ChatMessageComponent } from './ChatMessage';
 import { AssetTabs } from './AssetTabs';
 import { AiStatusIndicator } from './AiStatusIndicator';
@@ -34,11 +32,15 @@ interface ChatLogProps {
   blocks: Block[];
   status: 'idle' | 'streaming' | 'completed' | 'error';
   currentAiTask: string | null;
-  // ✨ 3. รับ messages ทั้งหมดเข้ามาเพื่อค้นหา feedback
   rawMessages?: ChatMessage[];
 }
 
-export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask, rawMessages = [] }) => {
+export const ChatLog: React.FC<ChatLogProps> = ({
+  blocks,
+  status,
+  currentAiTask,
+  rawMessages = [],
+}) => {
   const styles = useStyles();
   const [isStopAutoScrollDown, setIsStopAutoScrollDown] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -100,10 +102,14 @@ export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask,
           const hasContent = turn.blocks.some(
             (b) => (b.kind === 'text' && b.content) || b.kind === 'assets'
           );
-
-          // ✨ 4. ค้นหา message และ feedback ที่ตรงกัน
-          const currentMessage = rawMessages.find(msg => msg.id === turnMessageId);
+          const currentMessage = rawMessages.find((msg) => msg.id === turnMessageId);
           const initialFeedback = currentMessage?.feedback;
+
+          const shouldShowExport =
+            !!currentMessage?.generated_sql && currentMessage?.chart_config?.series.length > 0;
+
+          // ✨ 1. ตรวจสอบว่าใน turn นี้มี block ชนิด 'assets' หรือไม่
+          const turnHasAssets = turn.blocks.some((b) => b.kind === 'assets');
 
           return (
             <div key={turnIndex} className={styles.aiTurnWrapper}>
@@ -123,8 +129,12 @@ export const ChatLog: React.FC<ChatLogProps> = ({ blocks, status, currentAiTask,
                 )
               )}
               {!(isStreaming && turnIndex === groupedTurns.length - 1) && hasContent && (
-                // ✨ 5. ส่ง initialFeedback ลงไปเป็น prop
-                <FeedbackControls messageId={turnMessageId} initialFeedback={initialFeedback} />
+                <FeedbackControls
+                  messageId={turnMessageId}
+                  initialFeedback={initialFeedback}
+                  showExport={shouldShowExport}
+                  hasAssets={turnHasAssets} // ✨ 2. ส่ง prop ใหม่ลงไป
+                />
               )}
             </div>
           );

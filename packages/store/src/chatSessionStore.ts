@@ -64,14 +64,21 @@ function transformConversationResponseToBlocks(response: ConversationResponse): 
         });
         hasAssets = true;
       }
-      if (message.chart_config && message.chart_config.series?.length > 0) {
-        assetGroup.charts.push({
-          id: `chart-${idCounter}`,
-          title: message.chart_config.title?.text || 'Chart',
-          config: message.chart_config,
-        });
-        hasAssets = true;
+
+      if (message.chart_config) {
+        const hasSeries = message.chart_config.series?.length > 0;
+        const hasGraphic = message.chart_config.graphic?.length > 0;
+
+        if (hasSeries || hasGraphic) {
+          assetGroup.charts.push({
+            id: `chart-${idCounter}`,
+            title: message.chart_config.title?.text || 'Chart',
+            config: message.chart_config,
+          });
+          hasAssets = true;
+        }
       }
+
       if (hasAssets) {
         blocks.push({
           kind: 'assets',
@@ -260,21 +267,26 @@ export const createChatSessionStore = () =>
               } else if ('chart_builder_result' in eventData) {
                 const chartConfig = eventData.chart_builder_result;
                 if (chartConfig) {
-                  set((state) => ({
-                    pendingAssets: {
-                      ...state.pendingAssets,
-                      charts: [
-                        ...state.pendingAssets.charts,
-                        {
-                          id: `chart-${Date.now()}`,
-                          title: chartConfig.title?.text || 'Chart',
-                          config: chartConfig,
-                        },
-                      ],
-                    },
-                    currentAiTask: 'creating chart',
-                  }));
-                  useChatHistoryStore.getState().startStreaming(newThreadId, 'creating chart');
+                  const hasSeries = chartConfig.series?.length > 0;
+                  const hasGraphic = chartConfig.graphic?.length > 0;
+
+                  if (hasSeries || hasGraphic) {
+                    set((state) => ({
+                      pendingAssets: {
+                        ...state.pendingAssets,
+                        charts: [
+                          ...state.pendingAssets.charts,
+                          {
+                            id: `chart-${Date.now()}`,
+                            title: chartConfig.title?.text || 'Chart',
+                            config: chartConfig,
+                          },
+                        ],
+                      },
+                      currentAiTask: 'creating chart',
+                    }));
+                    useChatHistoryStore.getState().startStreaming(newThreadId, 'creating chart');
+                  }
                 }
               }
 
@@ -324,8 +336,18 @@ export const createChatSessionStore = () =>
                 set((state) => {
                   const newBlocks = [...state.blocks];
                   const lastBlock = newBlocks[newBlocks.length - 1];
+                  const textContent = eventData.answer;
+
                   if (lastBlock?.kind === 'text' && lastBlock.sender === 'ai') {
-                    (lastBlock as TextBlock).content = eventData.answer;
+                    (lastBlock as TextBlock).content = textContent;
+                  } else {
+                    newBlocks.push({
+                      kind: 'text',
+                      id: Date.now(),
+                      sender: 'ai',
+                      content: textContent,
+                      messageId: get().streamingMessageId,
+                    });
                   }
                   return { blocks: newBlocks };
                 });
