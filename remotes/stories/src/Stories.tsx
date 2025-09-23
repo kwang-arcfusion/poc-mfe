@@ -14,22 +14,6 @@ interface FilterValues {
   metrics?: string[];
 }
 
-const allFilterOptions = {
-  channels: ['Facebook', 'Google', 'TikTok', 'Instagram'],
-  campaigns: ['Campaign Alpha', 'Campaign Beta', 'Campaign Charlie', 'Summer Sale'],
-  groupBy: ['Day', 'Week', 'Campaign', 'Ad Set'],
-  ads: ['Ad Creative 1', 'Ad Creative 2', 'Video Ad A', 'Carousel Ad B'],
-  metrics: ['Impressions', 'Clicks', 'CTR', 'Conversions'],
-};
-
-const initialFilters: FilterValues = {
-  channels: ['Facebook', 'Google', 'TikTok'],
-  campaigns: [],
-  groupBy: ['Day'],
-  ads: [],
-  metrics: [],
-};
-
 const useStyles = makeStyles({
   root: {
     display: 'flex',

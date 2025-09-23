@@ -11,10 +11,14 @@ import {
   tokens,
   Spinner,
 } from '@fluentui/react-components';
-import { Sparkle24Regular, TriangleDown16Filled } from '@fluentui/react-icons';
+import {
+  Sparkle24Regular,
+  TriangleDown16Filled,
+  ArrowDownload24Regular,
+} from '@fluentui/react-icons';
 import { useLayoutStore, ChatSessionProvider } from '@arcfusion/store';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { getStoryById } from '@arcfusion/client';
+import { getStoryById, getStoryExportPdfUrl } from '@arcfusion/client';
 import type { Story } from '@arcfusion/types';
 import { NarrativeCard } from './storyDetail/NarrativeCard';
 import { ActionsCard } from './storyDetail/ActionsCard';
@@ -22,23 +26,21 @@ import { EvidenceSection } from './storyDetail/EvidenceSection';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
 import { TechnicalDetails } from './storyDetail/TechnicalDetails';
 
-// ... useStyles (เหมือนเดิมทุกประการ)
 const useStyles = makeStyles({
   outer: {
     overflow: 'hidden',
     height: 'calc(100vh - 60px)',
     backgroundColor: tokens.colorNeutralBackground2,
   },
-  askAiButton: {
-    position: 'fixed',
-    top: '90px',
-    right: '38px',
-    zIndex: 10,
-  },
+  // askAiButton: {
+  //   position: 'fixed',
+  //   top: '90px',
+  //   right: '38px',
+  //   zIndex: 10,
+  // },
   splitGrid: {
     display: 'flex',
     height: '100%',
-    // paddingLeft: '12px',
     boxSizing: 'border-box',
   },
   leftPane: {
@@ -96,12 +98,16 @@ const useStyles = makeStyles({
     display: 'flex',
     gap: '12px',
     alignItems: 'center',
+    width: '100%',
   },
   chips: {
     display: 'flex',
     flexWrap: 'wrap',
     columnGap: '8px',
     rowGap: '8px',
+    alignItems: 'center',
+    width: '100%',
+    justifyContent: 'space-between',
   },
   mainGrid: {
     display: 'grid',
@@ -139,8 +145,8 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [aiOpen, setAiOpen] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
 
-  // ... useEffect ทั้งหมดเหมือนเดิม ...
   React.useEffect(() => {
     setMainOverflow('hidden');
     return () => {
@@ -176,8 +182,38 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
     fetchStory();
   }, [storyId]);
 
+  const handleExportStoryPdf = async () => {
+    if (!storyId || isExporting) {
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const url = getStoryExportPdfUrl(storyId);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch story PDF: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `story-${storyId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error('Export Story PDF failed:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const renderContent = () => {
-    // ... เนื้อหาของฟังก์ชันนี้เหมือนเดิมทุกประการ ...
     if (isLoading) {
       return (
         <div className={s.centerContainer}>
@@ -197,27 +233,49 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
       <section className={s.leftPane}>
         <div className={s.page}>
           <div className={s.heroTitleRow}>
-            <Title1 style={{ paddingRight: '90px' }}>{story.title}</Title1>
+            <Title1>{story.title}</Title1>
             <div className={s.detailRow}>
-              {topMover && (
-                <Badge
-                  icon={topMover.direction === 'down' ? <TriangleDown16Filled /> : undefined}
-                  appearance="tint"
-                  color={topMover.direction === 'down' ? 'danger' : 'success'}
-                  size="extra-large"
-                >
-                  <Text size={400} weight="semibold">
-                    {topMover.change.toFixed(2)}% vs prior period
-                  </Text>
-                </Badge>
-              )}
               <div className={s.chips} role="toolbar" aria-label="page context">
-                <Badge appearance="tint">
-                  <strong>{story.type.split('_')[0].toUpperCase()}</strong>
-                </Badge>
-                <Badge appearance="tint">
-                  Period: {new Date(story.created_at).toLocaleDateString()}
-                </Badge>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  {topMover && (
+                    <Badge
+                      icon={topMover.direction === 'down' ? <TriangleDown16Filled /> : undefined}
+                      appearance="tint"
+                      color={topMover.direction === 'down' ? 'danger' : 'success'}
+                      size="extra-large"
+                    >
+                      <Text size={400} weight="semibold">
+                        {topMover.change.toFixed(2)}% vs prior period
+                      </Text>
+                    </Badge>
+                  )}
+                  <Badge appearance="tint">
+                    <strong>{story.type.split('_')[0].toUpperCase()}</strong>
+                  </Badge>
+                  <Badge appearance="tint">
+                    Period: {new Date(story.created_at).toLocaleDateString()}
+                  </Badge>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <Button
+                    appearance="secondary"
+                    icon={isExporting ? <Spinner size="tiny" /> : <ArrowDownload24Regular />}
+                    onClick={handleExportStoryPdf}
+                    disabled={isExporting || isLoading}
+                  >
+                    {isExporting ? 'Exporting...' : 'Export to PDF'}
+                  </Button>
+                  {!aiOpen && (
+                    <Button
+                      // className={s.askAiButton}
+                      icon={<Sparkle24Regular />}
+                      onClick={() => setAiOpen(true)}
+                    >
+                      Ask AI
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -232,28 +290,14 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
     );
   };
 
-  // ✨✨✨✨✨✨ จุดแก้ไขหลักอยู่ตรงนี้ ✨✨✨✨✨✨
   return (
     <div className={s.outer}>
-      {!aiOpen && (
-        <Button
-          className={s.askAiButton}
-          icon={<Sparkle24Regular />}
-          size="large"
-          onClick={() => setAiOpen(true)}
-        >
-          Ask AI
-        </Button>
-      )}
-
-      {/* ใช้ PanelGroup ตลอดเวลาเพื่อรักษาโครงสร้าง DOM */}
       <div className={s.splitGrid}>
         <PanelGroup direction="horizontal">
           <Panel defaultSize={100} minSize={40}>
             {renderContent()}
           </Panel>
 
-          {/* Render Panel ที่สองและตัวลากก็ต่อเมื่อ aiOpen เป็น true */}
           {aiOpen && (
             <>
               <PanelResizeHandle className={s.resizeHandle} />

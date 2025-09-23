@@ -79,3 +79,10 @@ export interface OverviewApiResponse {
 export interface FilterValues {
   channels: string[];
 }
+
+export interface PaginatedSearchResponse {
+  items: OptionGroup[];
+  total: number;
+  page: number;
+  page_size: number;
+}

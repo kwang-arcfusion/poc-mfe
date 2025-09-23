@@ -17,7 +17,7 @@ type Metric = { label: string; value: number };
 type PerformanceCardData = {
   id: string;
   title: string;
-  campaignName: string;
+  campaign_name: string;
   growth?: number;
   metrics: Metric[];
 };
@@ -112,7 +112,7 @@ const formatMetricValue = (value: number): string => {
 };
 
 const PerformanceCard: React.FC<{
-  data: Omit<PerformanceCardData, 'campaignName'>;
+  data: Omit<PerformanceCardData, 'campaign_name'>;
   onClick?: () => void;
   isSelected?: boolean;
 }> = ({ data, onClick, isSelected }) => {
@@ -168,14 +168,17 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
       { id: string; title: string; metrics: { [label: string]: number } }
     >();
     data.forEach((offer) => {
-      if (!campaignAggregates.has(offer.campaignName)) {
-        campaignAggregates.set(offer.campaignName, {
-          id: offer.campaignName,
-          title: offer.campaignName,
+      // แก้ไขโดยเปลี่ยนไปอ่านจาก offer.campaign_name
+      const campaignKey = offer.campaign_name || 'Uncategorized';
+
+      if (!campaignAggregates.has(campaignKey)) {
+        campaignAggregates.set(campaignKey, {
+          id: campaignKey,
+          title: campaignKey,
           metrics: {},
         });
       }
-      const campaign = campaignAggregates.get(offer.campaignName)!;
+      const campaign = campaignAggregates.get(campaignKey)!;
       offer.metrics.forEach((metric) => {
         campaign.metrics[metric.label] = (campaign.metrics[metric.label] || 0) + metric.value;
       });
