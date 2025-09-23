@@ -47,6 +47,7 @@ const useStyles = makeStyles({
       ...shorthands.margin(0),
     },
     '& li': { marginBottom: tokens.spacingVerticalXS },
+    '& strong': { backgroundColor: tokens.colorPaletteYellowBackground1 },
   },
 });
 
