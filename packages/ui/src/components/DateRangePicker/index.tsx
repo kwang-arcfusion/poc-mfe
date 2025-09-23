@@ -1,4 +1,3 @@
-// packages/ui/src/components/DateRangePicker/index.tsx
 import * as React from 'react';
 import {
   makeStyles,
@@ -19,9 +18,9 @@ import {
 } from '@fluentui/react-icons';
 import { DatePicker } from '@fluentui/react-datepicker-compat';
 import { getDatePresets, getModeFromValue, type Mode } from './dateUtils';
-import type { DateRange } from '@arcfusion/types'; // <-- UPDATED IMPORT
+import type { DateRange } from '@arcfusion/types';
 
-export type { DateRange }; // <-- Re-export for convenience
+export type { DateRange };
 
 export type DateRangePickerProps = {
   value?: DateRange;
@@ -34,6 +33,7 @@ export type DateRangePickerProps = {
   disabled?: boolean;
   size?: 'medium' | 'small';
   className?: string;
+  isInvalid?: boolean; // <-- Added this prop
 };
 
 const MODE_LABELS: Record<Mode, string> = {
@@ -65,6 +65,12 @@ const useStyles = makeStyles({
     ':focus-within': {
       outline: `2px solid ${tokens.colorStrokeFocus2}`,
       outlineOffset: '1px',
+    },
+  },
+  invalidGroup: {
+    ...shorthands.borderColor(`${tokens.colorPaletteRedBorderActive} !important`),
+    ':focus-within': {
+      outlineColor: tokens.colorPaletteRedBorderActive,
     },
   },
   field: {},
@@ -146,8 +152,6 @@ function useControllable<T>(controlled: T | undefined, defaultValue: T, onChange
   return [value, set] as const;
 }
 
-// ❌ เราจะไม่ใช้ฟังก์ชัน patchDatePickerPopupTheme เดิมอีกต่อไป ❌
-
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   value: valueProp,
   defaultValue = { start: null, end: null },
@@ -159,6 +163,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   disabled,
   size = 'medium',
   className,
+  isInvalid,
 }) => {
   const styles = useStyles();
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -326,7 +331,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   return (
     <div ref={rootRef} className={mergeClasses(styles.root, className)}>
-      <div className={styles.group} aria-label="Date range filter" role="group">
+      <div
+        className={mergeClasses(styles.group, isInvalid && styles.invalidGroup)}
+        aria-label="Date range filter"
+        role="group"
+      >
         <Menu open={isMenuOpen} onOpenChange={(_, data) => setIsMenuOpen(data.open)}>
           <MenuTrigger>
             <Button

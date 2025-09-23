@@ -6,18 +6,15 @@ import {
   tokens,
   Text,
   Button,
-  Menu,
-  MenuItem,
-  MenuList,
-  MenuPopover,
-  MenuTrigger,
-  SplitButton,
-  ProgressBar, // ✨ 1. นำเข้า ProgressBar
+  ProgressBar,
 } from '@fluentui/react-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLayoutStore } from '@arcfusion/store';
 import { DateRangePicker, MultiSelect } from '@arcfusion/ui';
-import { Filter28Filled, MoreHorizontal24Filled } from '@fluentui/react-icons';
+// --- START EDIT 1: Import getModeFromValue ---
+import { getModeFromValue } from '@arcfusion/ui';
+// --- END EDIT 1 ---
+import { Filter28Filled } from '@fluentui/react-icons';
 import { OverallPerformance } from './components/OverallPerformance';
 import { DailyPerformanceChart } from './components/DailyPerformanceChart';
 import { ByChannelTable } from './components/ByChannelTable';
@@ -149,6 +146,11 @@ export default function Overview() {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+  // --- START EDIT 2: ปรับปรุง Logic การตรวจสอบ ---
+  const mode = getModeFromValue(pendingDateRange);
+  const isDateInvalid = !pendingDateRange.start || (mode === 'dateRange' && !pendingDateRange.end);
+  // --- END EDIT 2 ---
+
   useEffect(() => {
     setMainOverflow('hidden');
     initialize();
@@ -158,7 +160,6 @@ export default function Overview() {
   }, []);
 
   useEffect(() => {
-    // Initialize with empty search, but subsequent searches depend on user input
     if (debouncedSearchTerm !== undefined) {
       searchOffers(debouncedSearchTerm);
     }
@@ -167,37 +168,25 @@ export default function Overview() {
   const FilterActionButton = () => {
     if (isDirty) {
       return (
-        <Menu positioning="below-end">
-          <MenuTrigger>
-            {(triggerProps) => (
-              <SplitButton
-                appearance="primary"
-                icon={<Filter28Filled />}
-                menuButton={triggerProps}
-                primaryActionButton={{
-                  onClick: applyFilters,
-                  className: styles.applyButton,
-                }}
-              >
-                Apply
-              </SplitButton>
-            )}
-          </MenuTrigger>
-
-          <MenuPopover className={styles.menuPopover}>
-            <MenuList>
-              <MenuItem onClick={applyFilters}>Apply</MenuItem>
-              <MenuItem onClick={cancelChanges}>Undo</MenuItem>
-            </MenuList>
-          </MenuPopover>
-        </Menu>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button appearance="secondary" onClick={cancelChanges}>
+            Undo
+          </Button>
+          <Button
+            appearance="primary"
+            icon={<Filter28Filled />}
+            onClick={applyFilters}
+            disabled={isLoading || isDateInvalid}
+          >
+            Apply
+          </Button>
+        </div>
       );
     }
-    return null; // Return null when not dirty
+    return null;
   };
 
   const renderLeftPanelContent = () => {
-    // ✨ 3. ปรับปรุง Logic การแสดงผลทั้งหมดในฟังก์ชันนี้
     if (isLoading && !overviewData) {
       return (
         <div className={styles.loadingContainer}>
@@ -214,7 +203,7 @@ export default function Overview() {
           </Text>
         </div>
       );
-    } // กรณีไม่มีข้อมูล
+    }
 
     if (!overviewData) {
       return (
@@ -231,7 +220,6 @@ export default function Overview() {
             <ProgressBar />
           </div>
         )}
-
         <div className={styles.contentContainer}>
           <OverallPerformance
             cards={overviewData.cards}
@@ -254,19 +242,24 @@ export default function Overview() {
           aria-label="Filters are up to date"
           disabled
         />
-        <DateRangePicker value={pendingDateRange} onChange={setPendingDateRange} />
-
+        <DateRangePicker
+          value={pendingDateRange}
+          onChange={setPendingDateRange}
+          isInvalid={isDateInvalid}
+        />
         <MultiSelect
           label="Offers"
           maxWidth={92}
           min={1}
           options={availableCampaignOffers}
           selectedOptions={pendingOfferFilters}
-          onSelectionChange={setPendingOfferFilters}
+          onSelectionChange={(newSelection) => {
+            const prefixedSelection = newSelection.map((id) => `offer_group:${id}`);
+            setPendingOfferFilters(prefixedSelection);
+          }}
           onSearchChange={setSearchTerm}
           showSelectAll
         />
-
         <MultiSelect
           min={1}
           label="Channels"
@@ -278,7 +271,6 @@ export default function Overview() {
         <div style={{ flexGrow: 1 }} />
         <FilterActionButton />
       </header>
-
       <div className={styles.outer}>
         <div className={styles.splitGrid}>
           {isPanelOpen && isRightPanelVisible ? (

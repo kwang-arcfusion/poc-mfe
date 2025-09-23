@@ -66,19 +66,36 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
     try {
       const initialDateRange = getDatePresets().thisWeek;
 
-      const [options, searchResponse] = await Promise.all([
+      // API calls ยังเหมือนเดิม
+      const [optionsResponse, searchResponse] = await Promise.all([
         fetchAnalyticsOptions(),
         searchCampaignsAndOffers(initialDateRange, ''),
       ]);
 
       const campaignOffers = searchResponse.items;
 
-      const allChannelOptions = options.dimensions.find((d) => d.key === 'channel')?.options || [];
-      const allChannelIds = allChannelOptions.map((o) => o.key);
+      // --- START EDIT ---
+      // 1. สร้าง Set เพื่อเก็บชื่อ Channel ที่ไม่ซ้ำกันจาก Offer ทั้งหมดที่ได้มา
+      const uniqueChannels = new Set<string>();
+      campaignOffers.forEach((group) => {
+        group.children.forEach((offer) => {
+          offer.channels?.forEach((channel) => {
+            uniqueChannels.add(channel);
+          });
+        });
+      });
+
+      // 2. แปลง Set เป็นโครงสร้างที่ MultiSelect ต้องการ
+      const dynamicChannelOptions = Array.from(uniqueChannels).map((channel) => ({
+        id: channel,
+        name: channel,
+      }));
+
+      const allChannelIds = Array.from(uniqueChannels);
+      // --- END EDIT ---
 
       const newOfferChannelMap: OfferChannelMap = {};
       const allOfferFilterStrings: string[] = [];
-
       campaignOffers.forEach((group: OptionGroup) => {
         group.children.forEach((child: OptionItem) => {
           if (child.channels) {
@@ -92,13 +109,15 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
         pendingDateRange: initialDateRange,
         availableCampaignOffers: campaignOffers,
         offerChannelMap: newOfferChannelMap,
+        // 3. ใช้ตัวเลือก Channel ที่สร้างขึ้นมาใหม่แบบ dynamic
         availableChannels: [
           {
             name: 'Channels',
-            children: allChannelOptions.map((o) => ({ id: o.key, name: o.label })),
+            children: dynamicChannelOptions,
           },
         ],
-        chartMetricKey: options.metrics.length > 0 ? options.metrics[0].key : '',
+        chartMetricKey: optionsResponse.metrics.length > 0 ? optionsResponse.metrics[0].key : '',
+        // 4. ตั้งค่า Filter เริ่มต้นให้เลือกทุก Channel ที่เจอ
         pendingOfferFilters: allOfferFilterStrings,
         pendingChannelFilters: allChannelIds,
         isDirty: true,
@@ -141,38 +160,116 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
       pendingDateRange: range,
       isDirty: true,
       availableCampaignOffers: [],
-      pendingOfferFilters: [], // ล้างค่าที่เลือกไว้ก่อน
+      pendingOfferFilters: [],
       focusedOfferId: null,
     });
 
-    // ดึงข้อมูล Offer ใหม่สำหรับช่วงวันที่ที่เลือก
+    // ดึงข้อมูล Offer ใหม่สำหรับช่วงวันที่ที่เลือก (เหมือนเดิม)
     await get().searchOffers('');
 
-    // --- ส่วนที่เพิ่มเข้ามา ---
-    // หลังจากดึงข้อมูล Offer ใหม่แล้ว ให้อ่านค่าแล้วตั้งเป็น Filter ที่เลือกไว้เลย
-    const { availableCampaignOffers } = get();
+    // --- START EDIT ---
+    const { availableCampaignOffers, offerChannelMap } = get();
+
+    // 1. คำนวณ Offer filters ใหม่จาก Offer ที่เพิ่งดึงมา
     const allOfferFilterStrings: string[] = [];
     availableCampaignOffers.forEach((group: OptionGroup) => {
       group.children.forEach((child: OptionItem) => {
-        // ใช้ `offer_group:` เพื่อให้ตรงกับ format ที่ MultiSelect component สร้าง
         allOfferFilterStrings.push(`offer_group:${child.id}`);
       });
     });
 
-    set({ pendingOfferFilters: allOfferFilterStrings });
+    // 2. คำนวณ Channel ที่เกี่ยวข้องทั้งหมดจาก Offer ที่เพิ่งดึงมา
+    const availableChannelsForSelection = new Set<string>();
+    availableCampaignOffers.forEach((group) => {
+      group.children.forEach((offer) => {
+        offer.channels?.forEach((channel) => {
+          availableChannelsForSelection.add(channel);
+        });
+      });
+    });
+
+    const newChannelFilters = Array.from(availableChannelsForSelection);
+
+    // 3. สร้างโครงสร้าง OptionGroup สำหรับ Channel dropdown ขึ้นมาใหม่
+    const newAvailableChannels = [
+      {
+        name: 'Channels',
+        children: newChannelFilters.map((channel) => ({ id: channel, name: channel })),
+      },
+    ];
+
+    // 4. อัปเดต State ทั้งหมดในครั้งเดียว
+    set({
+      pendingOfferFilters: allOfferFilterStrings,
+      availableChannels: newAvailableChannels,
+      pendingChannelFilters: newChannelFilters,
+    });
+    // --- END EDIT ---
   },
 
   setPendingOfferFilters: (selection: string[]) => {
+    const { offerChannelMap } = get();
+
+    // 1. รวบรวม Channel ทั้งหมดที่ไม่ซ้ำกัน จาก Offer ที่ถูกเลือกใหม่ (selection)
+    const availableChannelsForSelection = new Set<string>();
+    selection.forEach((offerFilterString) => {
+      const offerId = offerFilterString.split(':').pop();
+      if (offerId && offerChannelMap[offerId]) {
+        offerChannelMap[offerId].forEach((channel) => availableChannelsForSelection.add(channel));
+      }
+    });
+
+    const newChannelFilters = Array.from(availableChannelsForSelection);
+
+    // --- START EDIT ---
+    // 2. สร้างโครงสร้าง OptionGroup สำหรับ availableChannels ขึ้นมาใหม่แบบ Dynamic
+    const newAvailableChannels = [
+      {
+        name: 'Channels',
+        children: newChannelFilters.map((channel) => ({ id: channel, name: channel })),
+      },
+    ];
+    // --- END EDIT ---
+
     set({
       pendingOfferFilters: selection,
+      // 3. อัปเดตทั้งสอง State พร้อมกัน
+      availableChannels: newAvailableChannels, // <-- อัปเดตตัวเลือกทั้งหมดใน dropdown
+      pendingChannelFilters: newChannelFilters, // <-- อัปเดตตัวที่ถูกติ๊ก (ให้เลือกทั้งหมดที่ใช้ได้)
       isDirty: true,
       focusedOfferId: null,
     });
   },
 
   setPendingChannelFilters: (selection: string[]) => {
+    const { offerChannelMap, pendingOfferFilters } = get();
+
+    // --- เพิ่ม console.log ตรงนี้ ---
+    console.log('--- Channel Filter Changed ---');
+    console.log('New Channels Selected:', selection);
+    console.log('Offers BEFORE filtering:', pendingOfferFilters);
+    // -----------------------------
+
+    const newOfferFilters = pendingOfferFilters.filter((offerFilterString) => {
+      const offerId = offerFilterString.split(':').pop();
+      if (!offerId) return false;
+      const offerChannels = offerChannelMap[offerId];
+      if (!offerChannels || offerChannels.length === 0) {
+        return false;
+      }
+      return offerChannels.some((channel) => selection.includes(channel));
+    });
+
+    const finalOfferFilters = newOfferFilters.length > 0 ? newOfferFilters : [];
+
+    // --- เพิ่ม console.log ตรงนี้ ---
+    console.log('Offers AFTER filtering:', finalOfferFilters);
+    console.log('-----------------------------');
+    // -----------------------------
+
     set({
       pendingChannelFilters: selection,
+      pendingOfferFilters: finalOfferFilters,
       isDirty: true,
       focusedOfferId: null,
     });
@@ -183,9 +280,33 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   },
 
   setFocusedOfferId: (offerId: string | null) => {
-    const { focusedOfferId: currentFocusedId, applyFilters } = get();
+    const {
+      focusedOfferId: currentFocusedId,
+      offerChannelMap, // <-- 1. ดึง offerChannelMap จาก state
+      availableChannels, // <-- 2. ดึง availableChannels มาเพื่อหา all channel ids
+      applyFilters,
+    } = get();
+
     const newFocusedId = offerId && offerId === currentFocusedId ? null : offerId;
-    set({ focusedOfferId: newFocusedId });
+
+    let newChannelFilters = get().pendingChannelFilters; // <-- ใช้ค่าเดิมเป็น default
+
+    if (newFocusedId) {
+      const validChannelsForOffer = offerChannelMap[newFocusedId] || [];
+
+      if (validChannelsForOffer.length > 0) {
+        newChannelFilters = validChannelsForOffer;
+      }
+    } else {
+      const allChannelIds = availableChannels.flatMap((g) => g.children.map((c) => c.id));
+      newChannelFilters = allChannelIds;
+    }
+
+    set({
+      focusedOfferId: newFocusedId,
+      pendingChannelFilters: newChannelFilters,
+    });
+
     applyFilters();
   },
 

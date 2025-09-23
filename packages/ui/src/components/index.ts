@@ -15,7 +15,7 @@ export type { UserMenuProps } from './UserMenu';
 
 // ✨ Export getDatePresets เพื่อให้ store เรียกใช้ได้
 export { DateRangePicker } from './DateRangePicker';
-export { getDatePresets } from './DateRangePicker/dateUtils';
+export { getDatePresets, getModeFromValue } from './DateRangePicker/dateUtils';
 export type { DateRange } from './DateRangePicker';
 
 export * from './MultiSelect';
