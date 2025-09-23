@@ -169,7 +169,8 @@ export const fetchPerformanceSummary = (filters: {
 export const fetchOverviewData = (
   dateRange: DateRange,
   channels: string[],
-  offerFilters: string[]
+  offerFilters: string[],
+  compare?: string
 ): Promise<OverviewApiResponse> => {
   const params = new URLSearchParams({
     start: formatDateForApi(dateRange.start),
@@ -178,6 +179,9 @@ export const fetchOverviewData = (
   });
   if (offerFilters.length > 0) {
     offerFilters.forEach((filter) => params.append('filter', filter));
+  }
+  if (compare) {
+    params.append('compare', compare);
   }
   return apiFetch(`/v1/analytics/overview?${params.toString()}`);
 };

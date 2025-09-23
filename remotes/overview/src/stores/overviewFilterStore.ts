@@ -196,9 +196,15 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
       : pendingOfferFilters;
 
     set({ isLoading: true, error: null });
+
     try {
       const [overviewData, rightPanelData] = await Promise.all([
-        fetchOverviewData(pendingDateRange, pendingChannelFilters, activeOfferFilters),
+        fetchOverviewData(
+          pendingDateRange,
+          pendingChannelFilters,
+          activeOfferFilters,
+          'prev_period'
+        ),
         fetchPerformanceSummary({
           dateRange: pendingDateRange,
           offer_ids: pendingOfferFilters,
