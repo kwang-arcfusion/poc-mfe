@@ -13,15 +13,15 @@ import { CardData } from '../types';
 
 const useStyles = makeStyles({
   card: {
-    minWidth: '140px',
     display: 'flex',
+    gap: '8px',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    ...shorthands.gap(tokens.spacingVerticalS),
-    height: '100px',
     cursor: 'pointer',
     ...shorthands.border('2px', 'solid', 'transparent'),
     ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalL),
+    ...shorthands.borderColor(tokens.colorNeutralStroke2),
+    borderRadius: tokens.borderRadiusMedium,
     ':hover': {
       backgroundColor: tokens.colorNeutralBackground1Hover,
       ...shorthands.borderColor(tokens.colorNeutralStroke1Hover),
@@ -73,14 +73,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({ card, onClick, isSelecte
   const isPositive = changePercent >= 0;
 
   return (
-    <Card
+    <div
       className={mergeClasses(styles.card, isSelected && styles.selected)}
       onClick={() => onClick(card.key)}
     >
       <div className={styles.header}>
         <Text>{card.label}</Text>
       </div>
-      <div>
+      <div style={{ minWidth: '110px' }}>
         <Text as="p" className={styles.value}>
           {formatValue(card.value, card.format)}
         </Text>
@@ -89,6 +89,6 @@ export const MetricCard: React.FC<MetricCardProps> = ({ card, onClick, isSelecte
           <Text weight="semibold">{changePercent.toFixed(1)}%</Text>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };

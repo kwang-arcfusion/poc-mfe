@@ -67,11 +67,47 @@ export function FeedbackControls({
   }
 
   const handleFeedback = async (newFeedback: FeedbackType) => {
-    // ... โค้ดส่วนนี้เหมือนเดิม ...
+    if (isSubmitting) return;
+
+    if (newFeedback === 'thumb_down' && feedbackState !== 'thumb_down') {
+      setIsReportDialogOpen(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (feedbackState === newFeedback) {
+        await deleteFeedback(messageId);
+        setFeedbackState(null);
+      } else {
+        await submitFeedback({
+          message_id: messageId,
+          feedback_type: newFeedback,
+        });
+        setFeedbackState(newFeedback);
+      }
+    } catch (error) {
+      console.error('Failed to submit feedback:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReportSubmit = async (reasons: string[], details: string) => {
-    // ... โค้ดส่วนนี้เหมือนเดิม ...
+    setIsSubmitting(true);
+    try {
+      await submitFeedback({
+        message_id: messageId,
+        feedback_type: 'thumb_down',
+        reason: reasons.join(', '),
+        details: details,
+      });
+      setFeedbackState('thumb_down');
+    } catch (error) {
+      console.error('Failed to submit report:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // 5. แทนที่ handleExportPdf ด้วย Logic ใหม่ทั้งหมด

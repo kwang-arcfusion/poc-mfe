@@ -9,10 +9,9 @@ const useStyles = makeStyles({
     display: 'flex',
     flexWrap: 'nowrap',
     overflowX: 'auto',
-    ...shorthands.gap('16px'),
+    ...shorthands.gap('10px'),
     marginTop: '12px',
     paddingBottom: '16px',
-    scrollbarWidth: 'thin',
     '&::-webkit-scrollbar': {
       height: '8px',
     },
