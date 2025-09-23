@@ -79,6 +79,8 @@ const useStyles = makeStyles({
   },
   tabPanelPad: { ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS) },
   codeBox: {
+    maxHeight: '400px',
+    overflow: 'auto',
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
     backgroundColor: tokens.colorNeutralBackground3,
@@ -88,8 +90,20 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeBase200,
     overflowX: 'auto',
     whiteSpace: 'pre',
+  }, // ✨ ---- จุดที่แก้ไข ---- ✨
+  tableWrap: {
+    overflow: 'auto', // ใช้ 'auto' เพื่อให้ scrollbar แสดงผลทั้งแนวตั้งและแนวนอนเมื่อจำเป็น
+    maxHeight: '400px', // กำหนดความสูงสูงสุดของตาราง
+    // ตกแต่ง scrollbar ให้สวยงาม (optional)
+    '&::-webkit-scrollbar': {
+      width: '8px',
+      height: '8px',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: tokens.colorNeutralStroke2,
+      ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    },
   },
-  tableWrap: { overflowX: 'auto' },
 });
 
 interface SqlTableTabsProps {
@@ -148,8 +162,15 @@ const TabContent = ({
   return (
     <div className={styles.tabPanelPad}>
       <div className={styles.tableWrap}>
-        <table style={{ width: '100%' }}>
-          <thead>
+        <table style={{ width: '100%', position: 'relative' }}>
+          <thead
+            style={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 10,
+              backgroundColor: tokens.colorNeutralBackground2,
+            }}
+          >
             <tr>
               {dataframe.columns.map((c: string) => (
                 <th key={c} style={{ textAlign: 'left', padding: '6px 10px' }}>
