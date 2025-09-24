@@ -31,6 +31,11 @@ import ReactECharts from 'echarts-for-react';
 import { useThemeStore } from '@arcfusion/store';
 
 const useStyles = makeStyles({
+  chartWrap: {
+    overflowX: 'auto',
+    overflowY: 'hidden', // ป้องกันการ scroll แนวตั้งซ้อนกัน
+    paddingBottom: '15px', // เพิ่มพื้นที่เล็กน้อยให้ scrollbar ไม่ชิดขอบ
+  },
   assetGroup: {
     ...shorthands.border('2px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
@@ -109,7 +114,11 @@ const useStyles = makeStyles({
 interface SqlTableTabsProps {
   sql: SqlAsset;
   dataframe?: DataframeAsset;
-  chart?: ChartAsset & { processedConfig: Record<string, any> };
+  chart?: ChartAsset & {
+    processedConfig: Record<string, any>;
+    dynamicHeight?: number;
+    dynamicWidth?: number;
+  };
   messageId?: string;
 }
 
@@ -119,12 +128,16 @@ const TabContent = ({
   dataframe,
   chart,
   theme,
+  dynamicHeight,
+  dynamicWidth,
 }: {
   activeTab: TabValue;
   sql: SqlAsset;
   dataframe?: DataframeAsset;
   chart?: ChartAsset & { processedConfig: Record<string, any> };
   theme: 'light' | 'dark';
+  dynamicHeight?: number;
+  dynamicWidth?: number;
 }) => {
   const styles = useStyles();
 
@@ -137,17 +150,22 @@ const TabContent = ({
   }
 
   if (activeTab === 'chart' && chart) {
-    return (
-      <div className={styles.tabPanelPad}>
-        <ReactECharts
-          option={chart.processedConfig}
-          theme={theme}
-          style={{ height: '100%', minHeight: '400px', width: '100%' }}
-          notMerge={true}
-          lazyUpdate={true}
-        />
-      </div>
+    const chartElement = (
+      <ReactECharts
+        option={chart.processedConfig}
+        theme={theme}
+        style={{
+          height: dynamicHeight ? `${dynamicHeight}px` : '400px',
+          width: dynamicWidth ? `${dynamicWidth}px` : '100%',
+          minWidth: '100%',
+        }}
+        notMerge={true}
+        lazyUpdate={true}
+      />
     );
+
+    // ✨ [IMPROVEMENT] เพิ่ม scrollbar เฉพาะเมื่อมี dynamicWidth เท่านั้น
+    return dynamicWidth ? <div className={styles.chartWrap}>{chartElement}</div> : chartElement;
   }
 
   if (!dataframe || dataframe.rows.length === 0) {
@@ -168,7 +186,7 @@ const TabContent = ({
               position: 'sticky',
               top: 0,
               zIndex: 10,
-              backgroundColor: tokens.colorNeutralBackground2,
+              backgroundColor: tokens.colorNeutralBackground3,
             }}
           >
             <tr>
@@ -323,6 +341,8 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
           dataframe={dataframe}
           chart={chart}
           theme={theme}
+          dynamicHeight={chart?.dynamicHeight}
+          dynamicWidth={chart?.dynamicWidth}
         />
       </div>
 
@@ -356,6 +376,8 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
                 dataframe={dataframe}
                 chart={chart}
                 theme={theme}
+                dynamicHeight={chart?.dynamicHeight}
+                dynamicWidth={chart?.dynamicWidth}
               />
             </div>
           </DialogBody>
