@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+// remotes/overview/src/Overview.tsx
+import React, { useEffect, useState, useCallback, useMemo } from 'react'; // ✨ 1. เพิ่ม useMemo
 import {
   makeStyles,
   shorthands,
@@ -11,9 +12,7 @@ import {
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useLayoutStore } from '@arcfusion/store';
 import { DateRangePicker, MultiSelect } from '@arcfusion/ui';
-// --- START EDIT 1: Import getModeFromValue ---
 import { getModeFromValue } from '@arcfusion/ui';
-// --- END EDIT 1 ---
 import { ArrowCounterclockwiseFilled, Filter28Filled } from '@fluentui/react-icons';
 import { OverallPerformance } from './components/OverallPerformance';
 import { DailyPerformanceChart } from './components/DailyPerformanceChart';
@@ -101,6 +100,13 @@ const useStyles = makeStyles({
   loadingBar: {},
 });
 
+// ✨ 2. กำหนด Type สำหรับ State การ Sort
+type SortDirection = 'ascending' | 'descending';
+interface SortState {
+  sortColumn: string;
+  sortDirection: SortDirection;
+}
+
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
   useEffect(() => {
@@ -145,11 +151,11 @@ export default function Overview() {
   const [isPanelOpen, setIsPanelOpen] = React.useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  // ✨ 3. เพิ่ม State สำหรับการ Sort
+  const [sortState, setSortState] = useState<SortState | null>(null);
 
-  // --- START EDIT 2: ปรับปรุง Logic การตรวจสอบ ---
   const mode = getModeFromValue(pendingDateRange);
   const isDateInvalid = !pendingDateRange.start || (mode === 'dateRange' && !pendingDateRange.end);
-  // --- END EDIT 2 ---
 
   useEffect(() => {
     setMainOverflow('hidden');
@@ -164,6 +170,53 @@ export default function Overview() {
       searchOffers(debouncedSearchTerm);
     }
   }, [debouncedSearchTerm, searchOffers]);
+
+  // ✨ 4. สร้างฟังก์ชันสำหรับจัดการการ Sort
+  const handleSort = (columnKey: string) => {
+    setSortState((currentState) => {
+      if (currentState?.sortColumn === columnKey) {
+        // ถ้าคลิกคอลัมน์เดิม ให้สลับทิศทาง
+        return {
+          sortColumn: columnKey,
+          sortDirection: currentState.sortDirection === 'ascending' ? 'descending' : 'ascending',
+        };
+      }
+      // ถ้าคลิกคอลัมน์ใหม่ ให้เริ่ม sort แบบ ascending
+      return {
+        sortColumn: columnKey,
+        sortDirection: 'ascending',
+      };
+    });
+  };
+
+  // ✨ 5. ใช้ useMemo เพื่อเรียงข้อมูลเมื่อ data หรือ sortState เปลี่ยนแปลง
+  const sortedTableData = useMemo(() => {
+    const table = overviewData?.tables?.[0];
+    if (!table || !sortState) {
+      return table; // คืนค่าเดิมถ้าไม่มีข้อมูลหรือยังไม่มีการ sort
+    }
+
+    const sortedRows = [...table.rows].sort((a, b) => {
+      const aValue = a[sortState.sortColumn];
+      const bValue = b[sortState.sortColumn];
+
+      // ตรวจสอบว่าเป็นตัวเลขหรือไม่
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortState.sortDirection === 'ascending' ? aValue - bValue : bValue - aValue;
+      }
+
+      // ถ้าเป็น String
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortState.sortDirection === 'ascending'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      return 0;
+    });
+
+    return { ...table, rows: sortedRows };
+  }, [overviewData, sortState]);
 
   const FilterActionButton = () => {
     if (isDirty) {
@@ -229,7 +282,10 @@ export default function Overview() {
             selectedMetricKey={chartMetricKey}
           />
           <DailyPerformanceChart data={overviewData.series} metricKey={chartMetricKey} />
-          {overviewData.tables[0] && <ByChannelTable items={overviewData.tables[0]} />}
+          {/* ✨ 6. ส่งข้อมูลที่ sort แล้ว และ props ที่จำเป็นลงไป */}
+          {sortedTableData && (
+            <ByChannelTable items={sortedTableData} sortState={sortState} onSort={handleSort} />
+          )}
         </div>
       </>
     );
