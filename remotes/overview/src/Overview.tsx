@@ -14,7 +14,7 @@ import { DateRangePicker, MultiSelect } from '@arcfusion/ui';
 // --- START EDIT 1: Import getModeFromValue ---
 import { getModeFromValue } from '@arcfusion/ui';
 // --- END EDIT 1 ---
-import { Filter28Filled } from '@fluentui/react-icons';
+import { ArrowCounterclockwiseFilled, Filter28Filled } from '@fluentui/react-icons';
 import { OverallPerformance } from './components/OverallPerformance';
 import { DailyPerformanceChart } from './components/DailyPerformanceChart';
 import { ByChannelTable } from './components/ByChannelTable';
@@ -169,9 +169,11 @@ export default function Overview() {
     if (isDirty) {
       return (
         <div style={{ display: 'flex', gap: '8px' }}>
-          <Button appearance="secondary" onClick={cancelChanges}>
-            Undo
-          </Button>
+          <Button
+            appearance="secondary"
+            onClick={cancelChanges}
+            icon={<ArrowCounterclockwiseFilled />}
+          ></Button>
           <Button
             appearance="primary"
             icon={<Filter28Filled />}
@@ -258,7 +260,6 @@ export default function Overview() {
             setPendingOfferFilters(prefixedSelection);
           }}
           onSearchChange={setSearchTerm}
-          showSelectAll
         />
         <MultiSelect
           min={1}
@@ -267,6 +268,7 @@ export default function Overview() {
           selectedOptions={pendingChannelFilters}
           onSelectionChange={setPendingChannelFilters}
           showSelectAll
+          showSelectAllByName={false}
         />
         <div style={{ flexGrow: 1 }} />
         <FilterActionButton />
