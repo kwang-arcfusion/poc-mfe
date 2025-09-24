@@ -1,5 +1,5 @@
 // hosts/knowesis/src/App.tsx
-import React, { Suspense, useEffect, useRef } from 'react'; // ✨ 1. Import useRef
+import React, { Suspense, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, BrowserRouter, useNavigate } from 'react-router-dom';
 import { withAuthenticationRequired } from '@auth0/auth0-react';
 import {
@@ -22,7 +22,7 @@ import { useGlobalStyles, arcusionLightTheme, arcusionDarkTheme, ASSETS } from '
 import { AppLayout } from './layouts/AppLayout';
 
 // Import all Pages
-import { HomePage } from './pages/HomePage';
+// import { HomePage } from './pages/HomePage'; // 🗑️ ลบออก
 import { AskAiPage } from './pages/AskAiPage';
 import { StoriesPage } from './pages/StoriesPage';
 import { OverviewPage } from './pages/OverviewPage';
@@ -109,12 +109,12 @@ function ThemedApp() {
       <Suspense fallback={<div style={{ padding: '24px' }}>Loading Page...</div>}>
         <Routes>
           <Route element={<ProtectedApp />}>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<Navigate to="/overview" replace />} />
             <Route path="/ask_ai/:chatId?" element={<AskAiPage />} />
             <Route path="/stories" element={<StoriesPage />} />
             <Route path="/stories/:storyId" element={<StoryDetailPage />} />
             <Route path="/overview" element={<OverviewPage />} />
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<Navigate to="/overview" replace />} />
           </Route>
         </Routes>
       </Suspense>

@@ -1,9 +1,9 @@
-// hosts/knowesis/configs/remotes.js
+// hosts/knowesis/remotes.config.js
 
 // 1. Read values directly from process.env
 const remoteUrls = {
   ask_ai: process.env.REMOTE_URL_ASK_AI,
-  home: process.env.REMOTE_URL_HOME,
+  // home: process.env.REMOTE_URL_HOME, // 🗑️ ลบออก
   stories: process.env.REMOTE_URL_STORIES,
   overview: process.env.REMOTE_URL_OVERVIEW,
 };
