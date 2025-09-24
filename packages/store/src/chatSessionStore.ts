@@ -10,7 +10,7 @@ import type {
   Block,
   TextBlock,
   AssetsBlock,
-  ChatMessage,
+  ChatMessage, // 👈 1. Import ChatMessage
 } from '@arcfusion/types';
 
 type StreamStatus = 'idle' | 'streaming' | 'completed' | 'error';
@@ -169,7 +169,13 @@ export const createChatSessionStore = () =>
         set(initialState);
       }
 
-      const newThreadId = currentThreadId || uuidv4();
+      const newThreadId = currentThreadId || uuidv4(); // 👈 2. สร้างข้อความ User เพื่อเตรียมเพิ่มเข้า rawMessages
+
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: text,
+      };
 
       set((state) => ({
         threadId: newThreadId,
@@ -178,7 +184,8 @@ export const createChatSessionStore = () =>
         currentAiTask: 'thinking',
         error: null,
         activePrompt: state.activePrompt || text,
-        blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }],
+        blocks: [...state.blocks, { kind: 'text', id: Date.now(), sender: 'user', content: text }], // 👈 3. เพิ่มข้อความ User เข้าไปใน State
+        rawMessages: [...state.rawMessages, userMessage],
         pendingAssets: initialPendingAssets(),
         streamMode: 'default',
       }));
@@ -220,17 +227,25 @@ export const createChatSessionStore = () =>
               const eventData: StreamedEvent & {
                 message_id?: string;
                 response_type?: string;
-              } = JSON.parse(part.trim());
+              } = JSON.parse(part.trim()); // 👈 4. เมื่อได้ message_id ให้สร้าง placeholder ของ AI ใน rawMessages
 
               if (eventData.message_id) {
-                set({ streamingMessageId: eventData.message_id });
+                const botMessagePlaceholder: ChatMessage = {
+                  id: eventData.message_id,
+                  role: 'bot',
+                  content: '',
+                };
+                set((state) => ({
+                  streamingMessageId: eventData.message_id,
+                  rawMessages: [...state.rawMessages, botMessagePlaceholder],
+                }));
                 continue;
               }
 
               if (eventData.response_type === 'dynamic_response') {
                 set({ streamMode: 'dynamic' });
                 continue;
-              }
+              } // 👈 5. อัปเดต rawMessages เมื่อได้รับข้อมูลแต่ละส่วน
 
               if ('sql_query' in eventData) {
                 set((state) => ({
@@ -242,6 +257,11 @@ export const createChatSessionStore = () =>
                     ],
                   },
                   currentAiTask: 'creating sql',
+                  rawMessages: state.rawMessages.map((msg, index) =>
+                    index === state.rawMessages.length - 1
+                      ? { ...msg, generated_sql: eventData.sql_query }
+                      : msg
+                  ),
                 }));
                 useChatHistoryStore.getState().startStreaming(newThreadId, 'creating sql');
               } else if ('sql_query_result' in eventData) {
@@ -261,6 +281,11 @@ export const createChatSessionStore = () =>
                       ],
                     },
                     currentAiTask: 'creating table',
+                    rawMessages: state.rawMessages.map((msg, index) =>
+                      index === state.rawMessages.length - 1
+                        ? { ...msg, sql_result: eventData.sql_query_result }
+                        : msg
+                    ),
                   }));
                   useChatHistoryStore.getState().startStreaming(newThreadId, 'creating table');
                 }
@@ -284,6 +309,11 @@ export const createChatSessionStore = () =>
                         ],
                       },
                       currentAiTask: 'creating chart',
+                      rawMessages: state.rawMessages.map((msg, index) =>
+                        index === state.rawMessages.length - 1
+                          ? { ...msg, chart_config: eventData.chart_builder_result }
+                          : msg
+                      ),
                     }));
                     useChatHistoryStore.getState().startStreaming(newThreadId, 'creating chart');
                   }
@@ -329,8 +359,20 @@ export const createChatSessionStore = () =>
                       messageId: streamingMessageId,
                     });
                   }
-                  useChatHistoryStore.getState().startStreaming(newThreadId, 'answering');
-                  return { blocks: newBlocks, currentAiTask: 'answering' };
+                  useChatHistoryStore.getState().startStreaming(newThreadId, 'answering'); // 👈 6. อัปเดต content ใน rawMessages ด้วย
+
+                  const updatedRawMessages = state.rawMessages.map((msg, index) => {
+                    if (index === state.rawMessages.length - 1 && typeof msg.content === 'string') {
+                      return { ...msg, content: msg.content + eventData.answer_chunk };
+                    }
+                    return msg;
+                  });
+
+                  return {
+                    blocks: newBlocks,
+                    currentAiTask: 'answering',
+                    rawMessages: updatedRawMessages,
+                  };
                 });
               } else if ('answer' in eventData) {
                 set((state) => {
@@ -348,8 +390,16 @@ export const createChatSessionStore = () =>
                       content: textContent,
                       messageId: get().streamingMessageId,
                     });
-                  }
-                  return { blocks: newBlocks };
+                  } // 👈 7. อัปเดต content สุดท้ายใน rawMessages
+
+                  const updatedRawMessages = state.rawMessages.map((msg, index) => {
+                    if (index === state.rawMessages.length - 1) {
+                      return { ...msg, content: eventData.answer };
+                    }
+                    return msg;
+                  });
+
+                  return { blocks: newBlocks, rawMessages: updatedRawMessages };
                 });
               }
             } catch (e) {
