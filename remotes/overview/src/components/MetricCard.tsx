@@ -91,7 +91,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({ card, onClick, isSelecte
         <div className={styles.header}>
           <Text style={{ color: tokens.colorBrandForeground2Hover }}>{card.label}</Text>
         </div>
-        <div style={{ minWidth: '110px' }}>
+        <div>
           <Text
             as="p"
             className={mergeClasses(
