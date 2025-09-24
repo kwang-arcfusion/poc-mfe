@@ -16,7 +16,7 @@ import {
   DialogActions,
   Tooltip,
   Text,
-  Spinner, // 1. Import Spinner
+  Spinner,
 } from '@fluentui/react-components';
 import {
   ArrowDownload24Regular,
@@ -33,8 +33,8 @@ import { useThemeStore } from '@arcfusion/store';
 const useStyles = makeStyles({
   chartWrap: {
     overflowX: 'auto',
-    overflowY: 'hidden', // ป้องกันการ scroll แนวตั้งซ้อนกัน
-    paddingBottom: '15px', // เพิ่มพื้นที่เล็กน้อยให้ scrollbar ไม่ชิดขอบ
+    overflowY: 'hidden',
+    paddingBottom: '15px',
   },
   assetGroup: {
     ...shorthands.border('2px', 'solid', tokens.colorNeutralStroke2),
@@ -88,18 +88,17 @@ const useStyles = makeStyles({
     overflow: 'auto',
     ...shorthands.border('1px', 'solid', tokens.colorNeutralStroke2),
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    backgroundColor: tokens.colorNeutralBackground3,
+    backgroundColor: tokens.colorNeutralBackground1,
     ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalS),
     fontFamily:
       'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
     fontSize: tokens.fontSizeBase200,
     overflowX: 'auto',
     whiteSpace: 'pre',
-  }, // ✨ ---- จุดที่แก้ไข ---- ✨
+  },
   tableWrap: {
-    overflow: 'auto', // ใช้ 'auto' เพื่อให้ scrollbar แสดงผลทั้งแนวตั้งและแนวนอนเมื่อจำเป็น
-    maxHeight: '400px', // กำหนดความสูงสูงสุดของตาราง
-    // ตกแต่ง scrollbar ให้สวยงาม (optional)
+    overflow: 'auto',
+    maxHeight: '400px',
     '&::-webkit-scrollbar': {
       width: '8px',
       height: '8px',
@@ -114,11 +113,12 @@ const useStyles = makeStyles({
 interface SqlTableTabsProps {
   sql: SqlAsset;
   dataframe?: DataframeAsset;
+  // --- START EDIT ---
+  // เรายังรับ chart object อยู่ แต่ข้างในจะมีแค่ processedConfig ที่สำคัญ
   chart?: ChartAsset & {
     processedConfig: Record<string, any>;
-    dynamicHeight?: number;
-    dynamicWidth?: number;
   };
+  // --- END EDIT ---
   messageId?: string;
 }
 
@@ -128,16 +128,15 @@ const TabContent = ({
   dataframe,
   chart,
   theme,
-  dynamicHeight,
-  dynamicWidth,
 }: {
   activeTab: TabValue;
   sql: SqlAsset;
   dataframe?: DataframeAsset;
+  // --- START EDIT ---
+  // ลบ dynamicHeight และ dynamicWidth ออกจาก props
   chart?: ChartAsset & { processedConfig: Record<string, any> };
   theme: 'light' | 'dark';
-  dynamicHeight?: number;
-  dynamicWidth?: number;
+  // --- END EDIT ---
 }) => {
   const styles = useStyles();
 
@@ -149,24 +148,23 @@ const TabContent = ({
     );
   }
 
+  // --- START EDIT ---
+  // ปรับแก้ Logic การแสดงผล Chart
   if (activeTab === 'chart' && chart) {
-    const chartElement = (
+    return (
       <ReactECharts
         option={chart.processedConfig}
         theme={theme}
         style={{
-          height: dynamicHeight ? `${dynamicHeight}px` : '400px',
-          width: dynamicWidth ? `${dynamicWidth}px` : '100%',
-          minWidth: '100%',
+          height: '400px', // ใช้ความสูงคงที่
+          width: '100%',
         }}
         notMerge={true}
         lazyUpdate={true}
       />
     );
-
-    // ✨ [IMPROVEMENT] เพิ่ม scrollbar เฉพาะเมื่อมี dynamicWidth เท่านั้น
-    return dynamicWidth ? <div className={styles.chartWrap}>{chartElement}</div> : chartElement;
   }
+  // --- END EDIT ---
 
   if (!dataframe || dataframe.rows.length === 0) {
     return (
@@ -175,7 +173,6 @@ const TabContent = ({
       </div>
     );
   }
-  // ✨✨✨ END EDIT ✨✨✨
 
   return (
     <div className={styles.tabPanelPad}>
@@ -233,9 +230,8 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
   const timeoutRef = useRef<number | null>(null);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isExportingCsv, setIsExportingCsv] = useState(false); // 2. เพิ่ม State สำหรับ CSV Export
+  const [isExportingCsv, setIsExportingCsv] = useState(false);
 
-  // 3. แก้ไขฟังก์ชัน handleExport ทั้งหมด
   const handleExportCsv = async () => {
     if (!messageId || isExportingCsv) {
       return;
@@ -341,8 +337,6 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
           dataframe={dataframe}
           chart={chart}
           theme={theme}
-          dynamicHeight={chart?.dynamicHeight}
-          dynamicWidth={chart?.dynamicWidth}
         />
       </div>
 
@@ -376,8 +370,6 @@ export function SqlTableTabs({ sql, dataframe, chart, messageId }: SqlTableTabsP
                 dataframe={dataframe}
                 chart={chart}
                 theme={theme}
-                dynamicHeight={chart?.dynamicHeight}
-                dynamicWidth={chart?.dynamicWidth}
               />
             </div>
           </DialogBody>
