@@ -244,12 +244,6 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   setPendingChannelFilters: (selection: string[]) => {
     const { offerChannelMap, pendingOfferFilters } = get();
 
-    // --- เพิ่ม console.log ตรงนี้ ---
-    console.log('--- Channel Filter Changed ---');
-    console.log('New Channels Selected:', selection);
-    console.log('Offers BEFORE filtering:', pendingOfferFilters);
-    // -----------------------------
-
     const newOfferFilters = pendingOfferFilters.filter((offerFilterString) => {
       const offerId = offerFilterString.split(':').pop();
       if (!offerId) return false;
@@ -261,11 +255,6 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
     });
 
     const finalOfferFilters = newOfferFilters.length > 0 ? newOfferFilters : [];
-
-    // --- เพิ่ม console.log ตรงนี้ ---
-    console.log('Offers AFTER filtering:', finalOfferFilters);
-    console.log('-----------------------------');
-    // -----------------------------
 
     set({
       pendingChannelFilters: selection,
