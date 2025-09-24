@@ -23,7 +23,6 @@ const useStyles = makeStyles({
   bubble: {
     ...shorthands.padding(tokens.spacingVerticalM, tokens.spacingHorizontalL),
     ...shorthands.borderRadius(tokens.borderRadiusLarge),
-    whiteSpace: 'pre-wrap',
     wordWrap: 'break-word',
     '&[data-sender="user"]': {
       backgroundColor: tokens.colorNeutralStroke3,
@@ -36,15 +35,17 @@ const useStyles = makeStyles({
     },
   },
   markdown: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    lineHeight: 2,
     '& p': { marginTop: 0, marginBottom: 0 },
-    '& ul': {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '6px',
-    },
     '& ul, & ol': {
       ...shorthands.padding(0, 0, 0, tokens.spacingHorizontalL),
       ...shorthands.margin(0),
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '6px',
     },
     '& li': { marginBottom: tokens.spacingVerticalXS },
     '& strong': { backgroundColor: tokens.colorPaletteYellowBackground1 },
