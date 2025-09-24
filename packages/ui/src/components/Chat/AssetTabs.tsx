@@ -1,7 +1,24 @@
-// packages/ui/src/components/Chat/AssetTabs.tsx
 import * as React from 'react';
 import type { AssetGroup, ChartAsset } from '@arcfusion/types';
 import { SqlTableTabs } from './SqlTableTabs';
+
+/**
+ * Helper function สำหรับคำนวณพื้นที่ด้านซ้ายที่แกน Y ต้องการ
+ * โดยจะดูจากค่า max และ format ของ label เพื่อหาความยาวตัวอักษรที่มากที่สุด
+ */
+function calculateYAxisLeftMargin(yAxisConfig: any): number {
+  if (!yAxisConfig) return 60; // ค่า Default
+
+  const max = yAxisConfig.max || 100;
+  const formatter = yAxisConfig.axisLabel?.formatter || '{value}';
+  const formattedMaxValue = formatter.replace('{value}', max.toString());
+
+  const CHARACTER_WIDTH = 8; // ความกว้างเฉลี่ยของตัวอักษร
+  const PADDING = 30; // ระยะห่างเผื่อสำหรับชื่อแกน และอื่นๆ
+  const requiredWidth = formattedMaxValue.length * CHARACTER_WIDTH + PADDING;
+
+  return Math.max(60, requiredWidth); // ต้องมีพื้นที่อย่างน้อย 60px
+}
 
 export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?: string }) {
   const processedCharts = React.useMemo(() => {
@@ -10,7 +27,7 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
       const source = newConfig.dataset?.source || newConfig.dataset?.[0]?.source;
       const series = newConfig.series;
 
-      // ตรวจจับและแก้ไขปัญหากราฟ Bar Chart ที่ใช้แกนเวลา (Time Axis)
+      // Logic 1: แก้ไขแกน time ของ bar chart ให้เป็น category
       if (
         newConfig.xAxis?.type === 'time' &&
         Array.isArray(series) &&
@@ -19,13 +36,13 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
         newConfig.xAxis.type = 'category';
       }
 
-      // คำนวณความสูงและความกว้างแบบไดนามิก
+      // Logic 2: คำนวณความสูงและความกว้างแบบไดนามิก
       let dynamicHeight = 400;
       let dynamicWidth: number | undefined = undefined;
       const isHorizontal = newConfig.yAxis?.type === 'category';
 
       if (isHorizontal) {
-        // Logic การคำนวณ dynamicHeight สำหรับกราฟแนวนอน
+        // คำนวณ dynamicHeight สำหรับกราฟแนวนอน
         if (Array.isArray(series)) {
           const numLabels = newConfig.yAxis?.data?.length || 0;
           const numSeries = series.length;
@@ -39,7 +56,7 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
           }
         }
       } else if (newConfig.xAxis && Array.isArray(series)) {
-        // ✨ [IMPROVEMENT] คำนวณ dynamicWidth "เฉพาะกราฟแท่ง" เท่านั้น
+        // สำหรับกราฟแนวตั้ง
         const isVerticalBarChart = series.some((s) => s.type === 'bar');
 
         if (isVerticalBarChart) {
@@ -52,30 +69,32 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
           const numSeries = series.length;
 
           if (numLabels * numSeries > 25) {
+            // คำนวณ dynamicWidth
             const BAR_WIDTH = 35;
             const GROUP_PADDING = 25;
             const widthPerGroup = numSeries * BAR_WIDTH + GROUP_PADDING;
             const calculatedWidth = numLabels * widthPerGroup;
             dynamicWidth = Math.max(800, calculatedWidth);
 
-            if (newConfig.xAxis.axisLabel) {
-              newConfig.xAxis.axisLabel.rotate = 0;
-            }
+            if (newConfig.xAxis.axisLabel) newConfig.xAxis.axisLabel.rotate = 0;
+
+            newConfig.dataZoom = [
+              { type: 'slider', start: 0, end: (15 / numLabels) * 100, bottom: 30 },
+            ];
+            if (newConfig.grid) newConfig.grid.bottom = '18%';
           } else if (numLabels > 8) {
-            if (newConfig.xAxis.axisLabel) {
-              newConfig.xAxis.axisLabel.rotate = 30;
-            } else {
-              newConfig.xAxis.axisLabel = { rotate: 30 };
-            }
+            if (newConfig.xAxis.axisLabel) newConfig.xAxis.axisLabel.rotate = 30;
+            else newConfig.xAxis.axisLabel = { rotate: 30 };
           }
         }
       }
 
-      // ... (โค้ดประมวลผล config ที่เหลือทั้งหมดเหมือนเดิม)
+      // Logic 3: ประมวลผลข้อมูลตามโครงสร้าง
       if (Array.isArray(newConfig.graphic) && newConfig.graphic.length > 0 && !series) {
         if (newConfig.legend) newConfig.legend.show = false;
       } else if (source && Array.isArray(series)) {
         series.forEach((seriesItem: any) => {
+          // จัดการ label ซ้อนทับกัน
           if (seriesItem.type === 'bar') {
             seriesItem.labelLayout = { hideOverlap: true };
             if (series.length > 2 && seriesItem.label) {
@@ -112,6 +131,7 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
         delete newConfig.dataset;
       }
 
+      // Logic 4: การปรับปรุงทั่วไป (Universal Adjustments)
       if (newConfig.tooltip) {
         delete newConfig.tooltip.valueFormatter;
         newConfig.tooltip.formatter = (params: any) => {
@@ -136,10 +156,19 @@ export function AssetTabs({ group, messageId }: { group: AssetGroup; messageId?:
         newConfig.legend = { top: 'bottom', type: 'scroll' };
       }
 
+      // Logic 5: ปรับแก้ Grid Layout เป็นขั้นตอนสุดท้าย
       newConfig.grid = {
         containLabel: true,
         ...newConfig.grid,
       };
+
+      if (!isHorizontal) {
+        newConfig.grid.left = calculateYAxisLeftMargin(newConfig.yAxis);
+      }
+
+      if (newConfig.title?.text && newConfig.yAxis?.name) {
+        newConfig.grid.top = Math.max(newConfig.grid.top || 60, 90);
+      }
 
       return { ...ch, processedConfig: newConfig, dynamicHeight, dynamicWidth };
     });
