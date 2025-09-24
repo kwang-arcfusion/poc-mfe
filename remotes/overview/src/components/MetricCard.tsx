@@ -89,7 +89,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({ card, onClick, isSelecte
     >
       <div className={styles.valueWrapper}>
         <div className={styles.header}>
-          <Text>{card.label}</Text>
+          <Text style={{ color: tokens.colorBrandForeground2Hover }}>{card.label}</Text>
         </div>
         <div style={{ minWidth: '110px' }}>
           <Text

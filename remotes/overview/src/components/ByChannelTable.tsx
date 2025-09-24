@@ -86,7 +86,10 @@ export const ByChannelTable: React.FC<{
               onClick={() => onSort(items.dimension.key)}
               className={styles.sortableHeader}
             >
-              <Text weight="semibold"> {items.dimension.label}</Text>
+              <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
+                {' '}
+                {items.dimension.label}
+              </Text>
             </TableHeaderCell>
 
             {/* ✨ 5. ปรับแก้ Header Cell อื่นๆ (Columns) */}
@@ -99,7 +102,9 @@ export const ByChannelTable: React.FC<{
                 onClick={() => onSort(column.key)}
                 className={styles.sortableHeader}
               >
-                <Text weight="semibold">{column.label}</Text>
+                <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
+                  {column.label}
+                </Text>
               </TableHeaderCell>
             ))}
           </TableRow>
