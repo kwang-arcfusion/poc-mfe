@@ -1,5 +1,4 @@
 // /configs/webpack.config.remote.js
-
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -12,36 +11,42 @@ const { ModuleFederationPlugin } = container;
  * @param {Record<string, string>} options.exposes - The modules to expose.
  * @param {string} options.packageJsonPath - The absolute path to the package.json file.
  * @param {'development' | 'production'} [options.mode='development'] - The build mode.
+ * @param {Record<string, string>} [options.entry] - Optional custom entry points.
  */
 module.exports = function createRemoteConfig({
   name,
   exposes,
   packageJsonPath,
   mode = 'development',
+  // ✨ 1. เพิ่ม option 'entry' เพื่อรับ object ที่มีหลาย entry points
+  entry,
 }) {
   const packageJson = require(packageJsonPath);
   const deps = packageJson.dependencies;
   const isProd = mode === 'production';
 
   return {
-    // We will run webpack from within the remote's folder, so the entry path doesn't need to change.
-    entry: './src/index.tsx',
+    // ✨ 2. ใช้ entry ที่รับเข้ามา, ถ้าไม่มีก็ใช้ default entry สำหรับ MF
+    entry: entry || { [name]: './src/index.tsx' },
+
     output: {
-      // Use path.resolve with process.cwd() to ensure the path always points to the dist of the remote being built.
       path: path.resolve(process.cwd(), 'dist'),
-      filename: isProd ? '[name].[contenthash].js' : '[name].js',
+      // ✨ 3. ใช้ [name] เพื่อให้ webpack สร้างไฟล์ตามชื่อ key ของ entry object
+      // เช่น ask_ai.bundle.js และ ask-ai-wc.bundle.js
+      filename: '[name].bundle.js',
       clean: true,
       publicPath: 'auto',
       uniqueName: name,
     },
+
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.jsx'],
       alias: {
-        // Paths must be adjusted correctly from the remote's location to the packages.
         '@arcfusion/ui': path.resolve(process.cwd(), '../../packages/ui/src'),
         '@arcfusion/store': path.resolve(process.cwd(), '../../packages/store/src'),
       },
     },
+
     module: {
       rules: [
         {
@@ -55,7 +60,6 @@ module.exports = function createRemoteConfig({
           use: {
             loader: 'babel-loader',
             options: {
-              // Path to the central babel.config.js
               configFile: path.resolve(process.cwd(), '../../configs/babel.config.js'),
             },
           },
@@ -66,6 +70,7 @@ module.exports = function createRemoteConfig({
         },
       ],
     },
+
     plugins: [
       new CopyPlugin({
         patterns: [
@@ -79,6 +84,8 @@ module.exports = function createRemoteConfig({
       new MiniCssExtractPlugin({
         filename: isProd ? '[name].[contenthash].css' : '[name].css',
       }),
+      // ✨ 4. ไม่ต้องมีเงื่อนไขอีกต่อไป Plugin นี้จะทำงานเสมอ
+      // เพื่อสร้าง remoteEntry.js สำหรับโปรเจกต์ React ที่ต้องการใช้งาน
       new ModuleFederationPlugin({
         name,
         filename: 'remoteEntry.js',
