@@ -21,10 +21,10 @@ interface AskAiProps {
 }
 
 const ASK_AI_CONVERSATION_STARTERS = [
-  'What changed in CTR last week?',
-  'Which creatives drove conversions?',
-  'Highlight underperforming campaigns.',
-  'Summarize performance by channel.',
+  'What is the overall impression rate relative to contact volume?',
+  'Which are the top 3 offers with the highest engagement rate?',
+  'Which channel has the highest revenue per impression last week?',
+  'What is the average revenue attributed to the campaign?',
 ];
 
 export default function AskAi({ navigate, chatId }: AskAiProps) {
