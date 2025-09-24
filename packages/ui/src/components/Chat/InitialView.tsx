@@ -11,6 +11,8 @@ const useStyles = makeStyles({
     textAlign: 'center',
     ...shorthands.gap('24px'),
     height: '100%',
+    paddingLeft: '6px',
+    paddingRight: '6px',
   },
   iconContainer: {
     color: tokens.colorBrandForeground1,
@@ -22,7 +24,7 @@ const useStyles = makeStyles({
     display: 'grid', // ✨ 1. เปลี่ยนจาก flex เป็น grid
     gridTemplateColumns: 'repeat(2, 1fr)', // ✨ 2. กำหนดให้มี 2 คอลัมน์
     ...shorthands.gap('12px'),
-    maxWidth: '820px', // ✨ 3. (แนะนำ) เพิ่มความกว้างสูงสุดเพื่อให้ปุ่มไม่เบียดกันเกินไป
+    maxWidth: '460px', // ✨ 3. (แนะนำ) เพิ่มความกว้างสูงสุดเพื่อให้ปุ่มไม่เบียดกันเกินไป
   },
   buttonStartConversation: {
     color: tokens.colorBrandForeground1,
