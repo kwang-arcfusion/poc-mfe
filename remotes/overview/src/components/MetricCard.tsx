@@ -7,6 +7,7 @@ import {
   shorthands,
   tokens,
   mergeClasses,
+  Badge,
 } from '@fluentui/react-components';
 import { ArrowTrending24Regular, ArrowTrendingDown24Regular } from '@fluentui/react-icons';
 import { CardData } from '../types';
@@ -15,7 +16,7 @@ const useStyles = makeStyles({
   card: {
     display: 'flex',
     gap: '8px',
-    flexDirection: 'column',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
     cursor: 'pointer',
     ...shorthands.border('2px', 'solid', 'transparent'),
@@ -38,17 +39,26 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground2,
   },
   value: {
-    fontSize: '1.75rem',
+    fontSize: '1.25rem',
     fontWeight: tokens.fontWeightSemibold,
     lineHeight: 1.1,
+  },
+  valuePositive: {
+    color: tokens.colorPaletteGreenForeground2,
+  },
+  valueNegative: {
+    color: tokens.colorPaletteRedForeground2,
+  },
+  valueWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
   },
   footer: {
     display: 'flex',
     alignItems: 'center',
     ...shorthands.gap('4px'),
   },
-  positive: { color: tokens.colorPaletteGreenForeground3 },
-  negative: { color: tokens.colorPaletteRedForeground3 },
 });
 
 const formatValue = (value: number, format: { type: string }) => {
@@ -77,18 +87,31 @@ export const MetricCard: React.FC<MetricCardProps> = ({ card, onClick, isSelecte
       className={mergeClasses(styles.card, isSelected && styles.selected)}
       onClick={() => onClick(card.key)}
     >
-      <div className={styles.header}>
-        <Text>{card.label}</Text>
-      </div>
-      <div style={{ minWidth: '110px' }}>
-        <Text as="p" className={styles.value}>
-          {formatValue(card.value, card.format)}
-        </Text>
-        <div className={`${styles.footer} ${isPositive ? styles.positive : styles.negative}`}>
-          {isPositive ? <ArrowTrending24Regular /> : <ArrowTrendingDown24Regular />}
-          <Text weight="semibold">{changePercent.toFixed(1)}%</Text>
+      <div className={styles.valueWrapper}>
+        <div className={styles.header}>
+          <Text>{card.label}</Text>
+        </div>
+        <div style={{ minWidth: '110px' }}>
+          <Text
+            as="p"
+            className={mergeClasses(
+              styles.value,
+              isPositive ? styles.valuePositive : styles.valueNegative // ✨ เรียกใช้ style ตามเงื่อนไข
+            )}
+          >
+            {formatValue(card.value, card.format)}
+          </Text>
         </div>
       </div>
+      <Badge
+        className={styles.footer}
+        size="extra-large"
+        appearance="tint"
+        color={isPositive ? 'success' : 'danger'}
+        icon={isPositive ? <ArrowTrending24Regular /> : <ArrowTrendingDown24Regular />}
+      >
+        <Text weight="semibold">{changePercent.toFixed(1)}%</Text>
+      </Badge>
     </div>
   );
 };

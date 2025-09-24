@@ -128,9 +128,6 @@ export const DailyPerformanceChart: React.FC<DailyPerformanceChartProps> = ({
 
   return (
     <section>
-      <Text as="h2" size={500} weight="semibold">
-        Daily Performance
-      </Text>
       <Card className={styles.card}>
         <ReactECharts
           option={echartsOption}

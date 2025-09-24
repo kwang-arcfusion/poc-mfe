@@ -6,19 +6,10 @@ import { MetricCard } from './MetricCard';
 
 const useStyles = makeStyles({
   grid: {
-    display: 'flex',
-    flexWrap: 'nowrap',
-    overflowX: 'auto',
-    ...shorthands.gap('10px'),
+    display: 'grid', // 👈 เปลี่ยนจาก flex เป็น grid
+    gridTemplateColumns: 'repeat(3, 1fr)', // 👈 กำหนดให้มี 3 คอลัมน์ขนาดเท่ากัน
+    ...shorthands.gap('12px'), // 👈 เพิ่ม gap ให้สวยงามขึ้นเล็กน้อย
     marginTop: '12px',
-    paddingBottom: '16px',
-    '&::-webkit-scrollbar': {
-      height: '8px',
-    },
-    '&::-webkit-scrollbar-thumb': {
-      backgroundColor: tokens.colorNeutralStroke2,
-      ...shorthands.borderRadius(tokens.borderRadiusMedium),
-    },
   },
 });
 
@@ -36,20 +27,15 @@ export const OverallPerformance: React.FC<OverallPerformanceProps> = ({
   const styles = useStyles();
 
   return (
-    <section>
-      <Text size={500} weight="semibold">
-        Metrics
-      </Text>
-      <div className={styles.grid}>
-        {cards.map((card) => (
-          <MetricCard
-            key={card.key}
-            card={card}
-            onClick={onCardClick}
-            isSelected={card.key === selectedMetricKey}
-          />
-        ))}
-      </div>
-    </section>
+    <div className={styles.grid}>
+      {cards.map((card) => (
+        <MetricCard
+          key={card.key}
+          card={card}
+          onClick={onCardClick}
+          isSelected={card.key === selectedMetricKey}
+        />
+      ))}
+    </div>
   );
 };

@@ -65,6 +65,7 @@ const useStyles = makeStyles({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     marginBottom: tokens.spacingVerticalM,
+    color: tokens.colorBrandForeground2Hover,
   },
   metricsContainer: {
     display: 'grid',

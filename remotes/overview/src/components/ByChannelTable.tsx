@@ -11,17 +11,24 @@ import {
   Card,
   Text,
   TableCellLayout,
+  tokens,
 } from '@fluentui/react-components';
 import { TableData } from '../types';
 
 const useStyles = makeStyles({
   tableCard: {
-    padding: 0,
+    padding: '26px',
+    boxSizing: 'border-box',
     marginTop: '12px',
     overflowX: 'auto',
   },
   tableLayout: {
     tableLayout: 'auto',
+    padding: '12px',
+    backgroundColor: tokens.colorNeutralBackground2,
+  },
+  byChannelText: {
+    color: tokens.colorNeutralForeground3,
   },
 });
 
@@ -44,36 +51,36 @@ export const ByChannelTable: React.FC<{ items: TableData }> = ({ items }) => {
   const styles = useStyles();
 
   return (
-    <section>
-      <Text as="h2" size={500} weight="semibold">
-        {items.title}
+    <Card className={styles.tableCard}>
+      <Text weight="bold" size={400} className={styles.byChannelText}>
+        By Channels
       </Text>
-      <Card className={styles.tableCard}>
-        <Table aria-label={items.title} className={styles.tableLayout}>
-          <TableHeader>
-            <TableRow>
-              <TableHeaderCell key={items.dimension.key}>{items.dimension.label}</TableHeaderCell>
+      <Table aria-label={items.title} className={styles.tableLayout}>
+        <TableHeader>
+          <TableRow>
+            <TableHeaderCell key={items.dimension.key}>
+              <Text weight="semibold"> {items.dimension.label}</Text>
+            </TableHeaderCell>
+            {items.columns.map((column) => (
+              <TableHeaderCell key={column.key}>
+                <Text weight="semibold">{column.label}</Text>
+              </TableHeaderCell>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {items.rows.map((row, rowIndex) => (
+            <TableRow key={rowIndex}>
+              <TableCell>
+                <TableCellLayout>{String(row[items.dimension.key])}</TableCellLayout>
+              </TableCell>
               {items.columns.map((column) => (
-                <TableHeaderCell key={column.key}>{column.label}</TableHeaderCell>
+                <TableCell key={column.key}>{formatCell(row[column.key], column.format)}</TableCell>
               ))}
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.rows.map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                <TableCell>
-                  <TableCellLayout>{String(row[items.dimension.key])}</TableCellLayout>
-                </TableCell>
-                {items.columns.map((column) => (
-                  <TableCell key={column.key}>
-                    {formatCell(row[column.key], column.format)}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
-    </section>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
   );
 };

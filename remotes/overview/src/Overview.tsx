@@ -79,10 +79,10 @@ const useStyles = makeStyles({
   contentContainer: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px',
+    gap: '6px',
     paddingLeft: '24px',
     paddingRight: '24px',
-    paddingBottom: '24px',
+    paddingBottom: '48px',
   },
   loadingContainer: {
     display: 'flex',
@@ -190,7 +190,7 @@ export default function Overview() {
     if (isLoading && !overviewData) {
       return (
         <div className={styles.loadingContainer}>
-          <Spinner size="huge" label="Loading..." />
+          <Spinner size="huge" />
         </div>
       );
     }
