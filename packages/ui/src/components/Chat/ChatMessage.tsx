@@ -48,7 +48,14 @@ const useStyles = makeStyles({
       gap: '6px',
     },
     '& li': { marginBottom: tokens.spacingVerticalXS },
-    '& strong': { backgroundColor: tokens.colorPaletteYellowBackground1 },
+    '& strong': {
+      backgroundColor: tokens.colorPaletteDarkOrangeBackground1,
+      paddingLeft: '5px',
+      paddingRight: '5px',
+      paddingTop: '3px',
+      paddingBottom: '3px',
+      borderRadius: '6px',
+    },
   },
 });
 
