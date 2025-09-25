@@ -1,8 +1,23 @@
 // remotes/stories/src/components/InsightCard.tsx
 
 import React, { useMemo } from 'react';
-import { makeStyles, shorthands, tokens, Badge, Text } from '@fluentui/react-components';
-import { Sparkle24Regular, ArrowUp16Regular, ArrowDown16Regular } from '@fluentui/react-icons';
+import {
+  makeStyles,
+  shorthands,
+  tokens,
+  Badge,
+  Text,
+  // ✨ 1. Import Popover components
+  Popover,
+  PopoverTrigger,
+  PopoverSurface,
+} from '@fluentui/react-components';
+import {
+  Sparkle24Regular,
+  ArrowUp16Regular,
+  ArrowDown16Regular,
+  MoreVertical28Filled,
+} from '@fluentui/react-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Story } from '@arcfusion/types';
@@ -104,15 +119,36 @@ const useStyles = makeStyles({
     paddingTop: tokens.spacingVerticalXS,
     width: '100%',
   },
-  // ✨ Style ใหม่สำหรับตัดข้อความที่ยาวเกินไป
   truncatedText: {
-    maxWidth: '200px', // กำหนดความกว้างสูงสุดของชื่อ
+    maxWidth: '200px',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     display: 'inline-block',
-    verticalAlign: 'bottom', // จัดตำแหน่งให้อยู่กลาง Icon
+    verticalAlign: 'bottom',
   },
+  // ✨ 2. เพิ่ม Styles สำหรับ Popover และเนื้อหาข้างใน
+  popoverSurface: {
+    ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
+    ...shorthands.borderRadius(tokens.borderRadiusMedium),
+    backgroundColor: tokens.colorNeutralBackground1,
+  },
+  popoverList: {
+    listStyleType: 'none',
+    ...shorthands.margin(0),
+    ...shorthands.padding(0),
+    display: 'flex',
+    flexDirection: 'column',
+    ...shorthands.gap(tokens.spacingVerticalS),
+  },
+  popoverListItem: {
+    display: 'grid',
+    gridTemplateColumns: '16px 1fr auto',
+    alignItems: 'center',
+    ...shorthands.gap(tokens.spacingHorizontalS),
+  },
+  up: { color: tokens.colorPaletteGreenForeground2 },
+  down: { color: tokens.colorPaletteRedForeground1 },
 });
 
 const formatTimeAgo = (dateString: string) => {
@@ -151,9 +187,14 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
       ? tokens.colorPaletteRedForeground1
       : tokens.colorPaletteGreenForeground1;
 
-  // ✨ Logic ใหม่: ดึง Mover ตัวที่สอง และคำนวณจำนวนที่เหลือ
   const secondMover = story.top_movers?.[1];
-  const remainingCount = story.top_movers ? story.top_movers.length - 1 : 0;
+  console.log('InsightCard.tsx:191 |story.top_movers| : ', story.top_movers);
+  const remainingCount = story.top_movers ? story.top_movers.length - 2 : 0; // ✨ แก้ไข Logic นับจำนวนที่เหลือให้ถูกต้อง
+
+  // ✨ 3. เตรียมข้อมูล Movers ที่เหลือสำหรับใส่ใน Popover
+  const otherMovers = useMemo(() => {
+    return story.top_movers?.slice(2) || [];
+  }, [story.top_movers]);
 
   const chartOptions = useMemo(() => {
     if (!story.echart_config) return null;
@@ -174,14 +215,13 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
         <Badge appearance="tint" size="extra-large">
           {badgeText}
         </Badge>
-        <Text className={styles.timeAgo}>{timeAgo}</Text>
+        <MoreVertical28Filled />
       </header>
 
       <div className={styles.cardBody}>
         <Text className={styles.titleText}>{story.title}</Text>
         {topMover && (
           <div className={styles.kpiBlock}>
-            {/* ✨ Logic ใหม่: แสดง Mover ตัวที่สอง และ Badge "+n more" */}
             <div className={styles.otherMoversContainer}>
               {secondMover && (
                 <Badge
@@ -204,10 +244,40 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
                   <span>{secondMover.change.toFixed(2)}%</span>
                 </Badge>
               )}
+              {/* ✨ 4. นำ Popover มาครอบ Badge ที่แสดงจำนวนที่เหลือ */}
               {remainingCount > 0 && (
-                <Badge appearance="ghost" size="medium">
-                  +{remainingCount} more
-                </Badge>
+                <Popover withArrow positioning="above" openOnHover>
+                  <PopoverTrigger disableButtonEnhancement>
+                    <Badge appearance="tint" size="medium">
+                      +{remainingCount}
+                    </Badge>
+                  </PopoverTrigger>
+
+                  {/* ✨ 5. สร้างเนื้อหา Popover */}
+                  <PopoverSurface className={styles.popoverSurface}>
+                    <ul className={styles.popoverList}>
+                      {otherMovers.map((mover) => (
+                        <li key={mover.name} className={styles.popoverListItem}>
+                          {mover.direction === 'up' ? (
+                            <ArrowUp16Regular className={styles.up} />
+                          ) : (
+                            <ArrowDown16Regular className={styles.down} />
+                          )}
+                          <Text size={300} title={mover.name} className={styles.truncatedText}>
+                            {mover.name}
+                          </Text>
+                          <Text
+                            size={300}
+                            weight="semibold"
+                            className={mover.direction === 'up' ? styles.up : styles.down}
+                          >
+                            {mover.change.toFixed(2)}%
+                          </Text>
+                        </li>
+                      ))}
+                    </ul>
+                  </PopoverSurface>
+                </Popover>
               )}
             </div>
             <div
