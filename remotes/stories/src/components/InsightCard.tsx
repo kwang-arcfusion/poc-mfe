@@ -2,14 +2,13 @@
 
 import React, { useMemo } from 'react';
 import { makeStyles, shorthands, tokens, Badge, Text } from '@fluentui/react-components';
-import { Sparkle24Regular } from '@fluentui/react-icons';
+import { Sparkle24Regular, ArrowUp16Regular, ArrowDown16Regular } from '@fluentui/react-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Story } from '@arcfusion/types';
 import ReactECharts from 'echarts-for-react';
 import { useThemeStore } from '@arcfusion/store';
 
-// ... useStyles (เหมือนเดิมทุกประการ)
 const useStyles = makeStyles({
   insightCard: {
     display: 'flex',
@@ -33,22 +32,6 @@ const useStyles = makeStyles({
     alignItems: 'center',
     width: '100%',
     flexShrink: 0,
-  },
-  platformIconContainer: {
-    height: '28px',
-    width: '28px',
-    display: 'flex',
-    alignItems: 'flex-end',
-    justifyContent: 'space-evenly',
-    ...shorthands.gap('2px'),
-    backgroundColor: tokens.colorNeutralBackground3,
-    ...shorthands.borderRadius(tokens.borderRadiusSmall),
-    ...shorthands.padding('4px'),
-    boxSizing: 'border-box',
-  },
-  iconBar: {
-    width: '4px',
-    ...shorthands.borderRadius('1px'),
   },
   timeAgo: {
     fontSize: tokens.fontSizeBase200,
@@ -76,7 +59,7 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
-    ...shorthands.gap('4px'),
+    ...shorthands.gap('8px'),
   },
   kpiMetric: {
     fontSize: tokens.fontSizeBase400,
@@ -87,7 +70,6 @@ const useStyles = makeStyles({
     fontSize: '36px',
     fontWeight: tokens.fontWeightBold,
     lineHeight: 1,
-    marginBottom: '4px',
   },
   chartContainer: {
     width: '100%',
@@ -112,10 +94,28 @@ const useStyles = makeStyles({
     flexShrink: 0,
     marginTop: '2px',
   },
+  otherMoversContainer: {
+    display: 'flex',
+    gap: '6px',
+    flexWrap: 'nowrap',
+    whiteSpace: 'nowrap',
+    boxSizing: 'border-box',
+    ...shorthands.gap(tokens.spacingHorizontalS),
+    paddingTop: tokens.spacingVerticalXS,
+    width: '100%',
+  },
+  // ✨ Style ใหม่สำหรับตัดข้อความที่ยาวเกินไป
+  truncatedText: {
+    maxWidth: '200px', // กำหนดความกว้างสูงสุดของชื่อ
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: 'inline-block',
+    verticalAlign: 'bottom', // จัดตำแหน่งให้อยู่กลาง Icon
+  },
 });
 
 const formatTimeAgo = (dateString: string) => {
-  // ... ฟังก์ชันนี้เหมือนเดิม ...
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -144,15 +144,17 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   const timeAgo = formatTimeAgo(story.created_at);
   const topMover = story.top_movers?.[0];
 
-  // ✨ จุดที่แก้ไข: เปลี่ยนมาดึงข้อมูลจาก top_movers[0].name
-  const badgeText = topMover?.name?.toUpperCase() || story.type.split('_')[0].toUpperCase();
+  const badgeText = story.type.split('_')[0].toUpperCase();
 
   const kpiValueColor =
     topMover?.direction === 'down'
       ? tokens.colorPaletteRedForeground1
       : tokens.colorPaletteGreenForeground1;
 
-  // ... โค้ดส่วนที่เหลือเหมือนเดิม ...
+  // ✨ Logic ใหม่: ดึง Mover ตัวที่สอง และคำนวณจำนวนที่เหลือ
+  const secondMover = story.top_movers?.[1];
+  const remainingCount = story.top_movers ? story.top_movers.length - 1 : 0;
+
   const chartOptions = useMemo(() => {
     if (!story.echart_config) return null;
     const newConfig = JSON.parse(JSON.stringify(story.echart_config));
@@ -169,7 +171,6 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   return (
     <div className={styles.insightCard} onClick={onClick}>
       <header className={styles.cardHeader}>
-        {/* ✨ จุดที่แก้ไข: ใช้ตัวแปร badgeText ที่ได้มาจาก top_movers */}
         <Badge appearance="tint" size="extra-large">
           {badgeText}
         </Badge>
@@ -180,13 +181,35 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
         <Text className={styles.titleText}>{story.title}</Text>
         {topMover && (
           <div className={styles.kpiBlock}>
-            <Badge
-              appearance="tint"
-              color={topMover.direction === 'down' ? 'danger' : 'success'}
-              size="medium"
-            >
-              {topMover.direction === 'down' ? 'Significant Drop' : 'Significant Growth'}
-            </Badge>
+            {/* ✨ Logic ใหม่: แสดง Mover ตัวที่สอง และ Badge "+n more" */}
+            <div className={styles.otherMoversContainer}>
+              {secondMover && (
+                <Badge
+                  key={secondMover.name}
+                  appearance="tint"
+                  size="medium"
+                  color={secondMover.direction === 'down' ? 'danger' : 'success'}
+                  icon={
+                    secondMover.direction === 'down' ? <ArrowDown16Regular /> : <ArrowUp16Regular />
+                  }
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'nowrap',
+                    gap: '6px',
+                  }}
+                >
+                  <span className={styles.truncatedText} title={secondMover.name}>
+                    {secondMover.name}
+                  </span>
+                  <span>{secondMover.change.toFixed(2)}%</span>
+                </Badge>
+              )}
+              {remainingCount > 0 && (
+                <Badge appearance="ghost" size="medium">
+                  +{remainingCount} more
+                </Badge>
+              )}
+            </div>
             <div
               style={{
                 display: 'flex',
@@ -196,7 +219,6 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
               }}
             >
               <Text className={styles.kpiMetric}>{story.metric_label}</Text>
-
               <Text className={styles.kpiValue} style={{ color: kpiValueColor }}>
                 {topMover.change.toFixed(2)}%
               </Text>

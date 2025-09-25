@@ -25,6 +25,8 @@ import { ActionsCard } from './storyDetail/ActionsCard';
 import { EvidenceSection } from './storyDetail/EvidenceSection';
 import { AskAiPanel } from './askAiPanel/AskAiPanel';
 import { TechnicalDetails } from './storyDetail/TechnicalDetails';
+// 1. เพิ่ม import ของคอมโพเนนต์ใหม่
+import { MoversComparisonTable } from './storyDetail/MoversComparisonTable';
 
 const useStyles = makeStyles({
   outer: {
@@ -32,12 +34,6 @@ const useStyles = makeStyles({
     height: 'calc(100vh - 60px)',
     backgroundColor: tokens.colorNeutralBackground2,
   },
-  // askAiButton: {
-  //   position: 'fixed',
-  //   top: '90px',
-  //   right: '38px',
-  //   zIndex: 10,
-  // },
   splitGrid: {
     display: 'flex',
     height: '100%',
@@ -267,11 +263,7 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
                     {isExporting ? 'Exporting...' : 'Export to PDF'}
                   </Button>
                   {!aiOpen && (
-                    <Button
-                      // className={s.askAiButton}
-                      icon={<Sparkle24Regular />}
-                      onClick={() => setAiOpen(true)}
-                    >
+                    <Button icon={<Sparkle24Regular />} onClick={() => setAiOpen(true)}>
                       Ask AI
                     </Button>
                   )}
@@ -283,7 +275,9 @@ export default function StoryDetailPage({ storyId, threadId, navigate }: StoryDe
             <NarrativeCard story={story} />
             <ActionsCard story={story} />
           </section>
+          {/* 2. เพิ่มคอมโพเนนต์ใหม่เข้ามาในหน้านี้ */}
           <EvidenceSection story={story} />
+          <MoversComparisonTable story={story} />
           <TechnicalDetails story={story} />
         </div>
       </section>
