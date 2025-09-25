@@ -18,6 +18,8 @@ export interface OverviewState {
   appliedDateRange: DateRange;
   appliedOfferFilters: string[];
   appliedChannelFilters: string[];
+  appliedCampaignOffers: OptionGroup[]; // 👈 เพิ่ม State นี้
+  appliedChannels: OptionGroup[]; // 👈 เพิ่ม State นี้
   overviewData: OverviewApiResponse | null;
   availableCampaignOffers: OptionGroup[];
   availableChannels: OptionGroup[];
@@ -48,6 +50,8 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   appliedDateRange: { start: null, end: null },
   appliedOfferFilters: [],
   appliedChannelFilters: [],
+  appliedCampaignOffers: [], // 👈 เพิ่มค่าเริ่มต้น
+  appliedChannels: [], // 👈 เพิ่มค่าเริ่มต้น
   overviewData: null,
   availableCampaignOffers: [],
   availableChannels: [],
@@ -66,7 +70,6 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
     try {
       const initialDateRange = getDatePresets().thisWeek;
 
-      // API calls ยังเหมือนเดิม
       const [optionsResponse, searchResponse] = await Promise.all([
         fetchAnalyticsOptions(),
         searchCampaignsAndOffers(initialDateRange, ''),
@@ -74,8 +77,6 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
 
       const campaignOffers = searchResponse.items;
 
-      // --- START EDIT ---
-      // 1. สร้าง Set เพื่อเก็บชื่อ Channel ที่ไม่ซ้ำกันจาก Offer ทั้งหมดที่ได้มา
       const uniqueChannels = new Set<string>();
       campaignOffers.forEach((group) => {
         group.children.forEach((offer) => {
@@ -85,14 +86,12 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
         });
       });
 
-      // 2. แปลง Set เป็นโครงสร้างที่ MultiSelect ต้องการ
       const dynamicChannelOptions = Array.from(uniqueChannels).map((channel) => ({
         id: channel,
         name: channel,
       }));
 
       const allChannelIds = Array.from(uniqueChannels);
-      // --- END EDIT ---
 
       const newOfferChannelMap: OfferChannelMap = {};
       const allOfferFilterStrings: string[] = [];
@@ -109,7 +108,6 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
         pendingDateRange: initialDateRange,
         availableCampaignOffers: campaignOffers,
         offerChannelMap: newOfferChannelMap,
-        // 3. ใช้ตัวเลือก Channel ที่สร้างขึ้นมาใหม่แบบ dynamic
         availableChannels: [
           {
             name: 'Channels',
@@ -117,7 +115,6 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
           },
         ],
         chartMetricKey: optionsResponse.metrics.length > 0 ? optionsResponse.metrics[0].key : '',
-        // 4. ตั้งค่า Filter เริ่มต้นให้เลือกทุก Channel ที่เจอ
         pendingOfferFilters: allOfferFilterStrings,
         pendingChannelFilters: allChannelIds,
         isDirty: true,
@@ -132,11 +129,8 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   searchOffers: async (query: string) => {
     const { pendingDateRange } = get();
     try {
-      // --- START EDIT ---
-      // 3. แก้ไขการดึงข้อมูลตรงนี้ด้วย
       const searchResponse = await searchCampaignsAndOffers(pendingDateRange, query);
       const campaignOffers = searchResponse.items;
-      // --- END EDIT ---
 
       const newOfferChannelMap: OfferChannelMap = {};
       campaignOffers.forEach((group: OptionGroup) => {
@@ -164,13 +158,10 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
       focusedOfferId: null,
     });
 
-    // ดึงข้อมูล Offer ใหม่สำหรับช่วงวันที่ที่เลือก (เหมือนเดิม)
     await get().searchOffers('');
 
-    // --- START EDIT ---
-    const { availableCampaignOffers, offerChannelMap } = get();
+    const { availableCampaignOffers } = get();
 
-    // 1. คำนวณ Offer filters ใหม่จาก Offer ที่เพิ่งดึงมา
     const allOfferFilterStrings: string[] = [];
     availableCampaignOffers.forEach((group: OptionGroup) => {
       group.children.forEach((child: OptionItem) => {
@@ -178,7 +169,6 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
       });
     });
 
-    // 2. คำนวณ Channel ที่เกี่ยวข้องทั้งหมดจาก Offer ที่เพิ่งดึงมา
     const availableChannelsForSelection = new Set<string>();
     availableCampaignOffers.forEach((group) => {
       group.children.forEach((offer) => {
@@ -190,7 +180,6 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
 
     const newChannelFilters = Array.from(availableChannelsForSelection);
 
-    // 3. สร้างโครงสร้าง OptionGroup สำหรับ Channel dropdown ขึ้นมาใหม่
     const newAvailableChannels = [
       {
         name: 'Channels',
@@ -198,19 +187,15 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
       },
     ];
 
-    // 4. อัปเดต State ทั้งหมดในครั้งเดียว
     set({
       pendingOfferFilters: allOfferFilterStrings,
       availableChannels: newAvailableChannels,
       pendingChannelFilters: newChannelFilters,
     });
-    // --- END EDIT ---
   },
 
   setPendingOfferFilters: (selection: string[]) => {
     const { offerChannelMap } = get();
-
-    // 1. รวบรวม Channel ทั้งหมดที่ไม่ซ้ำกัน จาก Offer ที่ถูกเลือกใหม่ (selection)
     const availableChannelsForSelection = new Set<string>();
     selection.forEach((offerFilterString) => {
       const offerId = offerFilterString.split(':').pop();
@@ -221,21 +206,17 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
 
     const newChannelFilters = Array.from(availableChannelsForSelection);
 
-    // --- START EDIT ---
-    // 2. สร้างโครงสร้าง OptionGroup สำหรับ availableChannels ขึ้นมาใหม่แบบ Dynamic
     const newAvailableChannels = [
       {
         name: 'Channels',
         children: newChannelFilters.map((channel) => ({ id: channel, name: channel })),
       },
     ];
-    // --- END EDIT ---
 
     set({
       pendingOfferFilters: selection,
-      // 3. อัปเดตทั้งสอง State พร้อมกัน
-      availableChannels: newAvailableChannels, // <-- อัปเดตตัวเลือกทั้งหมดใน dropdown
-      pendingChannelFilters: newChannelFilters, // <-- อัปเดตตัวที่ถูกติ๊ก (ให้เลือกทั้งหมดที่ใช้ได้)
+      availableChannels: newAvailableChannels,
+      pendingChannelFilters: newChannelFilters,
       isDirty: true,
       focusedOfferId: null,
     });
@@ -271,18 +252,16 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   setFocusedOfferId: (offerId: string | null) => {
     const {
       focusedOfferId: currentFocusedId,
-      offerChannelMap, // <-- 1. ดึง offerChannelMap จาก state
-      availableChannels, // <-- 2. ดึง availableChannels มาเพื่อหา all channel ids
+      offerChannelMap,
+      availableChannels,
       applyFilters,
     } = get();
 
     const newFocusedId = offerId && offerId === currentFocusedId ? null : offerId;
-
-    let newChannelFilters = get().pendingChannelFilters; // <-- ใช้ค่าเดิมเป็น default
+    let newChannelFilters = get().pendingChannelFilters;
 
     if (newFocusedId) {
       const validChannelsForOffer = offerChannelMap[newFocusedId] || [];
-
       if (validChannelsForOffer.length > 0) {
         newChannelFilters = validChannelsForOffer;
       }
@@ -327,6 +306,8 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
         appliedDateRange: pendingDateRange,
         appliedOfferFilters: pendingOfferFilters,
         appliedChannelFilters: pendingChannelFilters,
+        appliedCampaignOffers: get().availableCampaignOffers, // ✨ บันทึกค่า
+        appliedChannels: get().availableChannels, // ✨ บันทึกค่า
         isDirty: false,
         isLoading: false,
         isRightPanelVisible: pendingOfferFilters.length > 0,
@@ -338,11 +319,19 @@ export const useOverviewStore = create<OverviewState>((set, get) => ({
   },
 
   cancelChanges: () => {
-    const { appliedDateRange, appliedOfferFilters, appliedChannelFilters } = get();
+    const {
+      appliedDateRange,
+      appliedOfferFilters,
+      appliedChannelFilters,
+      appliedCampaignOffers, // 👈 ดึงค่า
+      appliedChannels, // 👈 ดึงค่า
+    } = get();
     set({
       pendingDateRange: appliedDateRange,
       pendingOfferFilters: appliedOfferFilters,
       pendingChannelFilters: appliedChannelFilters,
+      availableCampaignOffers: appliedCampaignOffers, // ✨ คืนค่า
+      availableChannels: appliedChannels, // ✨ คืนค่า
       isDirty: false,
       focusedOfferId: null,
     });
