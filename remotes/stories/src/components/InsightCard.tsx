@@ -216,6 +216,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
                 justifyContent: 'space-between',
                 width: '100%',
                 alignItems: 'center',
+                gap: '6px',
               }}
             >
               <Text className={styles.kpiMetric}>{story.metric_label}</Text>
