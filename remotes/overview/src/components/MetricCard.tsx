@@ -23,6 +23,8 @@ const useStyles = makeStyles({
     ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalL),
     ...shorthands.borderColor(tokens.colorNeutralStroke2),
     borderRadius: tokens.borderRadiusMedium,
+    transition: '0.25s ease',
+    backgroundColor: tokens.colorNeutralBackground1,
     ':hover': {
       backgroundColor: tokens.colorNeutralBackground1Hover,
       ...shorthands.borderColor(tokens.colorNeutralStroke1Hover),
@@ -31,6 +33,9 @@ const useStyles = makeStyles({
   selected: {
     ...shorthands.borderColor(tokens.colorBrandStroke1),
     boxShadow: tokens.shadow8,
+    ':hover': {
+      ...shorthands.borderColor(tokens.colorBrandStroke1),
+    },
   },
   header: {
     display: 'flex',

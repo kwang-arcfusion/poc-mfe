@@ -9,8 +9,9 @@ import {
   TabList,
   Text,
   Card,
-  Spinner, // Spinner ถูก import อยู่แล้ว
+  Spinner,
   mergeClasses,
+  Badge, // ✨ 1. Import Badge component
 } from '@fluentui/react-components';
 
 type Metric = { label: string; value: number };
@@ -43,8 +44,14 @@ const useStyles = makeStyles({
     flexDirection: 'column',
     ...shorthands.gap(tokens.spacingVerticalL),
     ...shorthands.padding('16px'),
-    cursor: 'pointer',
     ...shorthands.border('2px', 'solid', 'transparent'),
+    transition: '0.25s ease',
+    ':hover': {
+      ...shorthands.borderColor(tokens.colorNeutralStroke1Hover),
+    },
+  },
+  clickableCard: {
+    cursor: 'pointer',
     ':hover': {
       ...shorthands.borderColor(tokens.colorNeutralStroke1Hover),
       backgroundColor: tokens.colorNeutralBackground1Hover,
@@ -53,6 +60,9 @@ const useStyles = makeStyles({
   selectedCard: {
     ...shorthands.borderColor(tokens.colorBrandStroke1),
     boxShadow: tokens.shadow8,
+    ':hover': {
+      ...shorthands.borderColor(tokens.colorBrandStroke1),
+    },
   },
   textContent: {
     display: 'flex',
@@ -121,22 +131,32 @@ const PerformanceCard: React.FC<{
 
   return (
     <div onClick={onClick}>
-      <Card className={mergeClasses(styles.perfCard, isSelected && styles.selectedCard)}>
+      <Card
+        className={mergeClasses(
+          styles.perfCard,
+          onClick && styles.clickableCard, // Conditionally apply clickable styles
+          isSelected && styles.selectedCard
+        )}
+      >
         <div className={styles.textContent}>
           <Text size={400} className={styles.title} title={data.title}>
             {data.title}
           </Text>
           <div className={styles.metricsContainer}>
-            {data.metrics.map((metric) => (
-              <div key={metric.label} className={styles.metricRow}>
-                <Text size={300} className={styles.metricLabel}>
-                  {metric.label}
-                </Text>
-                <Text size={300} className={styles.metricValue}>
-                  {formatMetricValue(metric.value)}
-                </Text>
-              </div>
-            ))}
+            {data.metrics.map((metric) => {
+              return (
+                <div key={metric.label} className={styles.metricRow}>
+                  <Text size={300} className={styles.metricLabel}>
+                    {metric.label}
+                  </Text>
+                  {/* ▼▼▼ THIS IS THE MODIFIED PART ▼▼▼ */}
+                  <Badge appearance="tint" color={'informative'} size={'large'}>
+                    {formatMetricValue(metric.value)}
+                  </Badge>
+                  {/* ▲▲▲ THIS IS THE MODIFIED PART ▲▲▲ */}
+                </div>
+              );
+            })}
           </div>
         </div>
       </Card>
