@@ -1,4 +1,3 @@
-// packages/ui/src/components/MultiSelect/index.tsx
 import React, { useMemo, useState } from 'react';
 import {
   Badge,
@@ -55,7 +54,9 @@ const useStyles = makeStyles({
     paddingLeft: '12px',
     paddingTop: '8px',
     paddingBottom: '4px',
-    color: tokens.colorNeutralForeground3,
+    // ▼▼▼ THIS IS THE MODIFIED PART ▼▼▼
+    color: tokens.colorBrandForeground1, // Changed from colorNeutralForeground3
+    // ▲▲▲ THIS IS THE MODIFIED PART ▲▲▲
     fontWeight: tokens.fontWeightSemibold,
     fontSize: tokens.fontSizeBase200,
   },
@@ -115,7 +116,7 @@ export interface MultiSelectProps {
   onSelectionChange: (newSelection: string[]) => void;
   onSearchChange?: (value: string) => void;
   showSelectAll?: boolean;
-  showSelectAllByName?: boolean; // ✨ เพิ่ม props ใหม่
+  showSelectAllByName?: boolean;
   maxWidth?: number | string;
   min?: number;
   max?: number;
@@ -128,7 +129,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   onSelectionChange,
   onSearchChange,
   showSelectAll = false,
-  showSelectAllByName = true, // ✨ กำหนดค่า default
+  showSelectAllByName = true,
   maxWidth,
   min,
   max,
@@ -353,53 +354,52 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
             </>
           )}
 
-          {showSelectAllByName &&
-            uniqueMatchingNames.length > 0 && ( // ✨ เพิ่มเงื่อนไขตรงนี้
-              <>
-                {uniqueMatchingNames.map((name) => {
-                  const idsForThisName = allChildren
-                    .filter((child) => child.name === name)
-                    .map((child) => child.id);
-                  const isChecked =
-                    idsForThisName.length > 0 &&
-                    idsForThisName.every((id) => simpleCheckedValues.includes(id));
+          {showSelectAllByName && uniqueMatchingNames.length > 0 && (
+            <>
+              {uniqueMatchingNames.map((name) => {
+                const idsForThisName = allChildren
+                  .filter((child) => child.name === name)
+                  .map((child) => child.id);
+                const isChecked =
+                  idsForThisName.length > 0 &&
+                  idsForThisName.every((id) => simpleCheckedValues.includes(id));
 
-                  const newItemsCount = idsForThisName.filter(
-                    (id) => !simpleCheckedValues.includes(id)
-                  ).length;
-                  const isDisabled =
-                    (!isChecked &&
-                      max !== undefined &&
-                      selectedOptions.length + newItemsCount > max) ||
-                    (isChecked &&
-                      min !== undefined &&
-                      selectedOptions.length - idsForThisName.length < min);
+                const newItemsCount = idsForThisName.filter(
+                  (id) => !simpleCheckedValues.includes(id)
+                ).length;
+                const isDisabled =
+                  (!isChecked &&
+                    max !== undefined &&
+                    selectedOptions.length + newItemsCount > max) ||
+                  (isChecked &&
+                    min !== undefined &&
+                    selectedOptions.length - idsForThisName.length < min);
 
-                  return (
-                    <div
-                      key={name}
-                      role="menuitem"
-                      tabIndex={0}
-                      className={styles.nonClosingMenuItem}
-                      onClick={() => !isDisabled && handleSelectAllByName(name)}
-                      onKeyDown={(e) => {
-                        if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
-                          e.preventDefault();
-                          handleSelectAllByName(name);
-                        }
-                      }}
-                      aria-disabled={isDisabled}
-                    >
-                      <span className={styles.menuIcon}>
-                        {isChecked ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
-                      </span>
-                      {name}
-                    </div>
-                  );
-                })}
-                <MenuDivider />
-              </>
-            )}
+                return (
+                  <div
+                    key={name}
+                    role="menuitem"
+                    tabIndex={0}
+                    className={styles.nonClosingMenuItem}
+                    onClick={() => !isDisabled && handleSelectAllByName(name)}
+                    onKeyDown={(e) => {
+                      if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        handleSelectAllByName(name);
+                      }
+                    }}
+                    aria-disabled={isDisabled}
+                  >
+                    <span className={styles.menuIcon}>
+                      {isChecked ? <CheckboxChecked16Regular /> : <CheckboxUnchecked16Regular />}
+                    </span>
+                    {name}
+                  </div>
+                );
+              })}
+              <MenuDivider />
+            </>
+          )}
 
           {filteredGroups.map((group, index) => (
             <React.Fragment key={`${group.name}-${index}`}>
