@@ -6,14 +6,6 @@ import { StoryGroup } from './components/StoryGroup';
 import { getStories } from '@arcfusion/client';
 import type { Story } from '@arcfusion/types';
 
-interface FilterValues {
-  channels?: string[];
-  campaigns?: string[];
-  ads?: string[];
-  groupBy?: string[];
-  metrics?: string[];
-}
-
 const useStyles = makeStyles({
   root: {
     display: 'flex',
@@ -118,6 +110,7 @@ export default function Stories({ navigate }: StoriesProps) {
           <StoryGroup
             key={group.title}
             title={group.title}
+            originalDate={group.originalDate}
             stories={group.stories}
             navigate={navigate}
           />

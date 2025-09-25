@@ -1,6 +1,6 @@
 // remotes/stories/src/components/StoryGroup.tsx
 import React from 'react';
-import { makeStyles, shorthands, tokens, Badge } from '@fluentui/react-components';
+import { makeStyles, shorthands, tokens, Badge, Tooltip } from '@fluentui/react-components';
 import type { Story } from '@arcfusion/types';
 import { InsightCard } from './InsightCard';
 
@@ -30,17 +30,36 @@ const useStyles = makeStyles({
   },
 });
 
+const formatFullDateForTooltip = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
 interface StoryGroupProps {
   title: string;
+  originalDate: string;
   stories: Story[];
   navigate: (path: string) => void;
 }
-export const StoryGroup: React.FC<StoryGroupProps> = ({ title, stories, navigate }) => {
+
+export const StoryGroup: React.FC<StoryGroupProps> = ({
+  title,
+  originalDate,
+  stories,
+  navigate,
+}) => {
   const styles = useStyles();
   return (
     <section className={styles.groupContainer}>
       <div className={styles.groupHeader}>
-        <h2 className={styles.groupTitle}>{title}</h2>
+        <Tooltip content={formatFullDateForTooltip(originalDate)} relationship="label" withArrow>
+          <h2 className={styles.groupTitle}>{title}</h2>
+        </Tooltip>
         <Badge className={styles.storyBadge} appearance="tint" size="extra-large">
           {stories.length} Stories
         </Badge>

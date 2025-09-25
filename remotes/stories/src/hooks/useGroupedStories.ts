@@ -2,12 +2,35 @@
 import { useMemo } from 'react';
 import type { Story } from '@arcfusion/types';
 
-const formatDate = (date: Date): string => {
+const formatDateForOlderDates = (date: Date): string => {
   return date.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
+};
+
+const formatRelativeDate = (dateKey: string): string => {
+  const date = new Date(dateKey);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเพื่อเปรียบเทียบเฉพาะวันที่
+
+  const storyDate = new Date(date);
+  storyDate.setHours(0, 0, 0, 0);
+
+  const diffTime = today.getTime() - storyDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return 'Today';
+  }
+  if (diffDays === 1) {
+    return 'Yesterday';
+  }
+  if (diffDays > 1 && diffDays <= 5) {
+    return `${diffDays} days ago`;
+  }
+  return formatDateForOlderDates(storyDate);
 };
 
 export const useGroupedStories = (stories: Story[]) => {
@@ -22,26 +45,12 @@ export const useGroupedStories = (stories: Story[]) => {
       groups[dateKey].push(story);
     });
 
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
-
-    const todayStr = today.toISOString().split('T')[0];
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-
     return Object.keys(groups)
-      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort dates descending
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
       .map((dateKey) => {
-        let title: string;
-        if (dateKey === todayStr) {
-          title = 'Today';
-        } else if (dateKey === yesterdayStr) {
-          title = 'Yesterday';
-        } else {
-          title = formatDate(new Date(dateKey));
-        }
         return {
-          title,
+          title: formatRelativeDate(dateKey),
+          originalDate: dateKey,
           stories: groups[dateKey],
         };
       });
