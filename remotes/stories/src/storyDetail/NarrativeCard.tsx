@@ -29,7 +29,9 @@ const useStyles = makeStyles({
     lineHeight: 2,
     gap: '12px',
     '& p': { margin: 0 },
-    '& strong': { color: tokens.colorNeutralForeground1 },
+    '& strong': {
+      color: tokens.colorNeutralForeground1,
+    },
     '& ul': {
       display: 'flex',
       flexDirection: 'column',
@@ -38,6 +40,10 @@ const useStyles = makeStyles({
     '& ul, & ol': {
       ...shorthands.margin(0),
       paddingLeft: tokens.spacingHorizontalL,
+    },
+    '& li': {
+      paddingBottom: '12px',
+      borderBottom: `1px solid ${tokens.colorNeutralStroke1Selected}`,
     },
   },
   tldr: {

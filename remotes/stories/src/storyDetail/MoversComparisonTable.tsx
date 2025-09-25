@@ -14,7 +14,7 @@ import {
   TableBody,
   TableCell,
 } from '@fluentui/react-components';
-import { DataTrending24Color, ArrowUp16Regular, ArrowDown16Regular } from '@fluentui/react-icons';
+import { ArrowUp16Regular, ArrowDown16Regular, DataArea24Color } from '@fluentui/react-icons';
 import type { Story } from '@arcfusion/types';
 
 const useStyles = makeStyles({
@@ -27,11 +27,14 @@ const useStyles = makeStyles({
     ...shorthands.borderRadius(tokens.borderRadiusXLarge),
     boxShadow: tokens.shadow4,
   },
+  tableWrapper: {
+    backgroundColor: tokens.colorNeutralBackground2,
+    padding: '12px',
+    borderRadius: '12px',
+    boxSizing: 'border-box',
+  },
   tableLayout: {
     tableLayout: 'auto',
-    padding: '24px',
-    borderRadius: '12px',
-    backgroundColor: tokens.colorNeutralBackground2,
   },
   titleWrap: { display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' },
   title: {
@@ -39,10 +42,9 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
     fontSize: '18px',
   },
-  // เราไม่จำเป็นต้องใช้ numericCell แล้ว เพราะจะใช้ inline style แทน
-  // numericCell: {
-  //   textAlign: 'left',
-  // },
+  headerCell: {
+    fontWeight: tokens.fontWeightSemibold,
+  },
   up: {
     color: tokens.colorPaletteGreenForeground2,
     display: 'flex',
@@ -66,6 +68,17 @@ interface MoverDetail {
   direction: 'up' | 'down';
 }
 
+// ✨ 1. สร้าง Type สำหรับข้อมูล detail เพื่อความชัดเจนและแก้ปัญหา
+interface TriggerDetail {
+  group: string[];
+  baseline_value: number | null;
+  latest_value: number | null;
+}
+interface MoverValue {
+  baseline: number | null;
+  latest: number | null;
+}
+
 interface MoversComparisonTableProps {
   story: Story;
 }
@@ -87,8 +100,10 @@ export const MoversComparisonTable: React.FC<MoversComparisonTableProps> = ({ st
       return [];
     }
 
-    const detailsMap = new Map(
-      triggeredRuleResult.details.map((d: any) => [
+    // ✨ 2. กำหนด Type ของ Key และ Value ให้กับ Map
+    const detailsMap = new Map<string, MoverValue>(
+      // ✨ 3. ใช้ Type 'TriggerDetail' แทน 'any'
+      triggeredRuleResult.details.map((d: TriggerDetail) => [
         d.group[0],
         { baseline: d.baseline_value, latest: d.latest_value },
       ])
@@ -96,6 +111,7 @@ export const MoversComparisonTable: React.FC<MoversComparisonTableProps> = ({ st
 
     return story.top_movers.map((mover) => {
       const detail = detailsMap.get(mover.name);
+      // ตอนนี้ TypeScript รู้จัก Type ของ detail แล้ว Error จึงหายไป
       const baseline = detail?.baseline ?? 0;
       const latest = detail?.latest ?? 0;
       const pointChange = latest - baseline;
@@ -119,61 +135,62 @@ export const MoversComparisonTable: React.FC<MoversComparisonTableProps> = ({ st
   return (
     <Card className={styles.tableCard}>
       <div className={styles.titleWrap}>
-        <DataTrending24Color />
+        <DataArea24Color />
         <Text className={styles.title}>Top Movers Breakdown</Text>
       </div>
-      <Table arial-label="Top Movers Breakdown" className={styles.tableLayout}>
-        <TableHeader>
-          <TableRow>
-            <TableHeaderCell>
-              <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
-                Offer/Channel
-              </Text>
-            </TableHeaderCell>
-            <TableHeaderCell style={{ textAlign: 'left' }}>
-              <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
-                Baseline Value
-              </Text>
-            </TableHeaderCell>
-            <TableHeaderCell style={{ textAlign: 'left' }}>
-              <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
-                Latest Value
-              </Text>
-            </TableHeaderCell>
-            <TableHeaderCell style={{ textAlign: 'left' }}>
-              <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
-                Point Change
-              </Text>
-            </TableHeaderCell>
-            <TableHeaderCell style={{ textAlign: 'left' }}>
-              <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
-                % Change
-              </Text>
-            </TableHeaderCell>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {moverDetails.map((item) => (
-            <TableRow key={item.name}>
-              <TableCell>{item.name}</TableCell>
-              {/* FIX: เปลี่ยนจากการใช้ className มาเป็น inline style เพื่อให้จัดขวาแน่นอน */}
-              <TableCell style={{ textAlign: 'left' }}>{item.baseline}</TableCell>
-              <TableCell style={{ textAlign: 'left' }}>{item.latest}</TableCell>
-              <TableCell style={{ textAlign: 'left' }}>
-                <Text className={item.direction === 'up' ? styles.up : styles.down}>
-                  {item.pointChange}
+      <div className={styles.tableWrapper}>
+        <Table arial-label="Top Movers Breakdown" className={styles.tableLayout}>
+          <TableHeader>
+            <TableRow>
+              <TableHeaderCell>
+                <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
+                  Offer/Channel
                 </Text>
-              </TableCell>
-              <TableCell style={{ textAlign: 'left' }}>
-                <Text className={item.direction === 'up' ? styles.up : styles.down}>
-                  {item.direction === 'up' ? <ArrowUp16Regular /> : <ArrowDown16Regular />}
-                  {item.percentChange}
+              </TableHeaderCell>
+              <TableHeaderCell style={{ textAlign: 'left' }}>
+                <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
+                  Baseline Value
                 </Text>
-              </TableCell>
+              </TableHeaderCell>
+              <TableHeaderCell style={{ textAlign: 'left' }}>
+                <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
+                  Latest Value
+                </Text>
+              </TableHeaderCell>
+              <TableHeaderCell style={{ textAlign: 'left' }}>
+                <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
+                  Point Change
+                </Text>
+              </TableHeaderCell>
+              <TableHeaderCell style={{ textAlign: 'left' }}>
+                <Text weight="medium" style={{ color: tokens.colorBrandForeground2Hover }}>
+                  % Change
+                </Text>
+              </TableHeaderCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {moverDetails.map((item) => (
+              <TableRow key={item.name}>
+                <TableCell>{item.name}</TableCell>
+                <TableCell style={{ textAlign: 'left' }}>{item.baseline}</TableCell>
+                <TableCell style={{ textAlign: 'left' }}>{item.latest}</TableCell>
+                <TableCell style={{ textAlign: 'left' }}>
+                  <span className={item.direction === 'up' ? styles.up : styles.down}>
+                    {item.pointChange}
+                  </span>
+                </TableCell>
+                <TableCell style={{ textAlign: 'left' }}>
+                  <span className={item.direction === 'up' ? styles.up : styles.down}>
+                    {item.direction === 'up' ? <ArrowUp16Regular /> : <ArrowDown16Regular />}
+                    {item.percentChange}
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 };
