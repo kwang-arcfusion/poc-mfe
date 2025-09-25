@@ -7,7 +7,6 @@ import {
   tokens,
   Badge,
   Text,
-  // ✨ 1. Import Popover components
   Popover,
   PopoverTrigger,
   PopoverSurface,
@@ -17,6 +16,9 @@ import {
   ArrowUp16Regular,
   ArrowDown16Regular,
   MoreVertical28Filled,
+  Book32Color,
+  Book24Color,
+  DataBarVerticalAscending24Color,
 } from '@fluentui/react-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -127,7 +129,6 @@ const useStyles = makeStyles({
     display: 'inline-block',
     verticalAlign: 'bottom',
   },
-  // ✨ 2. เพิ่ม Styles สำหรับ Popover และเนื้อหาข้างใน
   popoverSurface: {
     ...shorthands.padding(tokens.spacingVerticalS, tokens.spacingHorizontalM),
     ...shorthands.borderRadius(tokens.borderRadiusMedium),
@@ -187,14 +188,9 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
       ? tokens.colorPaletteRedForeground1
       : tokens.colorPaletteGreenForeground1;
 
-  const secondMover = story.top_movers?.[1];
-  console.log('InsightCard.tsx:191 |story.top_movers| : ', story.top_movers);
-  const remainingCount = story.top_movers ? story.top_movers.length - 2 : 0; // ✨ แก้ไข Logic นับจำนวนที่เหลือให้ถูกต้อง
-
-  // ✨ 3. เตรียมข้อมูล Movers ที่เหลือสำหรับใส่ใน Popover
-  const otherMovers = useMemo(() => {
-    return story.top_movers?.slice(2) || [];
-  }, [story.top_movers]);
+  const firstMover = story.top_movers?.[0];
+  const remainingCount = story.top_movers ? story.top_movers.length - 1 : 0;
+  const allMoversForPopover = story.top_movers || [];
 
   const chartOptions = useMemo(() => {
     if (!story.echart_config) return null;
@@ -212,10 +208,10 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
   return (
     <div className={styles.insightCard} onClick={onClick}>
       <header className={styles.cardHeader}>
+        <DataBarVerticalAscending24Color />
         <Badge appearance="tint" size="extra-large">
           {badgeText}
         </Badge>
-        <MoreVertical28Filled />
       </header>
 
       <div className={styles.cardBody}>
@@ -223,14 +219,14 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
         {topMover && (
           <div className={styles.kpiBlock}>
             <div className={styles.otherMoversContainer}>
-              {secondMover && (
+              {firstMover && (
                 <Badge
-                  key={secondMover.name}
+                  key={firstMover.name}
                   appearance="tint"
                   size="medium"
-                  color={secondMover.direction === 'down' ? 'danger' : 'success'}
+                  color={firstMover.direction === 'down' ? 'danger' : 'success'}
                   icon={
-                    secondMover.direction === 'down' ? <ArrowDown16Regular /> : <ArrowUp16Regular />
+                    firstMover.direction === 'down' ? <ArrowDown16Regular /> : <ArrowUp16Regular />
                   }
                   style={{
                     display: 'flex',
@@ -238,13 +234,13 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
                     gap: '6px',
                   }}
                 >
-                  <span className={styles.truncatedText} title={secondMover.name}>
-                    {secondMover.name}
+                  <span className={styles.truncatedText} title={firstMover.name}>
+                    {firstMover.name}
                   </span>
-                  <span>{secondMover.change.toFixed(2)}%</span>
+                  <span>{firstMover.change.toFixed(2)}%</span>
                 </Badge>
               )}
-              {/* ✨ 4. นำ Popover มาครอบ Badge ที่แสดงจำนวนที่เหลือ */}
+
               {remainingCount > 0 && (
                 <Popover withArrow positioning="above" openOnHover>
                   <PopoverTrigger disableButtonEnhancement>
@@ -253,19 +249,21 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
                     </Badge>
                   </PopoverTrigger>
 
-                  {/* ✨ 5. สร้างเนื้อหา Popover */}
                   <PopoverSurface className={styles.popoverSurface}>
                     <ul className={styles.popoverList}>
-                      {otherMovers.map((mover) => (
+                      {/* ✅ FIX 2: วนลูปแสดงผล mover ทั้งหมดใน popover */}
+                      {allMoversForPopover.map((mover) => (
                         <li key={mover.name} className={styles.popoverListItem}>
                           {mover.direction === 'up' ? (
                             <ArrowUp16Regular className={styles.up} />
                           ) : (
                             <ArrowDown16Regular className={styles.down} />
                           )}
+
                           <Text size={300} title={mover.name} className={styles.truncatedText}>
                             {mover.name}
                           </Text>
+
                           <Text
                             size={300}
                             weight="semibold"
@@ -280,6 +278,7 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
                 </Popover>
               )}
             </div>
+
             <div
               style={{
                 display: 'flex',
@@ -290,12 +289,14 @@ export const InsightCard: React.FC<InsightCardProps> = ({ story, onClick }) => {
               }}
             >
               <Text className={styles.kpiMetric}>{story.metric_label}</Text>
+
               <Text className={styles.kpiValue} style={{ color: kpiValueColor }}>
                 {topMover.change.toFixed(2)}%
               </Text>
             </div>
           </div>
         )}
+
         {chartOptions && (
           <div className={styles.chartContainer}>
             <ReactECharts
