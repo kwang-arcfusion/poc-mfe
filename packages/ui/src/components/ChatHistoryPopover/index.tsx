@@ -179,7 +179,7 @@ export const ChatHistoryPopover = () => {
                 color="danger"
               />
             ) : (
-              <Chat24Regular />
+              <Chat24Regular color={tokens.colorBrandForeground1} />
             )}
           </div>
 
@@ -208,7 +208,13 @@ export const ChatHistoryPopover = () => {
         <div className={styles.badgeWrapper}>
           <Button
             appearance="transparent"
-            icon={isPopoverOpen ? <Chat24Filled /> : <Chat24Regular />}
+            icon={
+              isPopoverOpen ? (
+                <Chat24Filled color={tokens.colorBrandForeground1} />
+              ) : (
+                <Chat24Regular color={tokens.colorBrandForeground1} />
+              )
+            }
             aria-label="Chat History"
           />
           {unreadResponses.length > 0 && (
